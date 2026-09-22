@@ -17,6 +17,11 @@ Three things are computed here, all by backward induction over `Fraction`s:
 - `policy_value(game, act)`: what a policy actually earns in the exact game. The approximation's regret is
   `exact` minus `policy_value` of the approximation's policy; that is non-negative by construction.
 
+Two framings of the LLM read. With `read_first=False` (the prototype) the read is one more instrument on the
+stage menu. With `read_first=True` (the owner's ruling for play) the read is taken at the start of every question
+and always paid: it is a chance node before any decision, its report sets the stage prior, and the menu is the
+lifelines still held.
+
 Menu order and tie-breaking follow the charter's reference solver (`spec_check.Ref`): answers A-D, then walk,
 then instruments in the order llm, fifty, phone, audience; a later act replaces the incumbent only if strictly
 better. The policy an approximation induces is therefore the one the wald kernel would pick.
@@ -31,6 +36,7 @@ OPTIONS = ("A", "B", "C", "D")
 LIFELINES = ("fifty", "phone", "audience")
 INSTRUMENTS = ("llm",) + LIFELINES
 ALL_LIFELINES = frozenset(LIFELINES)
+UNREAD = "?"  # the outcome of an instrument that fired but whose reply did not parse: it carries no information
 
 History = frozenset  # of (instrument, outcome) pairs observed in the current stage; order is irrelevant to belief
 Kernel = Mapping[str, Mapping[str, Fraction]]  # truth -> outcome -> probability
@@ -60,12 +66,14 @@ class Game:
     reliability: for each noisy instrument ('llm', 'phone', 'audience'), its rho per tier.
     price:       what firing each instrument costs, in ladder units ('llm', 'fifty', 'phone', 'audience').
     tiers:       the tier of each rung.
+    read_first:  the LLM read is taken, and paid, at the start of every question rather than offered on the menu.
     """
     ladder: tuple[Fraction, ...]
     havens: tuple[int, ...]
     reliability: Mapping[str, tuple[Fraction, ...]]
     price: Mapping[str, Fraction]
     tiers: tuple[int, ...]
+    read_first: bool = False
 
     @property
     def rungs(self) -> int:
@@ -88,8 +96,10 @@ def lifelines_used(h: History) -> frozenset:
 
 
 def posterior(kernels: Mapping[str, Kernel], h: History) -> dict[str, Fraction]:
-    "Uniform prior over the right option, conditioned on every observation in h."
-    like = {w: prod((kernels[k][w].get(o, Fraction(0)) for k, o in h), start=Fraction(1)) for w in OPTIONS}
+    "Uniform prior over the right option, conditioned on every observation in h (an UNREAD outcome is flat)."
+    like = {w: prod((Fraction(1) if o == UNREAD else kernels[k][w].get(o, Fraction(0)) for k, o in h),
+                    start=Fraction(1))
+            for w in OPTIONS}
     z = sum(like.values())
     return {w: p / z for w, p in like.items()}
 
@@ -130,7 +140,7 @@ def solve_stage(stage: Stage, correct: Callable[[History], Fraction], price: Cal
                 best, arg = v, f"answer {x}"
         if walk > best:
             best, arg = walk, "walk"
-        used = {k for k, _ in h}
+        used = {k for k, _ in h} | ({"llm"} if stage.game.read_first else set())
         for k in (k for k in kernels if k not in used):
             v = -price(k) + sum(p * solve(h | {(k, o)})[0] for o, p in outcomes(b, kernels[k]).items())
             if v > best:
@@ -138,6 +148,16 @@ def solve_stage(stage: Stage, correct: Callable[[History], Fraction], price: Cal
         return best, arg
 
     return solve
+
+
+def arrival(game: Game, kernels: Mapping[str, Kernel], price: Callable[[str], Fraction],
+            at: Callable[[History], Fraction]) -> Fraction:
+    """The value of a stage on arrival, given `at(h)`, the value from history h on. With `read_first` the LLM read
+    is a chance node paid before any decision; otherwise the stage starts at the empty history."""
+    if not game.read_first:
+        return at(frozenset())
+    reads = outcomes(posterior(kernels, frozenset()), kernels["llm"])
+    return -price("llm") + sum(p * at(frozenset({("llm", o)})) for o, p in reads.items())
 
 
 @dataclass(frozen=True)
@@ -158,7 +178,9 @@ def exact(game: Game) -> Solution:
 
     @cache
     def value(r: int, held: frozenset) -> Fraction:
-        return game.ladder[-1] if r == game.rungs else stage(r, held)(frozenset())[0]
+        if r == game.rungs:
+            return game.ladder[-1]
+        return arrival(game, Stage(game, r, held).kernels, lambda k: game.price[k], lambda h: stage(r, held)(h)[0])
 
     return Solution(value, lambda r, held, h=frozenset(): stage(r, held)(h)[1])
 
@@ -174,7 +196,9 @@ def option_value(game: Game) -> Solution:
 
     @cache
     def value(r: int, held: frozenset) -> Fraction:
-        return game.ladder[-1] if r == game.rungs else stage(r, held)(frozenset())[0]
+        if r == game.rungs:
+            return game.ladder[-1]
+        return arrival(game, Stage(game, r, held).kernels, lambda k: game.price[k], lambda h: stage(r, held)(h)[0])
 
     return Solution(value, lambda r, held, h=frozenset(): stage(r, held)(h)[1])
 
@@ -197,7 +221,7 @@ def policy_value(game: Game, act: Callable[[int, frozenset, History], str]) -> C
                 return b[x] * value(r + 1, held - lifelines_used(h)) + (1 - b[x]) * wrong
             return -game.price[a] + sum(p * follow(h | {(a, o)}) for o, p in outcomes(b, kernels[a]).items())
 
-        return follow(frozenset())
+        return arrival(game, kernels, lambda k: game.price[k], follow)
 
     return value
 
@@ -219,8 +243,12 @@ class Regret:
         return self.exact - self.estimate
 
 
+def regret_table(game: Game, held: frozenset = ALL_LIFELINES) -> list[Regret]:
+    "The regret from every rung, holding `held` on arrival: one row per rung."
+    E, A = exact(game), option_value(game)
+    P = policy_value(game, A.act)
+    return [Regret(exact=E.value(r, held), estimate=A.value(r, held), realised=P(r, held)) for r in range(game.rungs)]
+
+
 def regret(game: Game, r: int = 0, held: frozenset = ALL_LIFELINES) -> Regret:
-    approx = option_value(game)
-    return Regret(exact=exact(game).value(r, held),
-                  estimate=approx.value(r, held),
-                  realised=policy_value(game, approx.act)(r, held))
+    return regret_table(game, held)[r]

@@ -128,3 +128,59 @@ def test_differential_against_charter_reference_on_every_stage():
         for held in HELD_SETS:
             w = proto.stage_world(r, held, rho, rho_p, rho_a, GAME.price["llm"], lambda L: A.value(r + 1, L))
             assert S.REF.solve(w["prior"], w, w["N"]) == (A.value(r, held), A.act(r, held))
+
+
+# ---- the owner's framing: the LLM read is the stage prior, taken and paid at every question (ruling 2026-09-22)
+
+from dataclasses import replace
+
+from oracle.game import UNREAD, regret_table
+
+READ_FIRST = replace(GAME, read_first=True)
+
+
+@pytest.mark.parametrize("game", [replace(g, read_first=True) for g in SINGLE_RUNG_GAMES])
+def test_single_rung_read_first_approximation_is_exact(game):
+    E, A = exact(game), option_value(game)
+    for held in HELD_SETS:
+        assert E.value(0, held) == A.value(0, held)
+        for h in histories(game, 0, held):
+            if any(k == "llm" for k, _ in h):
+                assert E.act(0, held, h) == A.act(0, held, h)
+
+
+def test_read_first_never_offers_the_read_again():
+    E = exact(READ_FIRST)
+    for r in range(READ_FIRST.rungs):
+        for held in HELD_SETS:
+            for h in histories(READ_FIRST, r, held):
+                if any(k == "llm" for k, _ in h):
+                    assert E.act(r, held, h) != "llm"
+
+
+def test_read_first_regret_nonnegative_and_last_rung_exact():
+    rows = regret_table(READ_FIRST)
+    assert all(R.regret >= 0 for R in rows)
+    assert rows[-1].regret == 0 and rows[-1].gap == 0
+
+
+def test_read_first_always_answer_is_proto_A():
+    "With the read forced, the always-answer policy is exactly proto.py's A(r): read, pay, answer the report."
+    rho, c = GAME.reliability["llm"], GAME.price["llm"]
+
+    @cache
+    def A(r):
+        if r == GAME.rungs:
+            return GAME.ladder[-1]
+        return rho[GAME.tiers[r]] * A(r + 1) + (1 - rho[GAME.tiers[r]]) * GAME.safe(r) - c
+
+    act = lambda r, held, h: f"answer {dict(h)['llm']}"
+    assert policy_value(READ_FIRST, act)(0, ALL_LIFELINES) == A(0)
+
+
+def test_unread_outcome_is_uninformative():
+    E = exact(READ_FIRST)
+    flat = frozenset({("llm", UNREAD)})
+    # an unparseable read leaves the uniform prior: the act is whatever the uniform-prior stage calls for
+    assert E.act(0, ALL_LIFELINES, flat) in {"fifty", "phone", "audience", "answer A", "walk"}
+    assert E.act(0, frozenset(), flat) == "answer A"  # no lifelines, uniform belief: first option by menu order
