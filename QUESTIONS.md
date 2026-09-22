@@ -32,6 +32,9 @@ ruled, and a missing key fails loud where it is needed. Each open question block
 8. **The ladder's intermediate rungs.** The brief names "the US 15-rung ladder, $100 → $1,000,000, havens $1,000 and
    $32,000"; `owner.toml` carries the classic values 100, 200, 300, 500, 1,000, 2,000, 4,000, 8,000, 16,000,
    32,000, 64,000, 125,000, 250,000, 500,000, 1,000,000. Confirm.
+9. **What the LLM-plays-directly prompt says about cost.** It is told the rules, the ladder, its lifelines and the
+   question (the kickoff's list), not that each decision and each phone/audience call is charged λ_usd × its
+   price. Its utility is scored with those charges like everyone's. Should the prompt state them?
 
 ## Ruled
 
