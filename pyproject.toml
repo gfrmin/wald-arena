@@ -1,0 +1,18 @@
+[project]
+name = "wald-millionaire"
+version = "0.0.0"
+description = "Who Wants to Be a Millionaire, played by a wald contestant whose knowledge is an LLM"
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.uv]
+package = false
