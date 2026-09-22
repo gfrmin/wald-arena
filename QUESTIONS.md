@@ -5,38 +5,32 @@ ruled, and a missing key fails loud where it is needed. Each open question block
 
 ## Open
 
-1. **λ_usd** (`lambda_usd`): utility per dollar of instrument spend. Blocks: every price, hence the stage packs,
-   the oracle's play, the expected-winnings column and the regret table on real numbers.
-2. **Models** (`instruments.{llm,phone,audience}.model`): the contestant's LLM, the friend, and the audience.
-   The audience instrument is still "a third model or a poll of k weak reads"; the code treats it as one model
-   call until ruled. Blocks: calibration, all play. If a model is not Anthropic's, it needs its own transport in
-   `calibration/instruments.py` (only the Anthropic one exists).
-3. **Declared price per call** (`instruments.*.usd_per_call`): rule 5 prices every act at its declared price,
-   cached or not. One number per instrument, in dollars. (Token counts are logged too, so a per-token rate can
-   be audited against it.)
-4. **Question set** (`questions.path`): the owner's labelled set. The loader (`data/questions.py`) reads JSONL,
-   one question per line:
-   `{"id": "q0001", "text": "…", "options": {"A": "…", "B": "…", "C": "…", "D": "…"}, "answer": "C", "tier": "easy"}`
-   with `tier` in `easy | medium | hard`. If the set carries no tiers, say so and name the model whose accuracy
-   assigns them. Each tier needs at least 300 questions (200 calibration + 100 held-out) plus a play pool.
-5. **Seeds**: `split_seed` (calibration / held-out / play split) and `games.seed` (question draw and 50:50 draws for
-   the 500 games). The kickoff says the split seed is "in the brief"; the brief only says the game seed goes on
-   the scoreboard.
-6. **Unparseable replies.** An instrument reply that is not a single letter is recorded as `?`. In calibration it
-   counts as wrong (conservative, and it is in the count the fit sees). In play it is an observation with no
-   information: the belief stays where it was, and the act (and lifeline, if one was spent) is still paid.
-   Always-answer, given `?`, answers A. Confirm, or rule otherwise.
-7. **Phone and audience after a 50:50.** Are they shown the two remaining options? The oracle's kernel, like the
-   brief's, has them report over all four options independently of the 50:50. If they see the reduced question,
-   that is a different instrument and needs its own calibration.
-8. **The ladder's intermediate rungs.** The brief names "the US 15-rung ladder, $100 → $1,000,000, havens $1,000 and
-   $32,000"; `owner.toml` carries the classic values 100, 200, 300, 500, 1,000, 2,000, 4,000, 8,000, 16,000,
-   32,000, 64,000, 125,000, 250,000, 500,000, 1,000,000. Confirm.
-9. **What the LLM-plays-directly prompt says about cost.** It is told the rules, the ladder, its lifelines and the
-   question (the kickoff's list), not that each decision and each phone/audience call is charged λ_usd × its
-   price. Its utility is scored with those charges like everyone's. Should the prompt state them?
+1. **Question set: pick one** (no API call is made before you do). Loaded dry, no model calls:
+
+   | | A. CrowdMillionaire (recommended) | B. Open Trivia DB |
+   |---|---|---|
+   | source, licence | github.com/bahadiri/Millionaire, MIT; cite Aydin, Yilmaz, Demirbas, *Concurrency Computat.* 2017, e4168 | opentdb.com, CC BY-SA 4.0 |
+   | what it is | questions from the Turkish *Kim Milyoner Olmak İster?* live show, in Turkish | crowd-written trivia, English, not from the show |
+   | size | 3,810 unique (live + practice, deduplicated; 6 with repeated options dropped) | 5,298 verified, including true/false; the four-option share was not counted |
+   | four options, one right | yes (`choiceA`..`choiceD`, `correct_choice`) | yes, for `type=multiple` |
+   | difficulty per question | the show's level, 1-12. Tiers: 1-4 easy, 5-8 medium, 9-12 hard: 1,853 / 1,464 / 499 | contributor-rated easy / medium / hard (1,770 / 2,424 / 1,104 counted with true/false) |
+   | after the 200 + 100 split (seed 20260922) | play pools 1,549 / 1,163 / **198**: 500 games draw 2,500 hard questions, each reused about 13 times | not tried |
+   | loader change | a converter from the two CSVs to the JSONL above (tried: it loads, splits and draws a game) | a converter from the API's JSON (HTML-decode; shuffle the right answer among the four with a seed) |
+
+   Considered and rejected: the English WWTBM set (huggingface.co/datasets/WWTBM/wwtbm, CC BY-NC-SA 4.0), which is the
+   US show's own questions but only 1,000, with 39 hard (533 / 428 / 39). It cannot fill 300 per tier.
+   With A the instruments read Turkish. That is fine for calibration (the same questions calibrate and play), but it
+   is a choice.
 
 ## Ruled
+
+- **Session 002 rulings:** λ_usd = 1. Models: contestant `claude-haiku-4-5`, friend `claude-sonnet-4-6`, audience = five
+  independent `claude-haiku-4-5` samples at temperature 1, majority vote, calibrated as its own instrument. Price
+  per call = the mean measured dollars per call in calibration, per instrument, a `data` cell with its count (no
+  declared constant). Seeds: split 20260922, games 1. Unparseable replies: as proposed, their rate on the
+  scoreboard, no retry. Phone and audience see the full question, never the reduced one; one calibration per
+  instrument. Middle rungs confirmed. The direct-play prompt states the ladder, the lifelines held and the dollar
+  cost of each call. Live calibration waits for the question-set pick and a dollar estimate for it and for 500 games.
 
 - **2026-09-22, ladder:** the brief's ladder, not `proto.py`'s.
 - **2026-09-22, prices:** phone and audience are charged their API cost × λ_usd plus their option value; 50:50 is
