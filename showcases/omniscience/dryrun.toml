@@ -1,0 +1,47 @@
+# The dry run's numbers: PROPOSALS from QUESTIONS.md's pre-registration, NOT rulings. Read only by
+# `python -m showcases.omniscience.run --dry-run`, which refuses any model but claude-haiku-4-5-20251001.
+# Haiku stands in for the primary, the second opinion and the grader, so it grades its own answers: the result
+# proves the plumbing and nothing about the fit.
+
+lambda_usd = "1"
+penalties = [1, 3, 10]
+second_price_grid = ["0", "1/20", "1/10", "1/4", "1/2", "1", "2", "none"]
+split_seed = 20260923
+sampling_seed = 1
+
+[confidence]
+cuts = [50, 80, 95]
+
+[agreement]
+samples = 5
+price = "per_call"      # the primary's declared price per call, times the number of samples
+
+[fit]
+min_count = 10
+folds = 5
+
+# Declared prices are upper bounds, not measurements: Haiku 4.5 list prices ($1 in, $5 out per million tokens) times
+# the largest prompt each role sends and its max_tokens. An answer or confidence call: <= 300 tokens in, <= 64 out,
+# <= $0.00062. A grading call: <= 2,200 in, <= 8 out, <= $0.00224. The runner also records list-price dollars from
+# the tokens actually used, so the declaration can be audited (rule 5).
+[instruments.primary]
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+usd_per_call = "0.0007"
+max_tokens = 64
+
+[instruments.second]
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+usd_per_call = "0.0007"
+max_tokens = 64
+
+[instruments.grader]
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+usd_per_call = "0.0023"
+max_tokens = 8
+
+[list_price_per_mtok."claude-haiku-4-5-20251001"]
+input = "1"
+output = "5"

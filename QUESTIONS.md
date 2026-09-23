@@ -66,18 +66,23 @@ and are not rulings. Facts below were measured on 2026-09-23 and are cited in `b
 - **2.4 Answer prompt.** AA's prompt verbatim with `{domain}`/`{subtopic}` (the README, which names real fields),
   not the paper's `{topic}`/`{category}`. Confirm. **Blocks:** the read.
 - **2.5 Confidence (`confidence.*`).** Proposed: a second call after the answer ("You answered X to this question.
-  How confident are you, 0–100?"), so the answer itself is elicited exactly as AA elicits it. The cost is one extra
-  primary call per question. The alternative is one call asking for answer and confidence together: cheaper, but
-  the answer is no longer AA's. Buckets proposed: 0–49, 50–79, 80–94, 95–100, plus `declined`. **Blocks:** the
-  read, the bucket.
+  How confident are you, 0–100?"), so the answer itself is elicited exactly as AA elicits it. The confidence is the
+  reply's first line if that line is a lone whole number, and `unread` otherwise; Haiku, in the dry run, puts the
+  number first and then explains. The cost is one extra primary call per question. The alternative is one call
+  asking for answer and confidence together: cheaper, but the answer is no longer AA's. Buckets proposed: 0–49,
+  50–79, 80–94, 95–100, plus `unread`. A declined read needs no bucket of its own: it is graded NOT_ATTEMPTED and
+  scores 0 whichever act submits it. **Blocks:** the read, the bucket.
 - **2.6 Agreement samples (`agreement.*`).** Five further calls with AA's prompt at the instrument's sampling
   settings. If `gpt-6-astra` rejects `temperature` (reasoning models may), samples vary only as the API varies them,
   and that is recorded. Price: the declared per-call price × 5, or a separately declared batch price. **Blocks:** the
   agreement act.
 - **2.7 What "matches" means.** Proposed: normalised exact match (case, whitespace, punctuation, a leading
   article) between a sample and the read, and between the second opinion and the read. It is free and
-  deterministic, but it calls "Paris" and "Paris, France" different. The alternative is an equivalence judge call
-  per pair (six per question, priced). **Blocks:** k and s.
+  deterministic, but it calls "Paris" and "Paris, France" different. The dry run found a worse case: two declines
+  worded differently ("I don't have reliable information…" / "I don't have enough information…") count as
+  disagreeing, so a model that declines consistently shows k = 0. Declines are frequent (Haiku declined most of the
+  smoke run's questions). The alternative is an equivalence judge call per pair (six per question, priced), or a
+  judge that also says "this is a decline". **Blocks:** k and s.
 - **2.8 Penalties (`penalties`).** p ∈ {1, 3, 10} as briefed. PARTIAL scores 0 at every p, as in the Index.
   Confirm both. **Blocks:** the packs.
 - **2.10 Prices (`lambda_usd`, `second_price_grid`).** λ_usd, in utility per dollar. At λ_usd = 1 a right answer

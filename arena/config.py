@@ -41,10 +41,12 @@ class InstrumentSpec:
     usd_per_call: Decimal
     provider: str = "anthropic"
     key_env: str | None = None  # the environment variable holding the key; None: the transport's own default
+    max_tokens: int | None = None  # None: the transport's own default
 
 
 def instrument(owner, name: str) -> InstrumentSpec:
     return InstrumentSpec(name, need(owner, f"instruments.{name}.model"),
                           Decimal(need(owner, f"instruments.{name}.usd_per_call")),
                           optional(owner, f"instruments.{name}.provider", "anthropic"),
-                          optional(owner, f"instruments.{name}.key_env", None))
+                          optional(owner, f"instruments.{name}.key_env", None),
+                          optional(owner, f"instruments.{name}.max_tokens", None))

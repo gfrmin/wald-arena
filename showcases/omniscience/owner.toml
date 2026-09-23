@@ -1,0 +1,19 @@
+# AA-Omniscience: the owner's numbers. Rule 6: nothing here is chosen by the repository.
+# Empty until the pre-registration in QUESTIONS.md ("Pre-registration: brief 002") is ruled. A key that is absent is
+# TBD, and code that needs it fails loud naming it. With no [instruments.*] here, no code can build an instrument:
+# that absence is what keeps every frozen model uncalled until the ruling.
+#
+# Shapes, once ruled (see QUESTIONS.md 2.1-2.14; the dry run's proposals are in dryrun.toml, and are not rulings):
+#
+# lambda_usd = "..."                                    2.10
+# penalties = [...]                                     2.8
+# second_price_grid = ["...", ..., "none"]              2.10, in utility; "none" = no second opinion on offer
+# split_seed = ..., sampling_seed = ...                 2.14
+# budget_usd = "..."                                    2.14
+# [split]       calibration_per_domain = ...            2.1
+# [confidence]  cuts = [...]                            2.5
+# [agreement]   samples = 5, price = "per_call" | "..." 2.6
+# [fit]         min_count = ..., folds = ...            2.11
+# [instruments.primary]  provider = "openai",    model = "...", usd_per_call = "...", max_tokens = ...   2.3
+# [instruments.second]   provider = "anthropic", model = "...", usd_per_call = "...", max_tokens = ...   2.12
+# [instruments.grader]   provider = "...",       model = "...", usd_per_call = "...", max_tokens = ...   2.9

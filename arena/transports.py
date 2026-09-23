@@ -6,7 +6,8 @@ to name, in each board's owner file, with `provider` and optionally `key_env` be
 environment (rule 8).
 
 Every call is priced at the instrument's DECLARED price per call, whatever the tokens were and whether or not a
-cache served it; the tokens are logged beside it so the declaration can be audited.
+cache served it; the tokens are logged beside it so the declaration can be audited. An empty system prompt
+is sent as none.
 
 Refusals are recorded as an empty reply (hence unparseable), not retried on another model: a fallback model would
 be a different instrument from the one calibrated.
@@ -85,8 +86,8 @@ def anthropic_transport(model: str, key_env: str = "LLM_API_KEY", max_tokens: in
     client = anthropic.Anthropic(api_key=key)
 
     def send(system: str, user: str) -> Reply:
-        r = client.messages.create(model=model, max_tokens=max_tokens, system=system,
-                                   messages=[{"role": "user", "content": user}])
+        r = client.messages.create(model=model, max_tokens=max_tokens, messages=[{"role": "user", "content": user}],
+                                   **({"system": system} if system else {}))
         text = "" if r.stop_reason == "refusal" else "".join(b.text for b in r.content if b.type == "text")
         return Reply(text, r.usage.input_tokens, r.usage.output_tokens)
 
@@ -109,8 +110,8 @@ def openai_transport(model: str, key_env: str = "OPENAI_API_KEY", max_tokens: in
     client = openai.OpenAI(api_key=key)
 
     def send(system: str, user: str) -> Reply:
-        return openai_reply(client.responses.create(model=model, instructions=system, input=user,
-                                                    max_output_tokens=max_tokens))
+        return openai_reply(client.responses.create(model=model, input=user, max_output_tokens=max_tokens,
+                                                    **({"instructions": system} if system else {})))
 
     return send
 
@@ -126,5 +127,6 @@ def from_owner(owner, name: str, transport: Callable[[str], Transport] | None = 
         if spec.provider not in TRANSPORTS:
             raise ValueError(f"instruments.{name}.provider = {spec.provider!r}; known: {', '.join(TRANSPORTS)}")
         factory = TRANSPORTS[spec.provider]
-        transport = (lambda m: factory(m, key_env=spec.key_env)) if spec.key_env else factory
+        kwargs = {k: v for k, v in (("key_env", spec.key_env), ("max_tokens", spec.max_tokens)) if v is not None}
+        transport = lambda m: factory(m, **kwargs)
     return Instrument(name=name, model=spec.model, usd_per_call=spec.usd_per_call, transport=transport(spec.model))

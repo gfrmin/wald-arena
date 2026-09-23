@@ -6,12 +6,20 @@ and outcomes are; this module only counts and scores.
 """
 import math
 from fractions import Fraction
-from typing import Iterable
+from typing import Hashable, Iterable, Mapping, TypeVar
+
+K = TypeVar("K", bound=Hashable)
 
 
 def beta11_mean(right: int, wrong: int) -> Fraction:
     "Beta(1,1) posterior mean of a right/wrong count, exact."
     return Fraction(right + 1, right + wrong + 2)
+
+
+def dirichlet1_mean(counts: Mapping[K, int]) -> dict[K, Fraction]:
+    "Dirichlet(1,...,1) posterior mean over the given outcomes, exact: Beta(1,1) when there are two."
+    n = sum(counts.values())
+    return {k: Fraction(c + 1, n + len(counts)) for k, c in counts.items()}
 
 
 def held_out_log_score(probabilities: Iterable[Fraction | float]) -> float:
