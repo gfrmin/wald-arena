@@ -26,6 +26,6 @@ per_contestant = 500     # brief 001
 # split_seed = 0                          the calibration / held-out / play split
 # [games]  seed = 0                       the question draw and the 50:50 draws for the games
 # [questions]  path = "questions.jsonl"             relative to this file
-# [instruments.llm]       model = "...", usd_per_call = "..."
-# [instruments.phone]     model = "...", usd_per_call = "..."
-# [instruments.audience]  model = "...", usd_per_call = "..."
+# [instruments.llm]       provider = "anthropic", model = "...", usd_per_call = "..."
+# [instruments.phone]     provider = "anthropic", model = "...", usd_per_call = "..."
+# [instruments.audience]  provider = "anthropic", model = "...", usd_per_call = "..."

@@ -26,13 +26,25 @@ def need(owner: Mapping[str, Any], key: str) -> Any:
     return node
 
 
+def optional(owner: Mapping[str, Any], key: str, default: Any) -> Any:
+    "For plumbing the code may default (a transport's provider), never for an owner's number."
+    try:
+        return need(owner, key)
+    except MissingOwnerNumber:
+        return default
+
+
 @dataclass(frozen=True)
 class InstrumentSpec:
     name: str
     model: str
     usd_per_call: Decimal
+    provider: str = "anthropic"
+    key_env: str | None = None  # the environment variable holding the key; None: the transport's own default
 
 
 def instrument(owner, name: str) -> InstrumentSpec:
     return InstrumentSpec(name, need(owner, f"instruments.{name}.model"),
-                          Decimal(need(owner, f"instruments.{name}.usd_per_call")))
+                          Decimal(need(owner, f"instruments.{name}.usd_per_call")),
+                          optional(owner, f"instruments.{name}.provider", "anthropic"),
+                          optional(owner, f"instruments.{name}.key_env", None))
