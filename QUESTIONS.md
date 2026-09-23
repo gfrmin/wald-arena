@@ -22,6 +22,101 @@ ruled, and a missing key fails loud where it is needed. Each open question block
    With A the instruments read Turkish. That is fine for calibration (the same questions calibrate and play), but it
    is a choice.
 
+## Pre-registration: brief 002 (rule before any call to gpt-6-astra, gpt-5.5 or claude-opus-5)
+
+**BLOCKING.** No call to `gpt-6-astra`, `gpt-5.5` or `claude-opus-5` may be made, by any script in any session,
+until every item below has a ruling under `## Ruled` naming this section. `showcases/omniscience/owner.toml`
+carries no `[instruments.*]` until then. That absence, not this sentence, is what makes the block real: no code can
+build an instrument the file does not name. The dry run's proposals live in `showcases/omniscience/dryrun.toml`
+and are not rulings. Facts below were measured on 2026-09-23 and are cited in `briefs/002-omniscience.md`.
+
+2.9 comes first, because the others are worth less if its answer is no.
+
+- **2.9 Grader (`grader.*`) — load-bearing.** AA graded with `gemini-2.5-flash-preview-09-2025`, which is no longer
+  served; AA runs no grading service. The published board therefore cannot be reproduced exactly, and any grader
+  we choose measures a neighbouring metric. Options: (a) `gemini-2.5-flash` (GA, the same family; $0.30/$2.50;
+  needs a Gemini transport, not yet built; key `GEMINI_API_KEY` is in the keyring) with AA's prompt verbatim;
+  (b) another model with AA's prompt. Either way the board says "re-scored with <grader>, not AA's grader", and no
+  row is compared with AA's published numbers as if it were theirs. Also rule: grader reasoning on or off, and
+  whether a sample of grades is audited by hand. **Blocks:** every score.
+- **2.1 Split (`split.*`).** Proposed: 300 calibration / 300 test, stratified 50/50 within each domain, seeded
+  (2.14). The held-out score is 5-fold within calibration, so no third slice is spent. Worst-case standard errors
+  for the test split, since per-question utility lies in [−p, 1]:
+
+  | n_test | p | SE of a contestant's mean (≤) | SE of a paired difference (≤) |
+  |---|---|---|---|
+  | 300 | 1 | 0.058 (5.8 Index points) | 0.115 |
+  | 300 | 3 | 0.115 | 0.231 |
+  | 300 | 10 | 0.318 | 0.635 |
+  | 200 | 1 / 3 / 10 | 0.071 / 0.141 / 0.389 | 0.141 / 0.283 / 0.778 |
+  | 400 | 1 / 3 / 10 | 0.050 / 0.100 / 0.275 | 0.100 / 0.200 / 0.550 |
+
+  These are bounds. A paired difference is driven only by the questions where two contestants act differently,
+  so the real SE is smaller. It is recomputed from the fitted kernels before the test split is opened, and printed.
+  At p = 10 even the bound says a 300-question test separates only large differences; AA itself says the public
+  set is too small for domain-level claims. **Blocks:** the fit, the claims' power.
+- **2.2 Data (`questions.*`).** `ArtificialAnalysis/AA-Omniscience-Public` at revision `e4883edb…` (2026-08-24),
+  Apache-2.0, 600 rows, CSV sha256 `1e04603d…d02f`, 100 per domain. Confirm this revision is the board. **Blocks:**
+  the loader's pin.
+- **2.3 Primary instrument (`instruments.primary.*`).** `gpt-6-astra` is on the API, so the GPT-5.5 fallback is not
+  needed. It is listed only as an alias; no dated snapshot is listed, so the model behind it can change mid-run.
+  Rule: accept the alias and record the response's model field per call, or wait for a snapshot. Also rule
+  reasoning effort and max output tokens. They are part of the instrument, and they set most of the cost (2.14).
+  Key `OPENAI_API_KEY`. **Blocks:** any primary call.
+- **2.4 Answer prompt.** AA's prompt verbatim with `{domain}`/`{subtopic}` (the README, which names real fields),
+  not the paper's `{topic}`/`{category}`. Confirm. **Blocks:** the read.
+- **2.5 Confidence (`confidence.*`).** Proposed: a second call after the answer ("You answered X to this question.
+  How confident are you, 0–100?"), so the answer itself is elicited exactly as AA elicits it. The cost is one extra
+  primary call per question. The alternative is one call asking for answer and confidence together: cheaper, but
+  the answer is no longer AA's. Buckets proposed: 0–49, 50–79, 80–94, 95–100, plus `declined`. **Blocks:** the
+  read, the bucket.
+- **2.6 Agreement samples (`agreement.*`).** Five further calls with AA's prompt at the instrument's sampling
+  settings. If `gpt-6-astra` rejects `temperature` (reasoning models may), samples vary only as the API varies them,
+  and that is recorded. Price: the declared per-call price × 5, or a separately declared batch price. **Blocks:** the
+  agreement act.
+- **2.7 What "matches" means.** Proposed: normalised exact match (case, whitespace, punctuation, a leading
+  article) between a sample and the read, and between the second opinion and the read. It is free and
+  deterministic, but it calls "Paris" and "Paris, France" different. The alternative is an equivalence judge call
+  per pair (six per question, priced). **Blocks:** k and s.
+- **2.8 Penalties (`penalties`).** p ∈ {1, 3, 10} as briefed. PARTIAL scores 0 at every p, as in the Index.
+  Confirm both. **Blocks:** the packs.
+- **2.10 Prices (`lambda_usd`, `second_price_grid`).** λ_usd, in utility per dollar. At λ_usd = 1 a right answer
+  is worth $1, and real API prices are small against it. Second-opinion price grid, in utility: proposed
+  {0, 0.05, 0.1, 0.25, 0.5, 1, 2, ∞}, where ∞ means no second opinion. "Near the stake" = {0.5, 1, 2}. The grid is a
+  re-solve over the recorded second opinions, not further calls. The scoreboard's dollar columns use the real
+  declared price. **Blocks:** the packs.
+- **2.11 Fit (`fit.*`).** Beta(1,1) for binary cells, and one pseudo-count per outcome for multi-outcome kernels.
+  Minimum cell count before backing off: proposed 10. Back-off order: bucket first, then k into {0–2, 3–4, 5}.
+  **Blocks:** the fit.
+- **2.12 Second opinion (`instruments.second.*`).** `claude-opus-5`, asked AA's prompt verbatim, graded like any
+  answer. Its kernel is fitted from the joint table of both instruments' graded outcomes, never as its own
+  accuracy multiplied by the primary's. Its declared price is the mean measured dollars per call, as for
+  Millionaire. Key: `LLM_API_KEY` today, the Anthropic transport's default. Say whether it should become
+  `ANTHROPIC_API_KEY` now that two providers run side by side. **Blocks:** any second-opinion call.
+- **2.13 The pre-registered claims, verbatim, and how each is judged.** "wald ties the threshold at p = 1 without
+  the second opinion, separates at p ≥ 3 and when the second opinion is priced near the stake, and beats the raw
+  model throughout. A miss on any of these is a finding." Proposed tests use the paired per-question difference
+  Δ on the test split, with SE as in 2.1:
+  (i) *ties* at p = 1, c = ∞: |Δ(wald − threshold)| ≤ 2 SE;
+  (ii) *separates at p ≥ 3*: Δ(wald − threshold) > 2 SE at p = 3 and at p = 10, with c = ∞;
+  (iii) *separates near the stake*: Δ(wald − threshold) > 2 SE at some c in {0.5, 1, 2}, at every p;
+  (iv) *beats the raw model throughout*: Δ(wald − raw) > 2 SE at every p and every c.
+  A wald *below* a baseline beyond 2 SE is reported as that, not as a miss. **Blocks:** the verdict line.
+- **2.14 Seeds and dollars (`split_seed`, `sampling_seed`, budget).** Seeds: proposed split 20260923, sampling 1.
+  Whole run: 600 questions × (7 primary calls + 1 second opinion + 2 grades), since every observation is recorded
+  on every question so that the price grid and every baseline read the same record:
+
+  | primary | reasoning tokens per call | primary | second (`claude-opus-5`) | grader (`gemini-2.5-flash`) | total |
+  |---|---|---|---|---|---|
+  | `gpt-6-astra` | 0 | $7.98 | $0.57 | $3.01 | **$11.56** |
+  | `gpt-6-astra` | 500 | $112.98 | $8.07 | $3.01 | **$124.06** |
+  | `gpt-6-astra` | 2,000 | $427.98 | $30.57 | $3.01 | **$461.56** |
+  | `gpt-5.5` | 0 / 500 / 2,000 | $4.20 / $67.20 / $256.20 | as above | $3.01 | $7.78 / $78.28 / $289.78 |
+
+  This assumes 140 input tokens per answer call, 1,700 in and 800 out per grade, and list prices as of today. The
+  dry run replaces the input-token assumptions with measured ones; reasoning tokens are the owner's ruling (2.3).
+  Rule a budget ceiling; the runner refuses to start above it. **Blocks:** starting.
+
 ## Ruled
 
 - **Session 002 rulings:** λ_usd = 1. Models: contestant `claude-haiku-4-5`, friend `claude-sonnet-4-6`, audience = five
