@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from data.questions import TIERS, Question
+from explainers.millionaire.questions import TIERS, Question
 
 
 def make_questions(per_tier: int) -> list[Question]:

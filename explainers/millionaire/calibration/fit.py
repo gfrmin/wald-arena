@@ -1,7 +1,7 @@
 """Counts -> reliabilities. For each tier: rho = the Beta(1,1) posterior mean of the calibration counts, an exact
 rational; its held-out log score on the held-out slice. No float leaves this module as a reliability.
 
-    python -m calibration.fit --instrument llm     # calibration/llm.jsonl -> calibration/fitted/llm.json
+    python -m explainers.millionaire.calibration.fit --instrument llm   # <instrument>.jsonl -> fitted/<instrument>.json
 
 The fitted file is what the pack generator reads: per tier the counts, rho as "p/q", and the held-out score.
 An unparseable read counts as wrong, in the fit and in the score (QUESTIONS.md, 6); the score gives it the
@@ -10,14 +10,15 @@ wrong-option probability (1 - rho) / 3.
 import argparse
 import hashlib
 import json
-import math
 from dataclasses import dataclass
 from fractions import Fraction
 from pathlib import Path
 from typing import Iterable
 
-from calibration.run import HERE, read_rows, rows_path
-from data.questions import TIERS
+from arena.calibration import beta11_mean, held_out_log_score, uniform_log_score
+from arena.spend import read_rows
+from explainers.millionaire.calibration.run import HERE, rows_path
+from explainers.millionaire.questions import TIERS
 
 
 @dataclass(frozen=True)
@@ -31,7 +32,7 @@ class TierFit:
     @property
     def rho(self) -> Fraction:
         "Beta(1,1) posterior mean."
-        return Fraction(self.right + 1, self.right + self.wrong + 2)
+        return beta11_mean(self.right, self.wrong)
 
     @property
     def held_n(self) -> int:
@@ -40,12 +41,10 @@ class TierFit:
     @property
     def log_score(self) -> float:
         "Mean natural-log score of the fitted kernel on the held-out slice (higher is better; 0 is perfect)."
-        if not self.held_n:
-            return math.nan
         r = self.rho
-        return (self.held_right * math.log(r) + self.held_wrong * math.log((1 - r) / 3)) / self.held_n
+        return held_out_log_score([r] * self.held_right + [(1 - r) / 3] * self.held_wrong)
 
-    UNIFORM = math.log(1 / 4)  # the score of a read that carries no information
+    UNIFORM = uniform_log_score(4)  # the score of a read that carries no information
 
 
 def fit(rows: Iterable[dict]) -> tuple[TierFit, ...]:

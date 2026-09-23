@@ -4,12 +4,12 @@ from dataclasses import replace
 from decimal import Decimal
 from fractions import Fraction as F
 
-from baselines import always_answer
-from data.owner import havens, ladder, load
-from data.questions import draw_game, split
-from oracle.game import Game, tiers_by_fives
-from oracle.host import Decision, GameLog, fifty_outcome, play, simulated_fire
-from oracle.prototype import RELIABILITY
+from explainers.millionaire.baselines import always_answer
+from explainers.millionaire.owner import havens, ladder, load
+from explainers.millionaire.questions import draw_game, split
+from explainers.millionaire.oracle.game import Game, tiers_by_fives
+from explainers.millionaire.oracle.host import Decision, GameLog, fifty_outcome, play, simulated_fire
+from explainers.millionaire.oracle.prototype import RELIABILITY
 from tests.conftest import make_questions
 
 OWNER = load()
@@ -81,7 +81,7 @@ def test_game_log_round_trips_through_json():
 
 
 def test_always_answer_expected_is_proto_A_on_the_prototype():
-    from oracle.prototype import GAME
+    from explainers.millionaire.oracle.prototype import GAME
     assert round(float(always_answer.expected(GAME)), 1) == 211.4
 
 

@@ -1,8 +1,8 @@
-"""Play N games for one contestant and write its game logs to `games/<contestant>.jsonl`.
+"""Play N games for one contestant and write its game logs to `explainers/millionaire/games/<contestant>.jsonl`.
 
-    python -m tools.play --contestant oracle
-    python -m tools.play --contestant always_answer
-    python -m tools.play --contestant llm_direct
+    python -m explainers.millionaire.play --contestant oracle
+    python -m explainers.millionaire.play --contestant always_answer
+    python -m explainers.millionaire.play --contestant llm_direct
 
 Every contestant plays the same questions: game i's questions are drawn from the play set with the owner's games
 seed, and its 50:50 at rung r removes the same options for everyone. Needs the owner's numbers and the fitted
@@ -13,13 +13,14 @@ import json
 import random
 from pathlib import Path
 
-from calibration.fit import fitted_path, reliability
-from calibration.instruments import from_owner, read
-from calibration.run import owner_split
-from data import owner as O
-from data.questions import Question, draw_game
-from oracle.game import Game
-from oracle.host import fifty_outcome, play
+from explainers.millionaire.calibration.fit import fitted_path, reliability
+from arena.transports import from_owner
+from explainers.millionaire.calibration.reading import read
+from explainers.millionaire.calibration.run import owner_split
+from explainers.millionaire import owner as O
+from explainers.millionaire.questions import Question, draw_game
+from explainers.millionaire.oracle.game import Game
+from explainers.millionaire.oracle.host import fifty_outcome, play
 
 GAMES = O.ROOT / "games"
 SLUGS = ("oracle", "always_answer", "llm_direct")
@@ -48,8 +49,8 @@ def fitted_game(owner) -> Game:
 
 
 def contestant_for(slug: str, game: Game, instruments):
-    from baselines import always_answer, llm_direct
-    from oracle import play as oracle_play
+    from explainers.millionaire.baselines import always_answer, llm_direct
+    from explainers.millionaire.oracle import play as oracle_play
     return {"oracle": lambda: (oracle_play.NAME, oracle_play.contestant(game), game.read_first),
             "always_answer": lambda: (always_answer.NAME, always_answer.contestant, game.read_first),
             "llm_direct": lambda: (llm_direct.NAME, llm_direct.contestant(instruments["llm"], game), False)}[slug]()

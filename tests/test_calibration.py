@@ -5,10 +5,11 @@ from fractions import Fraction as F
 
 import pytest
 
-from calibration import fit as FIT
-from calibration import run as RUN
-from calibration.instruments import Instrument, Reply, read
-from data.questions import split
+from explainers.millionaire.calibration import fit as FIT
+from explainers.millionaire.calibration import run as RUN
+from arena.transports import Instrument, Reply
+from explainers.millionaire.calibration.reading import read
+from explainers.millionaire.questions import split
 from tests.conftest import make_questions
 
 SPLIT = split(make_questions(320), seed=5, per_tier=200, held_out_per_tier=100)

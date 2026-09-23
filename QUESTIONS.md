@@ -62,7 +62,7 @@ phone 322.5 + audience 234.0 = 2,211.1) exceeds the joint loss of all three (8,0
 that would use several lifelines together is overcharged. At Q14, after the LLM reads A, the exact game calls the
 audience and the approximation answers A.
 
-This is the approximation's regret, measured by the oracle (`oracle/game.py`, `regret_table`) at rung 1 with all
+This is the approximation's regret, measured by the oracle (`explainers/millionaire/oracle/game.py`, `regret_table`) at rung 1 with all
 lifelines held:
 
 | game | exact | wald estimate | wald realised | regret |

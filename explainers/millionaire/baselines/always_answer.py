@@ -5,8 +5,8 @@ This is a baseline, labelled as one (CLAUDE.md rule 1). The wald contestant neve
 from fractions import Fraction
 from functools import cache
 
-from oracle.game import OPTIONS, Game
-from oracle.host import Decision, GameLog, View
+from explainers.millionaire.oracle.game import OPTIONS, Game
+from explainers.millionaire.oracle.host import Decision, GameLog, View
 
 NAME = "always answer"
 

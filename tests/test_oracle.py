@@ -1,4 +1,4 @@
-"""The exact game (oracle/game.py), proved against the prototype and against itself."""
+"""The exact game (explainers/millionaire/oracle/game.py), proved against the prototype and against itself."""
 import os
 import sys
 from fractions import Fraction as F
@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from oracle.game import (ALL_LIFELINES, INSTRUMENTS, LIFELINES, OPTIONS, Game, exact, fifty, noisy, option_value,
+from explainers.millionaire.oracle.game import (ALL_LIFELINES, INSTRUMENTS, LIFELINES, OPTIONS, Game, exact, fifty, noisy, option_value,
                          policy_value, regret, tiers_by_fives)
-from oracle.prototype import GAME
+from explainers.millionaire.oracle.prototype import GAME
 
 HELD_SETS = [frozenset(c) for n in range(4) for c in combinations(LIFELINES, n)]
 CHARTER_LAWS = Path(os.environ.get("WALD_CHARTER_LAWS", Path.home() / "git/wald-charter/laws"))
@@ -134,7 +134,7 @@ def test_differential_against_charter_reference_on_every_stage():
 
 from dataclasses import replace
 
-from oracle.game import UNREAD, regret_table
+from explainers.millionaire.oracle.game import UNREAD, regret_table
 
 READ_FIRST = replace(GAME, read_first=True)
 

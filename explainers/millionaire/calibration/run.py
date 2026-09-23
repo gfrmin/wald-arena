@@ -1,21 +1,22 @@
 """Run one instrument on one tier's calibration and held-out questions; record right/wrong and every call.
 
-    python -m calibration.run --instrument llm --tier easy
-    python -m calibration.run --instrument llm --tier easy --dry-run recorded.jsonl --out /tmp/replayed.jsonl
+    python -m explainers.millionaire.calibration.run --instrument llm --tier easy
+    python -m explainers.millionaire.calibration.run --instrument llm --tier easy --dry-run recorded.jsonl --out /tmp/r.jsonl
 
-Rows go to `calibration/<instrument>.jsonl`, one per question: question id, tier, slice (calibration | held_out),
-report, truth, right, and the call's model, tokens, declared dollars and latency (rule 5). A run appends and skips
-questions already recorded, so an interrupted run resumes without paying twice. `--dry-run` replays a recorded
-jsonl instead of calling any API.
+Rows go to `explainers/millionaire/calibration/<instrument>.jsonl`, one per question: question id, tier, slice
+(calibration | held_out), report, truth, right, and the call's model, tokens, declared dollars and latency (rule 5).
+A run appends and skips questions already recorded, so an interrupted run resumes without paying twice.
+`--dry-run` replays a recorded jsonl instead of calling any API.
 """
 import argparse
-import json
 from pathlib import Path
 from typing import Callable, Iterable, Iterator
 
-from calibration.instruments import Call, from_owner, read
-from data import owner as O
-from data.questions import TIERS, Question, Split, load, split
+from arena.spend import append_new, read_rows, recorded_by_id
+from arena.transports import Call, from_owner
+from explainers.millionaire import owner as O
+from explainers.millionaire.calibration.reading import read
+from explainers.millionaire.questions import TIERS, Question, Split, load, split
 
 HERE = Path(__file__).resolve().parent
 Asker = Callable[[Question], tuple[str, Call]]  # question -> (report, call)
@@ -23,13 +24,6 @@ Asker = Callable[[Question], tuple[str, Call]]  # question -> (report, call)
 
 def rows_path(instrument: str) -> Path:
     return HERE / f"{instrument}.jsonl"
-
-
-def read_rows(path: Path) -> list[dict]:
-    if not path.exists():
-        return []
-    with open(path) as f:
-        return [json.loads(line) for line in f if line.strip()]
 
 
 def row(slice_: str, q: Question, report: str, c: Call) -> dict:
@@ -46,27 +40,15 @@ def slices(s: Split, tier: int) -> Iterator[tuple[str, Question]]:
 
 def run(s: Split, tier: int, ask: Asker, out: Path) -> list[dict]:
     "Ask every not-yet-recorded calibration and held-out question of the tier; append its row as soon as it is paid."
-    done = {r["question_id"] for r in read_rows(out)}
-    new = []
-    with open(out, "a") as f:
-        for slice_, q in slices(s, tier):
-            if q.id in done:
-                continue
-            report, c = ask(q)
-            new.append(row(slice_, q, report, c))
-            f.write(json.dumps(new[-1]) + "\n")
-            f.flush()
-    return new
+    return append_new(slices(s, tier), lambda sq: sq[1].id, lambda sq: row(sq[0], sq[1], *ask(sq[1])), out)
 
 
 def replaying(recorded: Iterable[dict]) -> Asker:
     "An asker that serves recorded replies by question id and never calls an API."
-    by_id = {r["question_id"]: r for r in recorded}
+    get = recorded_by_id(recorded)
 
     def ask(q: Question) -> tuple[str, Call]:
-        if q.id not in by_id:
-            raise KeyError(f"dry run: no recorded reply for question {q.id}")
-        r = by_id[q.id]
+        r = get(q.id)
         return r["report"], Call.from_json({k: r[k] for k in ("instrument", "model", "input_tokens", "output_tokens",
                                                                "usd", "latency_s", "reply")}
                                            | {"question_id": q.id, "tier": q.tier})

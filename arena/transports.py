@@ -1,8 +1,7 @@
-"""Instruments: a model asked a multiple-choice question, and the record of every call (rule 5).
+"""Transports, instruments, and the record of every call (rule 5), shared by every showcase.
 
-A transport sends (system, user) to a model and returns its text and token counts. The only live transport is
-Anthropic's, through the official SDK (`uv sync --extra llm`); the models are the owner's to name (QUESTIONS.md),
-and a model from another provider needs its own transport here. Keys come from the environment (rule 8).
+A transport sends (system, user) to a model and returns its text and token counts. The models are the owner's to
+name, in each showcase's owner file; keys come from the environment (rule 8).
 
 Every call is priced at the instrument's DECLARED price per call, whatever the tokens were and whether or not a
 cache served it; the tokens are logged beside it so the declaration can be audited.
@@ -11,14 +10,10 @@ Refusals are recorded as an empty reply (hence unparseable), not retried on anot
 be a different instrument from the one calibrated.
 """
 import os
-import re
 import time
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from typing import Callable
-
-from data.questions import Question
-from oracle.game import UNREAD
 
 
 @dataclass(frozen=True)
@@ -60,36 +55,13 @@ class Instrument:
     transport: Transport
 
 
-def call(instrument: Instrument, q: Question, system: str, user: str,
+def call(instrument: Instrument, question_id: str, tier: int, system: str, user: str,
          clock: Callable[[], float] = time.monotonic, name: str | None = None) -> tuple[str, Call]:
     t0 = clock()
     reply = instrument.transport(system, user)
-    return reply.text, Call(instrument=name or instrument.name, model=instrument.model, question_id=q.id, tier=q.tier,
-                            input_tokens=reply.input_tokens, output_tokens=reply.output_tokens,
+    return reply.text, Call(instrument=name or instrument.name, model=instrument.model, question_id=question_id,
+                            tier=tier, input_tokens=reply.input_tokens, output_tokens=reply.output_tokens,
                             usd=instrument.usd_per_call, latency_s=clock() - t0, reply=reply.text)
-
-
-READ_SYSTEM = ("You are answering a multiple-choice quiz question. Exactly one option is right. "
-               "Reply with exactly one letter, A, B, C or D, and nothing else.")
-
-
-def question_text(q: Question) -> str:
-    return q.text + "\n\n" + "\n".join(f"{k}. {v}" for k, v in q.options.items())
-
-
-LETTER = re.compile(r"\s*([ABCD])\s*")
-
-
-def parse_letter(text: str) -> str:
-    "The report: a lone letter A-D, or UNREAD for anything else."
-    m = LETTER.fullmatch(text)
-    return m.group(1) if m else UNREAD
-
-
-def read(instrument: Instrument, q: Question) -> tuple[str, Call]:
-    "Ask the instrument the question; the report is a letter or UNREAD."
-    text, c = call(instrument, q, READ_SYSTEM, question_text(q))
-    return parse_letter(text), c
 
 
 class MissingKey(RuntimeError):
@@ -120,6 +92,6 @@ def anthropic_transport(model: str, key_env: str = "LLM_API_KEY", max_tokens: in
 
 
 def from_owner(owner, name: str, transport: Callable[[str], Transport] = anthropic_transport) -> Instrument:
-    from data.owner import instrument
+    from arena.config import instrument
     spec = instrument(owner, name)
     return Instrument(name=name, model=spec.model, usd_per_call=spec.usd_per_call, transport=transport(spec.model))

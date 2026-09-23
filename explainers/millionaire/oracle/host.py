@@ -16,9 +16,10 @@ from decimal import Decimal
 from fractions import Fraction
 from typing import Callable, Mapping, Sequence
 
-from calibration.instruments import Call, Instrument, read
-from data.questions import Question
-from oracle.game import ALL_LIFELINES, LIFELINES, OPTIONS, Game
+from arena.transports import Call, Instrument
+from explainers.millionaire.calibration.reading import read
+from explainers.millionaire.questions import Question
+from explainers.millionaire.oracle.game import ALL_LIFELINES, LIFELINES, OPTIONS, Game
 
 ANSWERS = tuple(f"answer {x}" for x in OPTIONS)
 INVALID = "invalid"

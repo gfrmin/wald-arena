@@ -1,7 +1,7 @@
 [project]
-name = "wald-millionaire"
+name = "wald-arena"
 version = "0.0.0"
-description = "Who Wants to Be a Millionaire, played by a wald contestant whose knowledge is an LLM"
+description = "wald's entries on public boards, and the explainers that teach how it decides"
 requires-python = ">=3.12"
 dependencies = []
 

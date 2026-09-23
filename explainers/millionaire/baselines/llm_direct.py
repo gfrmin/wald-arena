@@ -9,9 +9,10 @@ unparseable reply is a walk, and the host counts it as invalid. Every decision c
 """
 import re
 
-from calibration.instruments import Instrument, call, question_text
-from oracle.game import UNREAD, Game
-from oracle.host import INVALID, Decision, View
+from arena.transports import Instrument, call
+from explainers.millionaire.calibration.reading import question_text
+from explainers.millionaire.oracle.game import UNREAD, Game
+from explainers.millionaire.oracle.host import INVALID, Decision, View
 
 NAME = "LLM plays directly"
 LIFELINE_NAMES = {"fifty": "50:50", "phone": "phone a friend", "audience": "ask the audience"}
@@ -80,7 +81,7 @@ def contestant(instrument: Instrument, game: Game):
     system = rules(game)
 
     def decide(view: View) -> Decision:
-        text, c = call(instrument, view.question, system, situation(game, view), name="llm_direct")
+        text, c = call(instrument, view.question.id, view.question.tier, system, situation(game, view), name="llm_direct")
         return Decision(parse(text), calls=(c,), raw=text)
 
     return decide

@@ -3,11 +3,11 @@
 These numbers are author-side illustrations used only to prove the oracle against the prototype. They are not
 the owner's numbers and no contestant reads them; the real reliabilities are fitted cells in packs (rule 2).
 
-Run `python -m oracle.prototype` to print the exact game's value, the approximation's, and the regret.
+Run `python -m explainers.millionaire.oracle.prototype` to print the exact game's value, the approximation's, and the regret.
 """
 from fractions import Fraction as F
 
-from oracle.game import ALL_LIFELINES, Game, regret, tiers_by_fives
+from explainers.millionaire.oracle.game import ALL_LIFELINES, Game, regret, tiers_by_fives
 
 LADDER = tuple(F(x) for x in ("0.5", 1, 2, 3, 5, 7, 10, 20, 30, 50, 100, 250, 500, 1000, 10000))
 HAVENS = (4, 9)

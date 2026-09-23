@@ -1,35 +1,19 @@
-"""The owner's numbers, read from `owner.toml`. A missing number is an error that names it, never a default."""
-import tomllib
-from dataclasses import dataclass
+"""Millionaire's numbers, read from its own `owner.toml`: the ladder, havens, λ_usd and prices."""
 from decimal import Decimal
 from fractions import Fraction
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Mapping
 
-from oracle.game import Game, tiers_by_fives
+from arena.config import InstrumentSpec, MissingOwnerNumber, instrument, need  # noqa: F401 (re-exported)
+from arena.config import load as _load
+from explainers.millionaire.oracle.game import Game, tiers_by_fives
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent
 OWNER_TOML = ROOT / "owner.toml"
 
 
-class MissingOwnerNumber(KeyError):
-    def __str__(self):
-        return f"owner.toml has no `{self.args[0]}`: it is the owner's number, not ours (see QUESTIONS.md)"
-
-
-def load(path: Path = OWNER_TOML) -> Mapping[str, Any]:
-    with open(path, "rb") as f:
-        return tomllib.load(f)
-
-
-def need(owner: Mapping[str, Any], key: str) -> Any:
-    "The value at a dotted key, e.g. 'instruments.llm.model'; MissingOwnerNumber if any part is absent."
-    node: Any = owner
-    for part in key.split("."):
-        if not isinstance(node, Mapping) or part not in node:
-            raise MissingOwnerNumber(key)
-        node = node[part]
-    return node
+def load(path: Path = OWNER_TOML):
+    return _load(path)
 
 
 def ladder(owner) -> tuple[Fraction, ...]:
@@ -43,18 +27,6 @@ def havens(owner) -> tuple[int, ...]:
 
 def lambda_usd(owner) -> Fraction:
     return Fraction(Decimal(need(owner, "lambda_usd")))
-
-
-@dataclass(frozen=True)
-class InstrumentSpec:
-    name: str
-    model: str
-    usd_per_call: Decimal
-
-
-def instrument(owner, name: str) -> InstrumentSpec:
-    return InstrumentSpec(name, need(owner, f"instruments.{name}.model"),
-                          Decimal(need(owner, f"instruments.{name}.usd_per_call")))
 
 
 def prices(owner) -> dict[str, Fraction]:

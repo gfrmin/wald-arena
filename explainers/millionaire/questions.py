@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
-from oracle.game import OPTIONS
+from explainers.millionaire.oracle.game import OPTIONS
 
 TIERS = ("easy", "medium", "hard")  # tier 0, 1, 2: questions 1-5, 6-10, 11-15
 

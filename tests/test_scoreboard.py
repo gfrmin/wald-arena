@@ -4,15 +4,15 @@ import statistics
 from decimal import Decimal
 from fractions import Fraction as F
 
-from baselines import always_answer, llm_direct
-from calibration.instruments import Instrument, Reply
-from data.questions import draw_game
-from oracle import play as oracle_play
-from oracle.game import exact
-from oracle.host import play, simulated_fire
+from explainers.millionaire.baselines import always_answer, llm_direct
+from arena.transports import Instrument, Reply
+from explainers.millionaire.questions import draw_game
+from explainers.millionaire.oracle import play as oracle_play
+from explainers.millionaire.oracle.game import exact
+from explainers.millionaire.oracle.host import play, simulated_fire
 from tests.test_host_and_always_answer import BRIEF, LAM, PLAY, USD
-from tools import scoreboard as SB
-from tools.play import fire_for, game_questions
+from explainers.millionaire import scoreboard as SB
+from explainers.millionaire.play import fire_for, game_questions
 
 
 def simulate(contestant, name, n, seed, read_first=True):

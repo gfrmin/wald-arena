@@ -6,8 +6,8 @@ against, played on the same questions with the same instruments.
 """
 from fractions import Fraction
 
-from oracle.game import ALL_LIFELINES, Game, exact
-from oracle.host import Contestant, Decision, View
+from explainers.millionaire.oracle.game import ALL_LIFELINES, Game, exact
+from explainers.millionaire.oracle.host import Contestant, Decision, View
 
 NAME = "the oracle plays"
 
