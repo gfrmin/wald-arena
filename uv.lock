@@ -394,9 +394,17 @@ wheels = [
 ]
 
 [[package]]
+name = "wald"
+version = "0.1.0"
+source = { git = "https://github.com/gfrmin/wald?tag=v0.1.0#4f0fdcda9a6f6abdc876d949410166f4a2daf69f" }
+
+[[package]]
 name = "wald-arena"
 version = "0.0.0"
 source = { virtual = "." }
+dependencies = [
+    { name = "wald" },
+]
 
 [package.optional-dependencies]
 llm = [
@@ -409,7 +417,10 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "anthropic", marker = "extra == 'llm'", specifier = ">=1" }]
+requires-dist = [
+    { name = "anthropic", marker = "extra == 'llm'", specifier = ">=1" },
+    { name = "wald", git = "https://github.com/gfrmin/wald?tag=v0.1.0" },
+]
 provides-extras = ["llm"]
 
 [package.metadata.requires-dev]

@@ -3,7 +3,9 @@ name = "wald-arena"
 version = "0.0.0"
 description = "wald's entries on public boards, and the explainers that teach how it decides"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "wald",
+]
 
 [project.optional-dependencies]
 llm = ["anthropic>=1"]
@@ -19,3 +21,6 @@ pythonpath = ["."]
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+wald = { git = "https://github.com/gfrmin/wald", tag = "v0.1.0" }
