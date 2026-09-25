@@ -22,6 +22,48 @@ ruled, and a missing key fails loud where it is needed. Each open question block
    With A the instruments read Turkish. That is fine for calibration (the same questions calibrate and play), but it
    is a choice.
 
+## Status: brief 002, as of 2026-09-25 (wald 0.1.0)
+
+**Built** (`showcases/omniscience/`, def8698), against brief 002 as drafted:
+- the loader, pinned to the public CSV's sha256; the seeded draw, and the calibration/test split stratified by domain
+  (`questions.py`);
+- the observations: the read with AA's prompt, the confidence call and its bucket, five agreement samples and the
+  second opinion, each call logged at its declared price (`observe.py`);
+- the grader, with AA's prompt verbatim and one call per distinct (question, answer) (`grader.py`);
+- the fit, as the chain rule with Dirichlet(1) means, back-off, and the held-out score from `arena.calibration`, with
+  the independence contrast (J2) (`fit.py`);
+- the two-stage packs, generated for each (bucket, p, c), played with `wald.run`, and the exact oracle for the J1
+  regret (`packs.py`);
+- the four contestants and the paired Δ (`board.py`);
+- the runner, whose wallet reserves every call before making it and holds across a resume (`run.py`);
+- the scoreboard (`scoreboard.py`).
+
+**Dry-run tested.** One end-to-end run: 294 questions, $2.90 declared, `claude-haiku-4-5-20251001` in all three
+roles, self-graded, so degenerate (`SCOREBOARD.md`). It showed that every call is recorded and priced, every pack
+passes `wald.load_pack` and is played by wald, and every contestant is scored from the same record. It showed
+nothing about the fit. It also produced two findings, now in 2.5 and 2.7. The 23 test functions in
+`tests/test_omniscience_*.py` use scripted transports:
+- the chain-rule fit;
+- the joint, never independent, second opinion;
+- back-off;
+- lawful packs, with the oracle ≥ wald;
+- wald switching to the second answer;
+- the budget and the resume;
+- the guard against frozen models.
+
+**Not built.** The brief names each of these; the list is complete:
+- a Gemini transport (2.9a);
+- recording the model name the response reports, for an alias (2.3);
+- reasoning effort in the OpenAI transport (2.3);
+- the seal. The brief keeps the test split sealed until the fit is committed, but the runner fits and plays in one
+  pass;
+- the SE recomputed from the fitted kernels before the test split opens (2.1);
+- dollars per question by act on the scoreboard. Today it gives dollars by instrument.
+
+**Open.** Every pre-registration item below, 2.1–2.14. None is ruled. Brief 002's re-plan on wald v0.2 (below it,
+when written) supersedes the World and the calibration. It does not supersede the items about data, instruments,
+penalties, baselines or claims.
+
 ## Pre-registration: brief 002 (rule before any call to gpt-6-astra, gpt-5.5 or claude-opus-5)
 
 **BLOCKING.** No call to `gpt-6-astra`, `gpt-5.5` or `claude-opus-5` may be made, by any script in any session,
