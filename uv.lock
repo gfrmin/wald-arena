@@ -413,7 +413,7 @@ wheels = [
 [[package]]
 name = "wald"
 version = "0.1.0"
-source = { git = "https://github.com/gfrmin/wald?tag=v0.1.0#4f0fdcda9a6f6abdc876d949410166f4a2daf69f" }
+source = { git = "https://github.com/gfrmin/wald?tag=v0.2.0#910d422bd76e4d0e32ec3466e0a3ae67021b2c25" }
 
 [[package]]
 name = "wald-arena"
@@ -438,7 +438,7 @@ dev = [
 requires-dist = [
     { name = "anthropic", marker = "extra == 'llm'", specifier = ">=1" },
     { name = "openai", marker = "extra == 'llm'", specifier = ">=1" },
-    { name = "wald", git = "https://github.com/gfrmin/wald?tag=v0.1.0" },
+    { name = "wald", git = "https://github.com/gfrmin/wald?tag=v0.2.0" },
 ]
 provides-extras = ["llm"]
 
