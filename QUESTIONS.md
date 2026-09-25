@@ -164,6 +164,105 @@ and are not rulings. Facts below were measured on 2026-09-23 and are cited in `b
   dry run replaces the input-token assumptions with measured ones; reasoning tokens are the owner's ruling (2.3).
   Rule a budget ceiling; the runner refuses to start above it. **Blocks:** starting.
 
+### Revision 2: brief 002 on wald 0.2 (2.15–2.24)
+
+Brief 002's World and calibration are re-planned on wald 0.2.0. Items 2.1–2.10 and 2.12–2.14 stand as written
+above; the World they feed is the one below. 2.11 (the Dirichlet fit) is withdrawn, replaced by 2.15 and 2.21. The
+dry run (below the items) uses the proposals, labelled as proposals in `dryrun.toml`. Costs are measured on this
+machine with wald 0.2.0.
+
+- **2.15 The Globals' grids (`globals.*`) — load-bearing.** Each Global is a grid of named hypotheses. P(Global)
+  is uniform over their product unless you rule otherwise, `elicited`.
+
+  Proposed for the dry run:
+
+  | Global | hypotheses |
+  |---|---|
+  | `calib` | ρ_b ∈ {1/10, 7/10} for each bucket: 2^|B| hypotheses |
+  | `agree` | (a⁺, a⁻) ∈ {(4/5, 1/5), (1/2, 1/2)}: informative or not |
+  | `second` | (σ, α, β) ∈ {(1/2, 4/5, 1/5), (1/10, 4/5, 1/2)}: a second opinion that rescues half the reads it doesn't share, or one that mostly shares the read's errors |
+  | `grader` | γ ∈ {9/10, 1} |
+
+  At four buckets that is 128 Global values and 2,560 states. wald is exact, so every value added multiplies the
+  cost. Measured, with the load and declaration counted per pack, i.e. per (p, c):
+
+  | ρ_b grid | Global values | states | load + declare | one episode, empty Counts | one episode, 140 records held | S15 |
+  |---|---|---|---|---|---|---|
+  | {1/10, 7/10} | 128 | 2,560 | 4 s | 0.3 s | 1.7 s | 2 s |
+  | {1/10, 1/2, 9/10} | 648 | 12,960 | 79 s | 1.7 s | not measured | 12 s |
+
+  Episodes slow as Counts grow, because the posterior is an exact rational: 144 calibration records gave a Score of
+  38,000 digits. A truth that falls between grid points is found by E7 when no grid point reproduces its record
+  law (C27). When one does, only S15 can show it. Rule the grid and the prior. **Blocks:** every pack.
+- **2.16 Agreement's shape.** Proposed: the outcome is binary (all five samples match the read, or not), and its
+  kernel reads `t` only. So, given whether the read is right, the samples are declared independent of the
+  confidence bucket. The alternatives are three bins ({0–2, 3–4, 5}, as the first plan had) or a kernel that reads
+  `b` too. Either multiplies the `agree` hypotheses. **Blocks:** the agreement act.
+- **2.17 P(b), the bucket's own law.** Proposed: uniform, `elicited`. It never moves an act when wald takes
+  `confidence` (free, and first), and it cannot be learned, since no Global governs it. Where wald skips
+  `confidence`, the record sums over b under this uniform law. E7's `confidence` line will print the gap between
+  uniform and the real bucket frequencies. That gap is a misdeclaration shown, not hidden. The alternative is a
+  `bucket` Global on a grid. **Blocks:** the local prior.
+- **2.18 PARTIAL and NOT_ATTEMPTED in the World.** A read graded PARTIAL or NOT_ATTEMPTED is `not` right. The World
+  prices submitting it at −p, and the scoreboard at 0, as AA does. The error is one-sided: wald may abstain on a
+  decline it could have submitted, and both realise 0. It never submits a decline expecting a gain. Confirm, or
+  rule a fourth value of `t`. **Blocks:** the utilities.
+- **2.19 A blind switch.** `answer_second` is a terminal. A World cannot make a terminal wait for an observation, so
+  wald may fire it without `second_opinion`, and the World prices that at 0. The door then buys the second opinion
+  and the scoreboard charges c. Proposed: accept, and print how often it happens and what it undercharged. The
+  alternative puts −c in `answer_second`'s utility, which charges twice after a consult. **Blocks:** the terminals.
+- **2.20 The plate's order (`plate_seed`).** What wald knows at question n depends on questions 1 to n − 1, so the
+  test questions enter each plate in a seeded order, the same for every (p, c). Proposed: 20260925. **Blocks:**
+  the test plates.
+- **2.21 The calibration plate.** Proposed:
+  - the calibration split is played once, under the test declaration's sibling: every observation priced 0, at
+    p = 1 and c = 0, from the declared prior. Free observations do not guarantee all three are taken: wald buys
+    only what can change its act;
+  - its Counts are shipped, with their digest and Score, into every test pack at every (p, c);
+  - the Score and digest come from the kit's reference, and wald recomputes both at declaration.
+
+  Rule the sibling's p and prices, and whether one calibration plate serves every test plate. **Blocks:** the
+  Counts.
+- **2.22 "No second opinion" (c = none).** A declaration without `second_opinion` cannot condition on calibration
+  records that use it (S13 refuses them PLATE). Proposed: drop `none` from 2.10's grid. The raw model and the
+  threshold never buy a second opinion, and claim (i) of 2.13 is then tested at c = 2, the grid's top, with blind
+  switches counted (2.19). The alternative is a second calibration plate declared without the act, for the `none`
+  column. **Blocks:** 2.10's grid; claim (i).
+- **2.23 Where E7 and the Score are computed.**
+  - **E7 and the Score from the kit.** wald 0.2.0's eleven names give S15 (`Plate.disclosure()`), but not E7's
+    lines or a Score for Counts a host writes. `wald.counts` has both, but it is not a host's to call (wald's
+    API.md). Proposed: compute both with the kit's reference, `laws/counts_check.py`. The kit is fetched at the
+    tag `wald.law` names (`kit-v0.12`) and verified against `arena/allowed_signers`, as wald's own cage does.
+    wald recomputes the Score and digest at declaration, so the two implementations must agree.
+  - **The 4,300-digit limit.** Python refuses integer literals over 4,300 digits by default, and a real Score is
+    longer, so the runner lifts that limit (`sys.set_int_max_str_digits(0)`) before `load_pack`. Both points are
+    worth raising with wald.
+
+  **Blocks:** the scoreboard.
+- **2.24 Compute, and the one-run maximiser.** The one-run maximiser of E7 (the exact plate value) is beyond the
+  kit's size bound at this World's size, so the scoreboard says so and prints the realised values with and
+  without Counts instead.
+
+  At the proposed grid, 300 test episodes per plate take about 10 minutes once the Counts are large. With 2.10's
+  grid less `none` (seven prices) at three penalties, that is 21 plates, about 3½ hours of CPU and no API spend.
+  The dollar table of 2.14 stands: the baselines still need both answers graded on every question, and the
+  After-act grades only answers already graded.
+
+  Rule the grid knowing this, or rule fewer price points. **Blocks:** starting.
+
+**Expected results, written before any spend** (for the frozen models, under the proposed numbers):
+- **2.13's four claims stand as written.** Revision 2 changes how wald learns, not what it is claimed to do.
+- **S15** discloses no class that settles an act for the proposed grid. Every Global is reached either by a graded
+  end or by `s`, and the grader's γ is separated from ρ_b because an abstention's grade and an answer's grade read
+  the same `t`.
+- **E7's `confidence` line** prints the gap between the uniform P(b) and the real bucket frequencies (2.17). It is
+  large, and it is not a reliability error.
+- **E7's lines for the `grade` After-act** after `answer_primary`, and the plate's realised net with Counts
+  against without, are the evidence that the Globals were learned. The line shrinks toward zero where some grid
+  point lies near the truth, and holds at the distance to the nearest grid point where none does (C27).
+- **Blind switches** (2.19) are rare at p ≥ 3: switching blind pays only when σ's hypothesis says the second
+  opinion alone clears p/(1 + p).
+
 ## Ruled
 
 - **Session 002 rulings:** λ_usd = 1. Models: contestant `claude-haiku-4-5`, friend `claude-sonnet-4-6`, audience = five

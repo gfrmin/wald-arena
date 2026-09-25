@@ -2,18 +2,22 @@
 
 The first showcase: wald entered on a public board. The board is AA-Omniscience (Artificial Analysis): short
 factual questions with free-text answers, where a wrong answer costs and an abstention does not. wald is consumed
-at `wald==0.1.0` (`wald.law` = charter-v0.1 / surface-v0.1 / kit-v0.10). Everything the contestant believes sits in
-generated packs `wald.load_pack` accepts, with every kernel `fitted` and scored on held-out questions. The host
-holds counts and dollars, never a probability.
+at `v0.2.0` (`wald.law` = charter-v0.2 / surface-v0.2 / kit-v0.12). Everything the contestant believes sits in
+generated packs `wald.load_pack` accepts. What it learns about its instruments it learns inside the law, as Counts
+on a plate. The host holds counts and dollars, never a probability.
+
+**Revision 2 (2026-09-25): re-planned on wald 0.2.** CHARTER v0.2 lets a World learn across episodes. The
+calibration script this brief first planned, a Dirichlet fit in Python written into two-stage packs as `fitted`
+cells, is replaced by Globals learned from Counts, with the grader as the After-act. The first plan is in git
+history (2ea36a4, def8698); the sections below supersede it.
 
 **Done when** the scoreboard prints, for each penalty p and each second-opinion price point, on the sealed test
 split: every contestant's score under p (the Omniscience Index generalised below), its coverage (share answered),
 its accuracy and hallucination rate as AA defines them, its dollars per question by act, and wald's realised
-utility beside the utility its packs expected. The calibration table carries its held-out scores; every pack
-passes `wald.load_pack`; the four pre-registered claims (QUESTIONS.md, 2.13) are each marked **held** or
-**missed**. Nothing reaches a frozen model until the pre-registration is ruled (QUESTIONS.md).
+utility, E7's lines and S15's disclosure for every plate, and the Score of the shipped calibration. Every pack passes
+`wald.load_pack`; the four pre-registered claims (QUESTIONS.md, 2.13) are each marked **held** or **missed**. Nothing reaches a frozen model until the pre-registration is ruled (QUESTIONS.md).
 
-**The owner's numbers** are the pre-registration in `QUESTIONS.md` (2.1–2.14). They are ruled there, written to
+**The owner's numbers** are the pre-registration in `QUESTIONS.md` (2.1–2.14, and 2.15–2.24 for revision 2). They are ruled there, written to
 `showcases/omniscience/owner.toml`, and never chosen here. Until then that file holds no instrument, so no code can
 reach the frozen models.
 
@@ -53,87 +57,116 @@ that ratio: a second opinion "priced near the stake" costs about as much, in uti
 Utility is dimensionless per question. Dollars enter through λ_usd (2.10): an act's price is its declared dollars
 per call × λ_usd.
 
-## The World
+## The World (revision 2)
 
-Two stages per question, generated per (confidence bucket b, penalty p, second-opinion price point c). This is
-the stage chain brief 001 used for rungs, now for one decision that may continue.
+**Episode and plate.** Each question is one episode. Every test question, played under one declaration (one
+penalty p and one second-opinion price c), is one plate: the Counts it writes persist from question to question,
+and nothing else does (C2.S13). The plate starts from the calibration split's Counts, shipped in the pack (below).
+Questions enter the plate in a seeded order (2.20), because what wald has learned by question n depends on which
+questions came before it.
 
-**The read (always paid, before any World).** The primary instrument answers with AA's prompt, then is asked its
-confidence in that answer (2.5), which falls in bucket b. Its answer is the one AA's board would have graded. A
-read that declines is graded NOT_ATTEMPTED and scores 0 whichever act submits it, so it needs no act of its own.
+**Always paid, outside the World.** The primary reads the question with AA's prompt, then is asked its confidence
+(2.5). The read is the answer AA's board would grade, and the raw model's act. Its bucket is served to the World by
+a free act.
 
-A question's record, once graded, is (b, g₁, k, s, g₂): the bucket, the grade class g ∈ {right, zero, wrong} of
-the read (*zero* is PARTIAL or NOT_ATTEMPTED; u = +1 / 0 / −p), how many of the agreement samples match the read,
-whether the second answer matches it (s ∈ {same, different}; 2.7), and the second answer's grade class. The
-kernel is fitted as the chain rule, P(g₁ | b) · P(k | g₁, b) · P(s, g₂ | g₁, k, b), so nothing in it assumes one
-observation independent of another, and the second opinion enters only through the joint table of both
-instruments' graded outcomes, never through its own accuracy (2.12).
+**The local**, drawn afresh each episode from P(local | Global):
+- `b`, the read's confidence bucket (2.5), with `unread` for an unparseable confidence.
+- `t`, which answer is right: `primary` (the read; when the second opinion agrees, both are), `second` (the
+  second opinion's answer and not the read), or `neither`. This is the owner's three-way Ω. A read graded
+  PARTIAL or NOT_ATTEMPTED is not right, so it falls under `second` or `neither` (2.18).
+- `s`, whether the second opinion's answer matches the read (2.7): `same` or `different`. It is `different`
+  whenever `t = second`, since two matching answers are both right or both not.
 
-**Stage 1**, Ω₁ = (g₁, k), prior P(g₁ | b) · P(k | g₁, b), `fitted`.
-- Terminal acts: `answer primary` (u by g₁); `abstain` (0); and `consult second`, worth V₂(g₁) − c: the value,
-  given the true g₁, of entering stage 2 without k, solved by the generator from the fitted kernel, minus the price.
-  **[J1]** This is exact on the path that consults first. On the path that buys agreement and then consults, stage 2
-  knows k and V₂ does not: the approximation brief 001 made for lifelines, and measured the same way (below).
-- Observational act `agreement` (`once`): five more samples of the primary instrument (2.6), revealing k (a point
-  kernel on the state's k). Price: 2.6.
+P(local | Global) = P(b) · P(t | b, Global) · P(s | t, Global), where
+P(t = primary | b) = ρ_b, P(t = second | b) = (1 − ρ_b)·σ, P(s = same | t = primary) = α and
+P(s = same | t = neither) = β. P(b) is declared, not learned (2.17).
 
-**Stage 2** (after `consult second`, whose answer shows s). Ω₂ = (g₁, g₂, k), prior ∝ the fitted joint at s (and at
-k, if agreement was bought). Terminal acts `answer primary` (u by g₁), `answer second` (u by g₂), `abstain` (0);
-`agreement` again, if not yet bought.
+**The Globals**, each a declared grid of named hypotheses (2.15), with P(Global) uniform over the product
+unless the owner rules otherwise:
+- `calib`: the primary's reliability given its confidence, ρ_b for every bucket.
+- `agree`: what the agreement samples say, a⁺ = P(all five match the read | the read is right) and
+  a⁻ = the same given it is not.
+- `second`: the second opinion's reliability *jointly with the primary's*. σ is how often it is right when the read
+  is not. α and β are how often it matches the read when the read is right and when both are wrong. β is the
+  correlated-error channel that brief 002's J2 was about. Here it is a Global the plate learns, not a fit's
+  assumption.
+- `grader`: γ = P(the grader's verdict is right). A grader assumed perfect can hide a misdeclaration from every
+  record-reading check (C27; appendices J and K). With γ a Global, S15 shows any confound between the grader and
+  an instrument that a second grid point reproduces.
 
-This is the owner's Ω with the grades kept. When the second answer is the same, g₁ = g₂ and the acts collapse to
-`answer`/`abstain` over {right, wrong}: brief 001's binary World. When it differs, the states that carry mass are
-the owner's three — primary right, second right, neither — plus "both right, worded differently", which the grader
-can find and a string match cannot. A threshold on confidence can only lower coverage. `answer second` is the act
-it does not have.
+No utility reads a Global (C2.S11).
 
-**What is measured rather than assumed:**
-- **[J2]** Whether the two opinions are dependent. The joint kernel's held-out score is printed beside that of the
-  kernel an independence assumption would give — the second opinion fitted by its own accuracy — so the scoreboard
-  says how much pricing the second opinion jointly was worth.
-- The J1 approximation. The exact joint decision (both observations, every order) is solved alongside as an
-  oracle, as in brief 001, and wald's regret against it is printed per penalty and price.
+**Acts.** N = 3, d = 3, every act `once`:
+- `confidence`: `point(b)`, price 0, because its call is paid outside the World.
+- `agreement`: five more samples of the primary. Outcome `all` (all five match the read) or `some`, with
+  kernel a⁺ or a⁻ by `t`. Price: 5 × the primary's declared price × λ_usd (2.6).
+- `second_opinion`: the second instrument answers with AA's prompt. `point(s)`, price c.
+- terminals: `answer_primary` (+1 if `t = primary`, −p otherwise), `answer_second` (+1 if `t = second`, or
+  `t = primary` and `s = same`, −p otherwise) and `abstain` (0).
 
-**The second-opinion price grid is a re-solve, not a re-run.** Every calibration and test question has its second
-opinion and its agreement samples recorded once, at the real declared price. Each price point c in the grid is a
-set of generated packs over the same fitted kernels. Evaluating wald at c charges c for each consult it chooses,
-and makes no new call. A grid of ten prices costs what one does.
+**The grader is the After-act** (`grade`, C2.S12). It is taken at the end of every episode, whenever declared, at
+the grader's declared price × λ_usd. It grades the answer the end submitted, and on `abstain` it grades the read,
+since an abstention is an end like any other (S12). It reports `right` (CORRECT) or `not` (anything else) with
+reliability γ. It changes no earned utility and adds no value to any act (S12). What it buys is what the plate
+learns, and a check on the model.
 
-Horizon: at most two observations and one continuation, solved exactly: no floor, no think act.
+**Where this is an approximation, each named for the owner:**
+- `answer_second` can be fired without `second_opinion`, and the World prices it at 0. The door then buys the
+  second opinion, and the scoreboard charges c for it. wald's blind switches are counted and their undercharge
+  printed (2.19).
+- Agreement is binary (all five match or not), and its kernel reads `t` alone. Given `t`, the agreement samples
+  are declared independent of the bucket (2.16).
+- The episode decomposition (C2.J21): wald maximises within a question, never acts in order to learn. E7 prints
+  that price where the kit's size bound admits it. At this World's size it does not, and the scoreboard says so.
 
-## Calibration (before any frozen-model spend on the test split)
+## Calibration: shipped Counts (revision 2)
 
-On the calibration split, per bucket, count the joint table over (g₁, k, s, g₂) from the recorded reads, samples,
-second opinions and grades. Fit every factor as a Dirichlet(1) mean of counts, which is Beta(1,1) when there are
-two outcomes (`arena.calibration`; 2.11). The second opinion's factor conditions on k in three bins, {0–2, 3–4, 5}.
-A conditioning slice thinner than the owner's minimum count drops the bucket first, then the k-bin (2.11), and
-each back-off is printed. Score held-out with
-`arena.calibration.held_out_log_score`: the same function that scores Millionaire's reliabilities, by k-fold within
-the calibration split (2.1), so the numbers compare. Write every cell `fitted` with its score. **The test split is
-sealed until the fit is written and committed**, and the standard errors in 2.1 are then recomputed from the fitted
-kernels before it is opened.
+No reliability is fitted in Python. The calibration split is played as its own plate, one episode per question,
+under a sibling declaration: the same space, Globals, kernels, terminals and After-act, with every observation
+priced 0 (2.21). Its door serves the recorded observations and grades the fired end. The Counts that plate writes
+are facts (C2.J24). Every test pack ships them inline (V2.6), with their digest (V2.13) and their Score, the
+leave-one-out predictive probability of the shipped records (C2.S14, V2.8). The Score and the digest are computed
+by the kit's reference (`laws/counts_check.py`, fetched at the kit tag `wald.law` names and verified against
+`arena/allowed_signers`), and wald recomputes both at declaration: a pack whose numbers differ is refused
+`UNSCORED` or `PLATE`. A test declaration may condition on records it would no longer write at its own prices
+(S13, appendix J).
+
+**The test split is sealed until the calibration Counts are written and committed**, and the SE of 2.1 is
+recomputed from them before the test plate opens (2.1).
 
 ## The contestants
 
-1. **wald**: per question, `wald.run` on the stage-1 pack for (b, p, c), and on consulting, the stage-2 pack for
-   what was seen. The Door's `outcome` serves the recorded agreement samples and second opinion; its `fire`
-   submits the chosen answer or the abstention.
+1. **wald**: per question, `Plate.run` on the test pack for (p, c), behind a Door. The Door's `outcome` serves the
+   bucket, the agreement samples' match (`all` when k = 5), the second opinion's match, and the grade of the
+   fired answer. Its `fire` submits the chosen answer or the abstention.
 2. **The raw model**: the primary's read as AA would score it — its answer, or its own abstention.
-3. **The calibrated threshold**: answer the primary's read iff its bucket's fitted P(right) − p · P(wrong) > 0
-   (PARTIAL at 0; with no partials this is P(right) > p/(1 + p)). It uses the same read and the same fitted table,
-   and buys nothing.
+3. **The calibrated threshold**: answer the read iff its bucket's P(right) − p · P(wrong) > 0, where P is the
+   Beta(1,1) mean of that bucket's graded reads on the calibration split. It uses the same read and buys nothing.
 4. **The better single model**: whichever of the primary and the second opinion scored higher under p on the
    calibration split, answering raw on the test split, at its own read's price.
 
-Contestants 2–4 are baselines, and nothing of theirs reaches wald (rule 1).
+Contestants 2–4 are baselines. They compute their numbers in Python, labelled as baselines, and nothing of theirs
+reaches wald (rule 1).
 
-## Scoreboard
+## Scoreboard (revision 2)
 
-Per p × c × contestant: score under p (and the Index at p = 1), coverage, accuracy, hallucination rate, dollars
-per question by act (read, agreement, second opinion, grading), and wald's expected utility beside its realised.
-Then the calibration table with held-out scores and the J2 independence contrast, wald's regret against the exact
-joint decision, and the grader line: which model graded, and that it is not AA's. Every call is at its declared
-price. Grading is one call per distinct (question, answer), shared by all four contestants and counted once.
+For each p × c and each contestant: the score under p (and the Index at p = 1), coverage, accuracy,
+hallucination rate, net utility, and the paired Δ against wald. Dollars per question by act: read, agreement,
+second opinion, grading. Then, per plate:
+- **S15's disclosure**, as `Plate.disclosure()` gives it. It is printed at declaration, before any result.
+- **E7**:
+  - every draw's line, grouped by the history in its episode that led to it. Each line is the total variation
+    between the empirical law of its outcome and its posterior predictive, as an exact rational with a decimal
+    display, computed by the kit's reference;
+  - the plate's realised net utility with its Counts, and the same questions played from the declared prior with
+    Counts never conditioned on;
+  - the one-run maximiser's value, or the statement that the kit's size bound does not admit it;
+  - the Score of the shipped Counts.
+- **What the Counts moved**: the Global marginals before and after the shipped calibration (a display from the
+  kit's reference), wald's first act on the first test question with and without them, and how many test episodes
+  took a different act.
+- **Every approximation named above, measured**: blind switches and their undercharge.
+- The grader line: which model graded, and that it is not AA's.
 
 ## What this teaches for the agent
 
