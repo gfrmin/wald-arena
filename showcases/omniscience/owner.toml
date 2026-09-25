@@ -7,13 +7,14 @@
 #
 # lambda_usd = "..."                                    2.10
 # penalties = [...]                                     2.8
-# second_price_grid = ["...", ..., "none"]              2.10, in utility; "none" = no second opinion on offer
-# split_seed = ..., sampling_seed = ...                 2.14
+# second_price_grid = ["...", ...]                      2.10 and 2.22, in utility
+# split_seed = ..., sampling_seed = ..., plate_seed = ... 2.14, 2.20
 # budget_usd = "..."                                    2.14
 # [split]       calibration_per_domain = ...            2.1
 # [confidence]  cuts = [...]                            2.5
 # [agreement]   samples = 5, price = "per_call" | "..." 2.6
-# [fit]         min_count = ..., folds = ...            2.11
+# [globals]     rho = [...], agree = [[a+, a-], ...], second = [[sigma, alpha, beta], ...], grader = [...]   2.15
+# [calibration_plate]  p = "...", c = "..."             2.21
 # [instruments.primary]  provider = "openai",    model = "...", usd_per_call = "...", max_tokens = ...   2.3
 # [instruments.second]   provider = "anthropic", model = "...", usd_per_call = "...", max_tokens = ...   2.12
 # [instruments.grader]   provider = "...",       model = "...", usd_per_call = "...", max_tokens = ...   2.9

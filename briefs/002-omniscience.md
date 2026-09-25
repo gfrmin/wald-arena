@@ -141,7 +141,8 @@ recomputed from them before the test plate opens (2.1).
    fired answer. Its `fire` submits the chosen answer or the abstention.
 2. **The raw model**: the primary's read as AA would score it — its answer, or its own abstention.
 3. **The calibrated threshold**: answer the read iff its bucket's P(right) − p · P(wrong) > 0, where P is the
-   Beta(1,1) mean of that bucket's graded reads on the calibration split. It uses the same read and buys nothing.
+   Dirichlet(1) mean of that bucket's graded reads (right, partial or declined, wrong) on the calibration split.
+   It uses the same read and buys nothing.
 4. **The better single model**: whichever of the primary and the second opinion scored higher under p on the
    calibration split, answering raw on the test split, at its own read's price.
 

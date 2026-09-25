@@ -3,6 +3,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+import wald
 
 from arena.config import MissingOwnerNumber, load
 from showcases.omniscience import run as RUN
@@ -13,10 +14,19 @@ FROZEN = re.compile(r"gpt-6|astra|gpt-5\.5|opus", re.I)
 SHOWCASE = Path(RUN.__file__).parent
 
 
-def dry(tmp_path, budget="1", fake=None):
+def small(owner):
+    "The dry run's numbers on a World small enough for a test: two buckets and one hypothesis per Global but calib."
+    owner["confidence"]["cuts"] = [50]
+    owner["globals"] = {"rho": ["1/10", "7/10"], "agree": [["4/5", "1/5"]], "second": [["1/2", "4/5", "1/5"]],
+                        "grader": ["9/10", "1"]}
+    owner["penalties"] = [1, 3]
+    return owner
+
+
+def dry(tmp_path, budget="1", fake=None, write_packs=False):
     fake = fake or Scripted()
-    o = RUN.run(load(RUN.DRY_RUN), tmp_path / "run", Decimal(budget), True, transport=fake,
-                questions=questions(10), write_packs=False)
+    o = RUN.run(small(load(RUN.DRY_RUN)), tmp_path / "run", Decimal(budget), True, transport=fake,
+                questions=questions(10), write_packs=write_packs, workers=1)
     return o, fake
 
 
@@ -68,20 +78,33 @@ def test_end_to_end_resumes_without_paying_twice_and_scores_every_contestant(tmp
     first = fake.calls
     o2, fake2 = dry(tmp_path, "1")
     assert fake2.calls == 0 and len(o2.calls) == first
-    assert set(o.lines) == {(p, c) for p in o.settings.penalties for c in o.settings.grid}
+    assert set(o.lines) == set(o.plates) == {(p, c) for p in o.settings.penalties for c in o.settings.grid}
+    n_test = sum(r["split"] == "test" for r in o.rows)
     for lines in o.lines.values():
-        assert set(lines) == set(RUN.B.CONTESTANTS)
-        assert all(L.n == sum(r["split"] == "test" for r in o.rows) for L in lines.values())
-    raw = o.lines[(o.settings.penalties[0], None)]["raw model"]
+        assert set(lines) == set(RUN.B.CONTESTANTS) and all(L.n == n_test for L in lines.values())
+    raw = next(iter(o.lines.values()))["raw model"]
     assert raw.coverage == 1 and raw.consult_rate == 0
-    for m in o.model.values():
-        assert m["exact"] >= m["wald_expected"] - 1e-9
+    for po in o.plates.values():
+        assert po.counts_n == sum(o.calibration.counts.values()) + n_test
+        assert po.e7 and "no class" in po.disclosure
     md = SB.render(o, dry_run=True, run_dir="runs/test")
-    assert "self-graded, degenerate" in md and "not AA's grader" in md and "| wald |" in md
+    for said in ("self-graded, degenerate", "not AA's grader", "| wald |", "What the Counts moved", "E7, p = 1",
+                 "S15", "blind switches"):
+        assert said in md, said
 
 
-def test_the_run_writes_lawful_packs(tmp_path):
-    o = RUN.run(load(RUN.DRY_RUN), tmp_path / "run", Decimal("0.5"), True, transport=Scripted(),
-                questions=questions(6), write_packs=True)
-    packs = list((tmp_path / "run" / "packs").rglob("*.py"))
-    assert packs and all(p.read_text().startswith("# omni_s") for p in packs)
+def test_the_run_writes_lawful_packs_that_ship_the_calibration(tmp_path):
+    o, _ = dry(tmp_path, "0.5", write_packs=True)
+    packs = sorted((tmp_path / "run" / "packs").glob("*.py"))
+    assert [p.name for p in packs][0] == "calibration.py" and len(packs) == 1 + len(o.plates)
+    for p in packs[1:]:
+        text = p.read_text()
+        assert o.calibration.digest in text and text.startswith("# omniscience-p")
+        wald.declare(wald.load_pack(text, "."))
+
+
+def test_no_second_opinion_cannot_be_priced_none():
+    owner = load(RUN.DRY_RUN)
+    owner["second_price_grid"] = ["1/10", "none"]
+    with pytest.raises(ValueError, match="2.22"):
+        RUN.settings(owner)

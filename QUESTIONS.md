@@ -64,6 +64,33 @@ nothing about the fit. It also produced two findings, now in 2.5 and 2.7. The 23
 when written) supersedes the World and the calibration. It does not supersede the items about data, instruments,
 penalties, baselines or claims.
 
+**Revision 2, built and dry-run (2026-09-25, wald 0.2.0).** `world.py` generates the v0.2 pack. `board.py` holds
+the Door and the baselines. `run.py` plays the calibration plate, ships its Counts, and plays one test plate per
+(p, c) with `Plate.run`. `arena/kit.py` gives E7 and the Score from the verified kit. The two-stage packs and the
+Dirichlet fit are removed.
+
+The dry run replayed the recorded Haiku answers above (`--replay`, which refuses any call), so it made no API call
+and spent nothing:
+- the calibration plate took 186 s for 144 episodes and wrote 20 distinct records;
+- each of the six test plates (p ∈ {1, 3, 10} × c ∈ {1/10, 1}) took 807–879 s for 150 questions, six in parallel
+  on 8 cores, the declared-prior replay included;
+- every pack shipping the Counts passed `wald.load_pack` and `wald.declare`, with wald recomputing the kit's Score
+  and digest;
+- the Counts moved the prior: `calib` from uniform to 0.65 on ρ = (1/10, 7/10, 7/10, 1/10), `agree` to the
+  informative hypothesis, and `grader` to γ = 9/10. The first test question's acts differ with the Counts and
+  without;
+- S15: no class, at every plate. E7's lines run to 0.88 on a two-point grid, which cannot hold Haiku's rates. Its
+  `confidence` line, 0.41, is 2.17's uniform P(b);
+- 12 blind switches at p = 1, c = 1/10 (2.19).
+
+`showcases/omniscience/SCOREBOARD.md` has the rest, including one finding: at p ≥ 3 wald realised less with the
+Counts than from the declared prior, which abstains at once. The committed scoreboard is from the dry run before a review's
+two fixes: its *realised, with Counts* column did not yet charge c for a blind switch. At p = 1 it overstates by
+about 0.008 (c = 1/10, 12 switches) and 0.013 (c = 1, 2 switches), and the declared-prior column's blind switches were
+not counted. The re-run with the fixes was stopped for low memory on this machine and has not been repeated:
+`python -m showcases.omniscience.run --dry-run --budget-usd 3 --replay` (about 18 minutes, no API call) regenerates
+it.
+
 ## Pre-registration: brief 002 (rule before any call to gpt-6-astra, gpt-5.5 or claude-opus-5)
 
 **BLOCKING.** No call to `gpt-6-astra`, `gpt-5.5` or `claude-opus-5` may be made, by any script in any session,
@@ -243,8 +270,11 @@ machine with wald 0.2.0.
   kit's size bound at this World's size, so the scoreboard says so and prints the realised values with and
   without Counts instead.
 
-  At the proposed grid, 300 test episodes per plate take about 10 minutes once the Counts are large. With 2.10's
-  grid less `none` (seven prices) at three penalties, that is 21 plates, about 3½ hours of CPU and no API spend.
+  Measured in the dry run at the proposed grid: 144 calibration episodes in 186 s, and 150 test questions in
+  807–879 s per plate (each plate plays every question twice, with the Counts and from the declared prior), six
+  plates in parallel on 8 cores. Episodes slow as Counts grow, so 300 test questions per plate will take more than
+  twice as long; this is extrapolated, not measured. With 2.10's grid less `none` (seven prices) at three
+  penalties, that is 21 plates: several hours of CPU, and no API spend.
   The dollar table of 2.14 stands: the baselines still need both answers graded on every question, and the
   After-act grades only answers already graded.
 

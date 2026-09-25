@@ -1,0 +1,4 @@
+# The signed commit of gfrmin/wald-charter whose kit judges the pinned wald: the kit tag wald.law names.
+# Changed only with a wald release bump (CLAUDE.md rule 4); `sh arena/fetch_kit.sh` refuses any other.
+TAG=kit-v0.12
+SHA=9505ea69589af5dc9e793a77a7659d2cd29bf0cf

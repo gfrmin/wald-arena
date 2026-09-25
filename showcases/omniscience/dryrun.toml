@@ -5,20 +5,31 @@
 
 lambda_usd = "1"
 penalties = [1, 3, 10]
-second_price_grid = ["0", "1/20", "1/10", "1/4", "1/2", "1", "2", "none"]
+# A subset of 2.10's grid, for time (QUESTIONS.md 2.24); "none" cannot be shipped calibration Counts that use the
+# second opinion (2.22).
+second_price_grid = ["1/10", "1"]
 split_seed = 20260923
 sampling_seed = 1
+plate_seed = 20260925                 # 2.20: the order questions enter each plate
 
 [confidence]
-cuts = [50, 80, 95]
+cuts = [50, 80]                       # 2.5 proposes [50, 80, 95]; four buckets keep the dry run's World at 128 Globals
+
+# 2.15: the Globals' hypotheses. P(Global) is uniform over their product.
+[globals]
+rho = ["1/10", "7/10"]                                  # the primary's reliability, per bucket
+agree = [["4/5", "1/5"], ["1/2", "1/2"]]                # (a+, a-): informative agreement, or not
+second = [["1/2", "4/5", "1/5"], ["1/10", "4/5", "1/2"]]  # (sigma, alpha, beta)
+grader = ["9/10", "1"]                                  # gamma
+
+# 2.21: the calibration split's own plate, every observation priced 0.
+[calibration_plate]
+p = "1"
+c = "0"
 
 [agreement]
 samples = 5
 price = "per_call"      # the primary's declared price per call, times the number of samples
-
-[fit]
-min_count = 10
-folds = 5
 
 # Declared prices are upper bounds, not measurements: Haiku 4.5 list prices ($1 in, $5 out per million tokens) times
 # the largest prompt each role sends and its max_tokens. An answer or confidence call: <= 300 tokens in, <= 64 out,
