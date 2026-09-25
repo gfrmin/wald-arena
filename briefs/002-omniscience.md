@@ -121,15 +121,23 @@ learns, and a check on the model.
 
 ## Calibration: shipped Counts (revision 2)
 
-No reliability is fitted in Python. The calibration split is played as its own plate, one episode per question,
-under a sibling declaration: the same space, Globals, kernels, terminals and After-act, with every observation
-priced 0 (2.21). Its door serves the recorded observations and grades the fired end. The Counts that plate writes
-are facts (C2.J24). Every test pack ships them inline (V2.6), with their digest (V2.13) and their Score, the
-leave-one-out predictive probability of the shipped records (C2.S14, V2.8). The Score and the digest are computed
-by the kit's reference (`laws/counts_check.py`, fetched at the kit tag `wald.law` names and verified against
-`arena/allowed_signers`), and wald recomputes both at declaration: a pack whose numbers differ is refused
-`UNSCORED` or `PLATE`. A test declaration may condition on records it would no longer write at its own prices
-(S13, appendix J).
+No reliability is fitted in Python. The calibration Counts are constructed from the calibration split, as ruled
+(2.21). There is one record per question, with every instrument drawn:
+`confidence`, `agreement`, `second_opinion`. Then comes an end, and the grade of the answer that end submits. The end
+reads only what the record shows, never a grade, so the design is ignorable (C2 §4). When the two answers match, the
+end submits the read. When they differ, the records alternate in question order between submitting the read and
+submitting the second opinion. Every record is checked realisable under the test declaration, and the whole
+multiset possible under some Global value (S13), with the kit's reference.
+
+Every test pack ships the same Counts inline (V2.6), with their digest (V2.13) and their Score (C2.S14, V2.8). The
+Score is the leave-one-out predictive probability of the shipped records. The Score and the digest are computed by
+the kit's reference (`laws/counts_check.py`, fetched at the kit tag `wald.law` names and verified against
+`arena/allowed_signers`). wald recomputes both at declaration, and a pack whose numbers differ is refused
+`UNSCORED` or `PLATE`.
+
+**Before any test question is played**, the runner prints the calibration split's confidence histogram and each
+bucket's share of the calibration records. It stops for the owner if a bucket holds under a fifth of them (2.15 as
+ruled).
 
 **The test split is sealed until the calibration Counts are written and committed**, and the SE of 2.1 is
 recomputed from them before the test plate opens (2.1).

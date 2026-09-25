@@ -17,6 +17,7 @@ SHOWCASE = Path(RUN.__file__).parent
 def small(owner):
     "The dry run's numbers on a World small enough for a test: two buckets and one hypothesis per Global but calib."
     owner["confidence"]["cuts"] = [50]
+    owner["confidence"]["unread"] = "b0"
     owner["globals"] = {"rho": ["1/10", "7/10"], "agree": [["4/5", "1/5"]], "second": [["1/2", "4/5", "1/5"]],
                         "grader": ["9/10", "1"]}
     owner["penalties"] = [1, 3]
@@ -96,8 +97,8 @@ def test_end_to_end_resumes_without_paying_twice_and_scores_every_contestant(tmp
 def test_the_run_writes_lawful_packs_that_ship_the_calibration(tmp_path):
     o, _ = dry(tmp_path, "0.5", write_packs=True)
     packs = sorted((tmp_path / "run" / "packs").glob("*.py"))
-    assert [p.name for p in packs][0] == "calibration.py" and len(packs) == 1 + len(o.plates)
-    for p in packs[1:]:
+    assert len(packs) == len(o.plates)
+    for p in packs:
         text = p.read_text()
         assert o.calibration.digest in text and text.startswith("# omniscience-p")
         wald.declare(wald.load_pack(text, "."))
@@ -108,3 +109,22 @@ def test_no_second_opinion_cannot_be_priced_none():
     owner["second_price_grid"] = ["1/10", "none"]
     with pytest.raises(ValueError, match="2.22"):
         RUN.settings(owner)
+
+
+def test_a_thin_bucket_stops_the_run_before_any_test_question(tmp_path):
+    owner = small(load(RUN.DRY_RUN))
+    owner["confidence"]["cuts"] = [95]            # the scripted model states 90 or 30: nothing reaches 95
+    with pytest.raises(RUN.BucketGate, match="under a fifth"):
+        RUN.run(owner, tmp_path / "run", Decimal("1"), True, transport=Scripted(), questions=questions(10),
+                write_packs=False, workers=1)
+
+
+def test_calibration_counts_are_constructed_one_record_per_question_every_instrument_drawn(tmp_path):
+    o, _ = dry(tmp_path, "1")
+    cal = [r for r in o.rows if r["split"] == "calibration"]
+    C = o.calibration
+    assert sum(C.counts.values()) == len(cal)
+    assert all([a for a, _ in draws] == ["confidence", "agreement", "second_opinion"] for draws, _, _ in C.counts)
+    ends = {end for (draws, end, _) in C.counts if dict(draws)["second_opinion"] == "same"}
+    assert ends <= {"answer_primary"}
+    assert sum(C.shares.values()) == 1

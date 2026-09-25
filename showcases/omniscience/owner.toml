@@ -18,3 +18,19 @@
 # [instruments.primary]  provider = "openai",    model = "...", usd_per_call = "...", max_tokens = ...   2.3
 # [instruments.second]   provider = "anthropic", model = "...", usd_per_call = "...", max_tokens = ...   2.12
 # [instruments.grader]   provider = "...",       model = "...", usd_per_call = "...", max_tokens = ...   2.9
+
+# ---- Ruled (QUESTIONS.md, "Ruled", 2026-09-25) ----
+# Models, verified against each provider's list on 2026-09-25T14:39Z. They become [instruments.*] only when every
+# pre-registration item is ruled, so they stay comments here: primary gpt-6-astra (an alias, no dated snapshot listed;
+# 2.3 open), fallback gpt-5.5-2026-04-23, second opinion claude-opus-5-5 (listed, created 2026-09-21).
+plate_seed = 20260925                   # 2.20
+
+[confidence]
+cuts = [80]                             # 2.15: two buckets, b0 = 0-79, b1 = 80-100
+unread = "b0"                           # 2.15: an unreadable confidence joins b0
+
+[globals]                               # 2.15; P(Global) uniform over the product, elicited
+rho = ["7/20", "13/20", "17/20", "19/20"]
+agree = [["4/5", "1/5"], ["1/2", "1/2"]]
+second = [["1/2", "4/5", "1/5"], ["1/10", "4/5", "1/2"]]
+grader = ["9/10", "1"]

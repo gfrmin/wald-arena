@@ -90,14 +90,13 @@ class Settings:
     sampling_seed: int
     plate_seed: int
     cuts: tuple[int, ...]
+    unread: str
     samples: int
     grids: W.Grids
-    calibration_p: Fraction
-    calibration_c: Fraction
 
     @property
     def buckets(self):
-        return OBS.bucket_names(self.cuts)
+        return OBS.bucket_names(self.cuts, self.unread)
 
 
 def fractions(xs) -> tuple:
@@ -115,8 +114,8 @@ def settings(owner) -> Settings:
                     fractions(need(owner, "globals.second")), fractions(need(owner, "globals.grader")))
     return Settings(Fraction(need(owner, "lambda_usd")), fractions(need(owner, "penalties")), fractions(grid),
                     need(owner, "split_seed"), need(owner, "sampling_seed"), need(owner, "plate_seed"),
-                    tuple(need(owner, "confidence.cuts")), need(owner, "agreement.samples"), grids,
-                    Fraction(need(owner, "calibration_plate.p")), Fraction(need(owner, "calibration_plate.c")))
+                    tuple(need(owner, "confidence.cuts")), need(owner, "confidence.unread"),
+                    need(owner, "agreement.samples"), grids)
 
 
 def instruments(owner, dry_run: bool, transport=None) -> dict[str, Instrument]:
@@ -141,9 +140,10 @@ def plan(budget: Decimal, inst, s: Settings, n_domains: int, domain_size: int) -
     return per_domain, per_domain // 2
 
 
-def record(q: QS.Question, split: str, tier: int, seen: OBS.Seen, cuts) -> dict:
+def record(q: QS.Question, split: str, tier: int, seen: OBS.Seen, bucketing) -> dict:
+    "bucketing: (cuts, unread). The bucket is recomputed from the confidence whenever a run reads the record."
     return {"question_id": q.id, "split": split, "domain": q.domain, "tier": tier, "read": seen.read,
-            "confidence": seen.confidence, "b": OBS.bucket_of(seen.confidence, cuts), "samples": list(seen.samples),
+            "confidence": seen.confidence, "b": OBS.bucket_of(seen.confidence, *bucketing), "samples": list(seen.samples),
             "second": seen.second, "k": seen.k, "s": seen.s, "calls": [c.to_json() for c in seen.calls]}
 
 
@@ -165,16 +165,86 @@ def plate_order(rows, seed: int) -> list:
     return out
 
 
+class BucketGate(RuntimeError):
+    "A confidence bucket holds under a fifth of the calibration records: the owner rules again (2.15)."
+
+
+GATE = Fraction(1, 5)
+
+
+def histogram(cal_rows) -> list[tuple[str, int]]:
+    "The calibration split's stated confidences, by tens, and the unreadable ones."
+    bins = Counter("unread" if r["confidence"] is None else f"{min(r['confidence'] // 10, 9) * 10}-"
+                   f"{min(r['confidence'] // 10, 9) * 10 + (10 if r['confidence'] >= 90 else 9)}" for r in cal_rows)
+    order = [f"{d}-{d + (10 if d == 90 else 9)}" for d in range(0, 100, 10)] + ["unread"]
+    return [(k, bins[k]) for k in order]
+
+
+def bucket_shares(cal_rows, buckets) -> dict[str, Fraction]:
+    n = Counter(r["b"] for r in cal_rows)
+    return {b: Fraction(n[b], len(cal_rows)) for b in buckets}
+
+
+def gate(cal_rows, s: Settings) -> dict[str, Fraction]:
+    """Before any test question is played: print the calibration histogram and each bucket's share, and stop if a
+    bucket holds under a fifth of the calibration records (the owner's ruling on 2.15). Calibration data only."""
+    shares = bucket_shares(cal_rows, s.buckets)
+    print("calibration confidences: " + ", ".join(f"{k} {n}" for k, n in histogram(cal_rows)), flush=True)
+    print("bucket shares: " + ", ".join(f"{b} {n.numerator}/{n.denominator} ({float(n):.1%})"
+                                        for b, n in shares.items()), flush=True)
+    thin = {b: n for b, n in shares.items() if n < GATE}
+    if thin:
+        raise BucketGate(f"under a fifth of the {len(cal_rows)} calibration records: "
+                         + ", ".join(f"{b} {float(n):.1%}" for b, n in thin.items())
+                         + f" (cuts {list(s.cuts)}, unread -> {s.unread}); the owner rules again (2.15)")
+    return shares
+
+
+def calibration_end(row, index_among_different: int) -> str:
+    """The end a constructed calibration record takes (the owner's ruling on 2.21: chosen for what its grade teaches).
+    It reads only what the record shows, never a grade, so the design stays ignorable (C2 §4): when the two answers
+    match, one grade teaches both, so the read is submitted; when they differ, the records alternate in question
+    order between grading the read and grading the second opinion, so both reliabilities are taught."""
+    if row["s"] == "same":
+        return "answer_primary"
+    return "answer_primary" if index_among_different % 2 == 0 else "answer_second"
+
+
+def construct(cal_rows, samples: int) -> Counter:
+    """The calibration Counts, one record per question with every instrument drawn: the bucket, the agreement samples,
+    the second opinion, then the chosen end and its grade."""
+    counts, i = Counter(), 0
+    for r in sorted(cal_rows, key=lambda r: r["question_id"]):
+        end = calibration_end(r, i)
+        i += r["s"] == "different"
+        door = B.RecordedDoor(r, samples)
+        draws = tuple((act, door.outcome(act)) for act in ("confidence", "agreement", "second_opinion"))
+        door.fire(end)
+        counts[(draws, end, door.outcome(W.AFTER))] += 1
+    return counts
+
+
 @dataclass
 class Calibration:
-    "The calibration split's plate, and the Counts every test pack ships."
-    pack: str
+    "The constructed calibration Counts every test pack ships."
     counts: Counter
     digest: str
     score: Fraction
-    acts: Counter                    # the calibration plate's act sequences, as a check on what it bought
+    ends: Counter                    # records by end
+    shares: dict                     # each bucket's share of the calibration records
+    histogram: list                  # the calibration confidences by tens
     before: dict                     # P(Global) marginals, declared (display)
     after: dict                      # P(Global | calibration Counts) marginals (display)
+
+
+def calibrate(s: Settings, inst, cal_rows, shares) -> Calibration:
+    counts = construct(cal_rows, s.samples)
+    spec, _ = W.declare(W.text(s.buckets, s.grids, prices(inst, s, Fraction(1), Fraction(0)), "omniscience"))
+    bad = [rec for rec in counts if not kit.cc().realisable(spec, rec)]
+    if bad or not kit.cc().expressible(spec, counts):
+        raise ValueError(f"constructed calibration records this declaration could not have written: {bad[:3]}")
+    return Calibration(counts, kit.digest(counts), kit.score(spec, counts), Counter(end for _, end, _ in counts.elements()),
+                       shares, histogram(cal_rows), kit.marginals(spec, Counter()), kit.marginals(spec, counts))
 
 
 @dataclass
@@ -192,21 +262,6 @@ class PlateOut:
     differ: int                      # test questions whose acts differ with the Counts and without
     counts_n: int                    # records in the plate's Counts at its end
     seconds: float
-
-
-def calibrate(s: Settings, inst, cal_rows, out: Path | None) -> Calibration:
-    pr = prices(inst, s, s.calibration_p, s.calibration_c)
-    pr = W.Prices(pr.p, Fraction(0), s.calibration_c, pr.grade)        # every observation priced 0 (2.21)
-    pack = W.text(s.buckets, s.grids, pr, "omniscience-calibration")
-    spec, world = W.declare(pack)
-    plate, plays = B.play_plate(world, plate_order(cal_rows, s.plate_seed), s.samples)
-    counts = plate.counts()
-    if out:
-        out.mkdir(parents=True, exist_ok=True)
-        (out / "calibration.py").write_text(pack)
-    return Calibration(pack, counts, kit.digest(counts), kit.score(spec, counts),
-                       Counter(tuple(res.acts) for _, res in plays), kit.marginals(spec, Counter()),
-                       kit.marginals(spec, counts))
 
 
 def realised(rows, plays, results, p, c) -> Fraction:
@@ -274,7 +329,7 @@ def run(owner, run_dir: Path, budget: Decimal, dry_run: bool, transport=None, qu
     append_new(items, lambda it: it[1].id,
                lambda it: record(it[1], it[0], tier(it[1]),
                                  OBS.observe(inst["primary"], inst["second"], it[1], tier(it[1]), s.samples,
-                                             wallet.reserve), s.cuts),
+                                             wallet.reserve), (s.cuts, s.unread)),
                run_dir / "records.jsonl")
     grader = Grader(inst["grader"], run_dir / "grades.jsonl", tier, wallet.reserve)
     by_id = {q.id: q for q in qs}
@@ -282,16 +337,17 @@ def run(owner, run_dir: Path, budget: Decimal, dry_run: bool, transport=None, qu
     for r in read_rows(run_dir / "records.jsonl"):
         q = by_id[r["question_id"]]
         g1, g2 = grader(q, r["read"]), grader(q, r["second"])
-        rows.append(r | {"b": OBS.bucket_of(r["confidence"], s.cuts), "grade1": g1, "grade2": g2,
+        rows.append(r | {"b": OBS.bucket_of(r["confidence"], s.cuts, s.unread), "grade1": g1, "grade2": g2,
                          "g1": B.grade_class(g1), "g2": B.grade_class(g2)})
 
     cal_rows = [r for r in rows if r["split"] == "calibration"]
     test_rows = plate_order([r for r in rows if r["split"] == "test"], s.plate_seed)
     packs = run_dir / "packs" if write_packs else None
+    shares = gate(cal_rows, s)
     t0 = time.time()
-    calib = calibrate(s, inst, cal_rows, packs)
-    print(f"calibration plate: {sum(calib.counts.values())} records, {len(calib.counts)} distinct, "
-          f"{time.time() - t0:.0f}s", flush=True)
+    calib = calibrate(s, inst, cal_rows, shares)
+    print(f"calibration Counts: {sum(calib.counts.values())} records, {len(calib.counts)} distinct, "
+          f"Score and digest by the kit in {time.time() - t0:.0f}s", flush=True)
     (run_dir / "calibration_counts.json").write_text(json.dumps(
         {"records": [[[list(d) for d in draws], end, after, n] for (draws, end, after), n in
                      sorted(calib.counts.items(), key=repr)],

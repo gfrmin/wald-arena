@@ -1,4 +1,4 @@
-# The dry run's numbers: PROPOSALS from QUESTIONS.md's pre-registration, NOT rulings. Read only by
+# The dry run's numbers: the owner's rulings where marked "ruled", PROPOSALS from QUESTIONS.md otherwise. Read only by
 # `python -m showcases.omniscience.run --dry-run`, which refuses any model but claude-haiku-4-5-20251001.
 # Haiku stands in for the primary, the second opinion and the grader, so it grades its own answers: the result
 # proves the plumbing and nothing about the fit.
@@ -13,19 +13,15 @@ sampling_seed = 1
 plate_seed = 20260925                 # 2.20: the order questions enter each plate
 
 [confidence]
-cuts = [50, 80]                       # 2.5 proposes [50, 80, 95]; four buckets keep the dry run's World at 128 Globals
+cuts = [80]                           # ruled 2026-09-25 (2.15): two buckets, cut at 80
+unread = "b0"                         # ruled: an unreadable confidence joins the low bucket
 
-# 2.15: the Globals' hypotheses. P(Global) is uniform over their product.
+# 2.15, ruled 2026-09-25: the Globals' hypotheses. P(Global) is uniform over their product, elicited.
 [globals]
-rho = ["1/10", "7/10"]                                  # the primary's reliability, per bucket
+rho = ["7/20", "13/20", "17/20", "19/20"]               # per bucket; straddles p/(1+p) at p = 1, 3, 10
 agree = [["4/5", "1/5"], ["1/2", "1/2"]]                # (a+, a-): informative agreement, or not
 second = [["1/2", "4/5", "1/5"], ["1/10", "4/5", "1/2"]]  # (sigma, alpha, beta)
 grader = ["9/10", "1"]                                  # gamma
-
-# 2.21: the calibration split's own plate, every observation priced 0.
-[calibration_plate]
-p = "1"
-c = "0"
 
 [agreement]
 samples = 5

@@ -5,22 +5,8 @@ ruled, and a missing key fails loud where it is needed. Each open question block
 
 ## Open
 
-1. **Question set: pick one** (no API call is made before you do). Loaded dry, no model calls:
-
-   | | A. CrowdMillionaire (recommended) | B. Open Trivia DB |
-   |---|---|---|
-   | source, licence | github.com/bahadiri/Millionaire, MIT; cite Aydin, Yilmaz, Demirbas, *Concurrency Computat.* 2017, e4168 | opentdb.com, CC BY-SA 4.0 |
-   | what it is | questions from the Turkish *Kim Milyoner Olmak İster?* live show, in Turkish | crowd-written trivia, English, not from the show |
-   | size | 3,810 unique (live + practice, deduplicated; 6 with repeated options dropped) | 5,298 verified, including true/false; the four-option share was not counted |
-   | four options, one right | yes (`choiceA`..`choiceD`, `correct_choice`) | yes, for `type=multiple` |
-   | difficulty per question | the show's level, 1-12. Tiers: 1-4 easy, 5-8 medium, 9-12 hard: 1,853 / 1,464 / 499 | contributor-rated easy / medium / hard (1,770 / 2,424 / 1,104 counted with true/false) |
-   | after the 200 + 100 split (seed 20260922) | play pools 1,549 / 1,163 / **198**: 500 games draw 2,500 hard questions, each reused about 13 times | not tried |
-   | loader change | a converter from the two CSVs to the JSONL above (tried: it loads, splits and draws a game) | a converter from the API's JSON (HTML-decode; shuffle the right answer among the four with a seed) |
-
-   Considered and rejected: the English WWTBM set (huggingface.co/datasets/WWTBM/wwtbm, CC BY-NC-SA 4.0), which is the
-   US show's own questions but only 1,000, with 39 hard (533 / 428 / 39). It cannot fill 300 per tier.
-   With A the instruments read Turkish. That is fine for calibration (the same questions calibrate and play), but it
-   is a choice.
+1. **Question set** (Millionaire): moot. Millionaire's live play is dropped (ruled 2026-09-25); the table that
+   stood here is in git history.
 
 ## Status: brief 002, as of 2026-09-25 (wald 0.1.0)
 
@@ -91,9 +77,9 @@ not counted. The re-run with the fixes was stopped for low memory on this machin
 `python -m showcases.omniscience.run --dry-run --budget-usd 3 --replay` (about 18 minutes, no API call) regenerates
 it.
 
-## Pre-registration: brief 002 (rule before any call to gpt-6-astra, gpt-5.5 or claude-opus-5)
+## Pre-registration: brief 002 (rule before any call to gpt-6-astra, gpt-5.5 or claude-opus-5-5)
 
-**BLOCKING.** No call to `gpt-6-astra`, `gpt-5.5` or `claude-opus-5` may be made, by any script in any session,
+**BLOCKING.** No call to `gpt-6-astra`, `gpt-5.5` or `claude-opus-5-5` (or `claude-opus-5`) may be made, by any script in any session,
 until every item below has a ruling under `## Ruled` naming this section. `showcases/omniscience/owner.toml`
 carries no `[instruments.*]` until then. That absence, not this sentence, is what makes the block real: no code can
 build an instrument the file does not name. The dry run's proposals live in `showcases/omniscience/dryrun.toml`
@@ -190,6 +176,87 @@ and are not rulings. Facts below were measured on 2026-09-23 and are cited in `b
   This assumes 140 input tokens per answer call, 1,700 in and 800 out per grade, and list prices as of today. The
   dry run replaces the input-token assumptions with measured ones; reasoning tokens are the owner's ruling (2.3).
   Rule a budget ceiling; the runner refuses to start above it. **Blocks:** starting.
+
+### After the rulings of 2026-09-25
+
+**Models, as listed** (`GET /v1/models` at each provider, 2026-09-25T14:39Z, no completion made):
+
+| role | string | as listed |
+|---|---|---|
+| primary | `gpt-6-astra` | listed, created 2026-08-27; still an alias, with no dated snapshot. Two siblings are new since 2026-09-23: `gpt-6-luna` and `gpt-6-sol`, both created 2026-09-14 |
+| primary, fallback | `gpt-5.5-2026-04-23` | a dated snapshot, listed beside the alias `gpt-5.5` |
+| second opinion | `claude-opus-5-5` | listed, created 2026-09-21. It replaces `claude-opus-5`, which is still listed (created 2026-07-24) |
+| grader, if 2.9 rules (a) | `gemini-2.5-flash` | listed, version 001 ("stable") |
+
+`claude-opus-5-5` cannot turn thinking off. Its reasoning effort (default `medium`) is part of the instrument and
+is not ruled (2.12, below). Its list price is $4 / $20 per million tokens, from Anthropic's price table as cached
+on 2026-06-24.
+
+**How the calibration ends are chosen (2.21, my reading, for you to confirm).** "Chosen for what its grade teaches"
+could be read as choosing each end by the question's grades. That would bias the Counts. The record keeps only the
+chosen end's grade, and the likelihood treats the end as a design choice. If the end depended on the other,
+unrecorded grade (say, grading the second opinion only when the read was wrong), the Counts would over-represent
+right reads among graded reads, and ρ would be learned too high. So the end reads only what the record shows:
+- the read, when the two answers match, since one grade then teaches both;
+- when they differ, the records alternate in question order between grading the read and grading the second
+  opinion.
+
+On the dry run's 144 calibration questions that gave 17 distinct records. The code is `run.calibration_end`.
+
+**Measured at the ruled grid** (two buckets, 4² × 2 × 2 × 2 = 128 Global values, 1,280 states), on the dry run's
+calibration questions only, so no test question was played:
+
+| what | cost |
+|---|---|
+| a pack without Counts: generate, then load and declare | 0.05 s + 1.4 s (1.1 MB) |
+| the kit's Score and digest of the 144 constructed records | 3.0 s; the Score has 80,623 digits |
+| a pack shipping the Counts: load and declare, wald recomputing the Score | 11.5 s |
+| one episode from the declared prior | 0.18 s |
+| episodes from the 144 shipped records | 1.9 s at the first, 2.9 s after 144 more; 343 s for 144 |
+| S15; E7 over 288 records | 1.4 s; 1.4 s |
+
+Extrapolated, not measured, for 300 calibration and 300 test questions: about 3–5 s an episode, so about 20
+minutes a plate, or 7 hours of CPU for 21 plates. That is 2–3 hours on three cores, which is what this machine's
+memory allows. It ran out of memory with six plates in parallel on 2026-09-25.
+
+**The gate stops the dry run.** Haiku's calibration confidences, by tens: 0–9: 2, 10–19: 42, 20–29: 51, 30–39: 1,
+40–79: 10 (all 70–79), 80–89: 12, 90–100: 6, unread: 20. With the cut at 80 and unread in b0, b1 holds 18 of 144
+(12.5%), under a fifth. So the dry run on constructed Counts has not played a test question. Haiku is not the
+frozen primary, whose histogram will differ, but the gate applies to it as ruled. For the dry run, a cut at 70
+gives b1 28 of 144 (19.4%), still under a fifth. A cut at 30 gives 29 of 144 (20.1%). Moving unread to b1 with
+the cut at 80 gives 38 of 144 (26.4%).
+
+**The dollar estimate.** 600 questions, each with 7 primary calls, 1 second-opinion call and at most 2 grades.
+Input tokens are the dry run's measured means: an answer 130, a confidence call 150, a grade 1,658. Visible
+output is 51 tokens an answer, as measured (Haiku explains its answer; a frozen model may write less). R is the
+reasoning tokens per primary and second-opinion call, which 2.3 and 2.12 set. The grader is `gemini-2.5-flash` with
+800 output tokens a grade, as 2.14 assumed. Prices: OpenAI and Google as listed on 2026-09-23 (brief 002),
+Anthropic as above.
+
+| primary | R = 0 | R = 500 | R = 2,000 |
+|---|---|---|---|
+| `gpt-6-astra` ($10 / $50) | $16.20 + $0.92 + $3.00 = **$20.12** | $121.20 + $6.92 + $3.00 = **$131.12** | $436.20 + $24.92 + $3.00 = **$464.12** |
+| `gpt-5.5-2026-04-23` ($5 / $30) | **$13.08** | **$82.08** | **$289.08** |
+
+Each total is primary + second opinion (`claude-opus-5-5`) + grader.
+
+**Still open, blocking any frozen-model call:**
+- 2.1: the split.
+- 2.2: the data revision.
+- 2.3: accept `gpt-6-astra` as an alias, recording each response's model field, or use `gpt-5.5-2026-04-23`;
+  reasoning effort; max output tokens.
+- 2.4: the answer prompt's placeholders.
+- 2.5: how confidence is elicited. The cut is ruled.
+- 2.6: agreement sampling.
+- 2.7: what "matches" means.
+- 2.8: penalties, and PARTIAL scoring 0.
+- 2.9: the grader.
+- 2.10: λ_usd and the second-opinion price grid.
+- 2.12: `claude-opus-5-5`'s reasoning effort and max tokens, and whether its key becomes `ANTHROPIC_API_KEY`.
+- 2.13: the claims.
+- 2.14: seeds and the budget ceiling.
+- The gate on the dry run, above.
+- The reading of 2.21, above.
 
 ### Revision 2: brief 002 on wald 0.2 (2.15–2.24)
 
@@ -294,6 +361,22 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-25, brief 002 revision 2:**
+  - **2.15:** two confidence buckets, cut at 80 (b0 = 0–79, b1 = 80–100). An unreadable confidence joins b0. Each
+    ρ_b is on {7/20, 13/20, 17/20, 19/20}, which straddles p/(1 + p) at p = 1, 3, 10. The other grids are as
+    proposed, and P(Global) is uniform, `elicited`. Before any test question is played, the runner prints the
+    calibration split's confidence histogram and each bucket's share, and stops for a new ruling if either bucket
+    holds under a fifth of the calibration records.
+  - **2.21:** no calibration plate. The calibration Counts are constructed directly: every instrument drawn on
+    every calibration question, graded, one record per question, each record's end chosen for what its grade
+    teaches. Each record's realisability, and the digest and Score, are checked with the kit's reference. The same
+    Counts ship into every test pack.
+  - **2.19:** accepted. The scoreboard prints the number of blind switches and their total undercharge.
+  - **Models:** every string is verified against the providers' current lists and pinned with the date;
+    `claude-opus-5` becomes `claude-opus-5-5` if the list shows it (it does: "Models, as listed", below).
+  - **2.16, 2.17, 2.18, 2.20, 2.22, 2.23, 2.24:** accepted as proposed.
+  - **Open 1:** moot.
 
 - **Session 002 rulings:** λ_usd = 1. Models: contestant `claude-haiku-4-5`, friend `claude-sonnet-4-6`, audience = five
   independent `claude-haiku-4-5` samples at temperature 1, majority vote, calibrated as its own instrument. Price

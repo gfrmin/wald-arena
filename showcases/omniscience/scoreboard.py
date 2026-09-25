@@ -85,16 +85,19 @@ def by_penalty(o) -> str:
             w = L["wald"]
             (dt, st), (dr, sr) = paired(w, L["calibrated threshold"]), paired(w, L["raw model"])
             body.append([str(c)] + [f3(L[k].net) for k in CONTESTANTS]
-                        + [f"{100 * w.consult_rate:.0f}% / {100 * w.agreement_rate:.0f}%", str(w.blind),
+                        + [f"{100 * w.consult_rate:.0f}% / {100 * w.agreement_rate:.0f}%",
+                           f"{w.blind} / {W.num(c * w.blind)}",
                            f"{dt:+.3f} ± {2 * st:.3f}", f"{dr:+.3f} ± {2 * sr:.3f}",
                            f3(po.realised), f3(po.realised_fresh), str(po.differ)])
         out += ["", f"**p = {p}**", "", table(
-            ["c"] + list(CONTESTANTS) + ["wald consults / agreement", "blind switches (2.19)", "Δ wald − threshold",
+            ["c"] + list(CONTESTANTS) + ["wald consults / agreement", "blind switches / total undercharge (2.19)", "Δ wald − threshold",
                                          "Δ wald − raw", "wald realised, with Counts", "without Counts",
                                          "questions acted differently"], body)]
-    out += ["", "A blind switch fires `answer_second` without looking at the second opinion; the World prices it at 0 "
-                "and the net above charges c for it (QUESTIONS.md 2.19). *Without Counts*: the same questions, each "
-                "played from the declared prior, never conditioned on the calibration or on earlier test questions."]
+    out += ["", "A blind switch fires `answer_second` without looking at the second opinion. The World prices it at 0; "
+                "the door buys the second opinion, and every net and realised figure above charges c for it. The "
+                "total undercharge is c × the number of blind switches, in utility over the plate (QUESTIONS.md "
+                "2.19). *Without Counts*: the same questions, each played from the declared prior, never conditioned "
+                "on the calibration or on earlier test questions."]
     return "\n".join(out)
 
 
@@ -132,31 +135,33 @@ def claims(o, dry_run: bool) -> str:
 def calibration(o) -> str:
     cal = [r for r in o.rows if r["split"] == "calibration"]
     n_b = Counter(r["b"] for r in cal)
-    body = [[b, n_b[b]] + [str(sum(r["g1"] == g for r in cal if r["b"] == b)) for g in ("right", "zero", "wrong")]
+    body = [[b, n_b[b], f"{float(o.calibration.shares[b]):.1%}"]
+            + [str(sum(r["g1"] == g for r in cal if r["b"] == b)) for g in ("right", "zero", "wrong")]
             for b in o.settings.buckets]
     C = o.calibration
     n = sum(C.counts.values())
-    moved = []
-    for comp in C.before:
-        for v in C.before[comp]:
-            moved.append([comp, v, dec(C.before[comp][v]), dec(C.after[comp][v])])
+    moved = [[comp, v, dec(C.before[comp][v]), dec(C.after[comp][v])] for comp in C.before for v in C.before[comp]]
     first = next(iter(o.plates.values())).first
-    acts = "; ".join(f"`{' → '.join(a)}` × {k}" for a, k in C.acts.most_common())
+    unread = "its own bucket" if o.settings.unread == "unread" else f"bucket {o.settings.unread}"
     return "\n".join([
-        "## Calibration: the shipped Counts (brief 002, revision 2)", "",
-        f"The calibration split played as its own plate ({n} episodes, every observation priced 0, p = "
-        f"{o.settings.calibration_p}, c = {o.settings.calibration_c}; QUESTIONS.md 2.21). It wrote {len(C.counts)} "
-        f"distinct records. Every test pack ships them with digest `{C.digest}` and a Score of "
+        "## Calibration: the constructed Counts (brief 002, revision 2; QUESTIONS.md 2.21 as ruled)", "",
+        f"The calibration split's confidences, by tens, checked before any test question was played: "
+        + ", ".join(f"{k} {v}" for k, v in C.histogram) + f". Unreadable confidences go to {unread}. The gate "
+        "(2.15 as ruled) stops the run if a bucket holds under a fifth of the calibration records.", "",
+        table(["bucket", "n", "share", "read right", "partial / declined", "wrong"], body), "",
+        f"One record per calibration question ({n}), every instrument drawn: the bucket, the agreement samples and the "
+        "second opinion, then an end and the grade of the answer it submits. The end reads only what the record "
+        "shows: the read when the two answers match, and alternately the read and the second opinion when they "
+        "differ. Ends: " + ", ".join(f"`{e}` {k}" for e, k in C.ends.most_common()) + f". {len(C.counts)} distinct "
+        "records. Every record's realisability and the digest and Score were checked with the kit's reference, and "
+        f"wald recomputed the digest and Score at every declaration. Digest `{C.digest}`. Score "
         f"{len(str(C.score.numerator))}/{len(str(C.score.denominator))} digits (numerator/denominator), log "
-        f"{log_of(C.score):.2f}, or {log_of(C.score) / n:.4f} per record, computed by the kit's reference and "
-        "recomputed by wald at every declaration. The records, digest and exact Score are in the run directory's "
-        "`calibration_counts.json`.", "",
-        f"What the calibration plate bought, episode by episode: {acts}.", "",
-        table(["confidence bucket", "n", "read right", "partial / declined", "wrong"], body), "",
-        "**What the Counts moved.** P(Global) marginals, declared and after the shipped Counts (the kit's "
+        f"{log_of(C.score):.2f}, or {log_of(C.score) / n:.4f} per record. The records, digest and exact Score are in "
+        "the run directory's `calibration_counts.json`.", "",
+        "**What the Counts moved.** P(Global) marginals, declared and after the calibration Counts (the kit's "
         "`post_global`, a display: nothing that decides reads it):", "",
         table(["Global", "value", "declared", "after the calibration Counts"], moved), "",
-        f"On the first test question, wald played `{' → '.join(first[0])}` with the shipped Counts and "
+        f"On the first test question, wald played `{' → '.join(first[0])}` with the calibration Counts and "
         f"`{' → '.join(first[1])}` from the declared prior. The number of test questions it played differently, per "
         "plate, is the last column of the tables above."])
 

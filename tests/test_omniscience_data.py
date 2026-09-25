@@ -48,6 +48,8 @@ def test_buckets():
     cuts = (50, 80, 95)
     assert [OBS.bucket_of(c, cuts) for c in (0, 49, 50, 94, 95, 100, None)] == \
            ["b0", "b0", "b1", "b2", "b3", "b3", "unread"]
+    assert [OBS.bucket_of(c, (80,), "b0") for c in (79, 80, None)] == ["b0", "b1", "b0"]
+    assert OBS.bucket_names((80,), "b0") == ("b0", "b1") and OBS.bucket_names((80,)) == ("b0", "b1", "unread")
 
 
 def test_one_question_is_observed_once_and_every_call_logged_at_its_price():

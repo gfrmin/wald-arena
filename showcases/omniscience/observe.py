@@ -39,15 +39,17 @@ def parse_confidence(text: str) -> int | None:
     return int(m.group(1)) if m and int(m.group(1)) <= 100 else None
 
 
-def bucket_of(confidence: int | None, cuts: tuple[int, ...]) -> str:
-    "cuts are the lower bounds of the buckets above the first, e.g. (50, 80, 95) -> b0 [0,50) b1 [50,80) ..."
+def bucket_of(confidence: int | None, cuts: tuple[int, ...], unread: str = UNREAD) -> str:
+    """cuts are the lower bounds of the buckets above the first, e.g. (50, 80, 95) -> b0 [0,50) b1 [50,80) ...;
+    an unreadable confidence goes to `unread`, its own bucket or one of the others (QUESTIONS.md 2.15)."""
     if confidence is None:
-        return UNREAD
+        return unread
     return f"b{sum(confidence >= c for c in cuts)}"
 
 
-def bucket_names(cuts: tuple[int, ...]) -> tuple[str, ...]:
-    return tuple(f"b{i}" for i in range(len(cuts) + 1)) + (UNREAD,)
+def bucket_names(cuts: tuple[int, ...], unread: str = UNREAD) -> tuple[str, ...]:
+    named = tuple(f"b{i}" for i in range(len(cuts) + 1))
+    return named if unread in named else named + (unread,)
 
 
 def domain_index(q: Question, domains: tuple[str, ...]) -> int:
