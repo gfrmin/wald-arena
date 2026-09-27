@@ -58,3 +58,21 @@ def test_from_owner_picks_the_provider_and_its_key(monkeypatch):
 def test_unknown_provider_fails_loud():
     with pytest.raises(ValueError, match="provider = 'acme'"):
         from_owner({"instruments": {"x": {"model": "m", "usd_per_call": "0", "provider": "acme"}}}, "x")
+
+
+def test_a_gemini_reply_counts_thinking_as_output_and_a_safety_stop_is_empty():
+    from arena.transports import gemini_reply
+    ok = {"candidates": [{"content": {"parts": [{"text": "A", "thought": False}]}, "finishReason": "STOP"}],
+          "usageMetadata": {"promptTokenCount": 10, "candidatesTokenCount": 1, "thoughtsTokenCount": 5}}
+    r = gemini_reply(ok)
+    assert (r.text, r.input_tokens, r.output_tokens) == ("A", 10, 6)
+    assert gemini_reply({"candidates": [{"finishReason": "SAFETY"}], "usageMetadata": {}}).text == ""
+    assert gemini_reply({"promptFeedback": {"blockReason": "OTHER"}}).text == ""
+
+
+def test_the_gemini_transport_fails_loud_without_a_key(monkeypatch):
+    import pytest
+    from arena.transports import MissingKey, gemini_transport
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with pytest.raises(MissingKey):
+        gemini_transport("gemini-2.5-flash")

@@ -260,6 +260,74 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 - 2.13: the claims.
 - 2.14: seeds and the budget ceiling.
 - The reading of 2.21, above.
+- 2.25: whether the agreement and the second opinion can be wrong together (proposed: κ ∈ {0, 1/2}).
+- Providers: the OpenAI account has no credit and `gemini-2.5-flash` is refused to this account (the second
+  dry run, below). 2.3's primary and 2.9's grader cannot be called until that changes.
+
+### The second dry run: a different model in each role (2026-09-27)
+
+This run exists because the all-Haiku dry run cannot test independence.
+
+**Setup.**
+- Settings: `dryrun-mixed.toml`, run directory `runs/dry-run-mixed/`, with its own `SCOREBOARD.md`.
+- Instruments:
+  - primary: `claude-haiku-4-5-20251001`;
+  - second opinion: `claude-sonnet-5`, thinking off;
+  - grader: `claude-sonnet-4-6`, thinking off.
+- Models were checked against the providers' lists at 2026-09-27T19:44Z.
+- The same 294 questions as the first dry run: seed 1, 49 per domain.
+- Declared spend $5.79 of a $6.00 cap; $3.80 at list price from the tokens used. No frozen model was called.
+
+**Why the grader is a third Anthropic model.** No other provider could be called on 2026-09-27:
+- the OpenAI account has no credit (429 `credit_balance_exhausted`);
+- the Gemini project's prepaid credit is used up;
+- `gemini-2.5-flash` is listed but refused to new users (404: "no longer available to new users … use
+  models/gemini-3.8-flash");
+- the OpenRouter key is unknown (401).
+
+This blocks the real run as proposed. 2.3's primary is an OpenAI model, and 2.9's proposed grader cannot be called
+by this account. A Gemini transport (standard library only) is in `arena/transports.py`, unexercised past the 404.
+
+**The gate** was waived here too, stated in the report: b1 holds 19 of 144 records (13.2%). The primary is the same
+Haiku the waiver was ruled for.
+
+**Net utility per question** (Δ wald − threshold ± 2 SE):
+
+| p | c | wald | threshold | raw | better single | Δ | blind switches | switches after consulting |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 1/10 | +0.018 | −0.007 | −0.047 | −0.013 | +0.025 ± 0.057 | 1 | 0 |
+| 1 | 1 | +0.023 | −0.007 | −0.047 | −0.913 | +0.030 ± 0.052 | 0 | 0 |
+| 3 | 1/10 | −0.017 | +0.000 | −0.473 | −0.473 | −0.017 ± 0.065 | 0 | 0 |
+| 3 | 1 | +0.000 | +0.000 | −0.473 | −0.473 | +0.000 ± 0.000 | 0 | 0 |
+| 10 | 1/10 | −0.110 | +0.000 | −1.967 | −1.967 | −0.110 ± 0.192 | 0 | 0 |
+| 10 | 1 | +0.000 | +0.000 | −1.967 | −1.967 | +0.000 ± 0.000 | 0 | 0 |
+
+**What the records say about independence** (a display of counts, not a fit). The table crosses unanimous agreement
+(all five samples match the read) with whether the second opinion matches the read, and splits by the grader's
+verdict on the read:
+
+| read | all & same | all & different | some & same | some & different |
+|---|---|---|---|---|
+| right | 11 | 2 | 8 | 27 |
+| not right | 4 | 5 | 3 | 234 |
+
+- When the read is not right, the second opinion matches it in 4 of 9 unanimous cases, against 3 of 237 others.
+- When the read is right: 11 of 13, against 8 of 35.
+- Today's World says these are equal given t (2.25).
+- Caveats: the split is by the grader's verdict, not by t, and "not right" pools t = second (where the match is
+  impossible) with t = neither.
+- Unanimity is rare (22 of 294). The samples are compared as strings (2.7), so they seldom match exactly, and the
+  "all" cells are small.
+- It is evidence for 2.25, not a test of it.
+
+**E7 at p = 10, c = 1/10** is in the run's scoreboard, each line with its draw count.
+- The largest lines rest on 1–3 draws: 0.62 on 2 draws, 0.47 on 3.
+- Of the lines with many draws, the worst are:
+  - `agreement` after b0: 0.39 on 254 draws;
+  - `confidence`: 0.36 on 294, where P(b) is uniform and b1 holds 13%;
+  - `grade` after b0 → some → different → `answer_second`: 0.21 on 59;
+  - `second_opinion` after b0 → some: 0.15 on 121.
+- The second opinion's line after b0 → all is 0.26 on 6 draws.
 
 ### Revision 2: brief 002 on wald 0.2 (2.15–2.24)
 
@@ -358,6 +426,64 @@ machine with wald 0.2.0.
   After-act grades only answers already graded.
 
   Rule the grid knowing this, or rule fewer price points. **Blocks:** starting.
+
+- **2.25 Can the agreement and the second opinion be wrong together?** (proposed 2026-09-27; the owner rules)
+
+  **Today's World cannot say so.** Given which answer is right (t), and given the Globals, it treats the bucket,
+  the agreement and the second opinion as independent:
+  - the agreement kernel reads only t and (a⁺, a⁻);
+  - whether the second opinion matches the read depends only on t and (σ, α, β).
+
+  So when the primary is wrong, unanimous samples and a second opinion repeating the same wrong answer are, to the
+  World, two independent pieces of evidence. The all-Haiku dry run cannot test this, since one model in every role
+  is correlated with itself by construction. Two lawful ways to let the World say it follow. Each adds one Global
+  component that the calibration records' joint draws can teach, since every record draws all three observations.
+
+  **A. A correlation Global κ.** This is built, and off unless an owner file names a grid: `Grids.corr`,
+  `world.py`. With probability κ the instruments are tied: all five samples match exactly when the second opinion
+  matches the read. Otherwise they behave as today:
+
+      P(all | t, s, a, κ) = (1 − κ) · a_t + κ · [s = same],   where a_t = a⁺ if t = primary, else a⁻.
+
+  - κ = 0 is today's World, so the grid nests it, and the Counts can push the posterior back to 0.
+  - The agreement kernel reads (t, s, agree, corr). Nothing else changes: no local is added, the utilities and the
+    grade are untouched, and the calibration Counts ship as they are.
+  - κ > 0 makes "all agree and the second repeats the read" more likely together than apart for every t. When t is
+    `neither`, that is the case of being wrong together.
+  - Proposed grid: κ ∈ {0, 1/2}. A three-point grid {0, 1/4, 1/2} costs half as much again.
+
+  **B. A shared local "difficulty" d ∈ {easy, hard}.** P(hard) = η is a new Global.
+  - An easy question is today's World.
+  - On a hard question the primary is right with probability ρ_b / 2. The factor 1/2 is fixed and elicited; letting
+    it be learned needs another Global. The samples are unanimous, and the second opinion repeats the read unless
+    the second is the one that is right.
+  - So hard questions are where both instruments are confidently wrong together, and they also lower the read's
+    reliability. A adds no local; B does, and so has more states per Global value.
+  - Proposed grid: η ∈ {0, 1/4}, or {0, 1/4, 1/2}.
+  - B is less general than A in one respect: it ties the samples and the match to each other and to accuracy
+    through one switch. It is more literal in another: "hard" names a property of the question, which a later board
+    could observe.
+
+  **Cost.** Measured 2026-09-27 on this machine, one process. The Haiku dry run's 144 calibration records were
+  shipped; 20 test episodes were played in plate order at p = 10, c = 1/10. "Pack" is the time to generate the pack,
+  its Score included; "declare" is wald's check of it.
+
+  | World | Global values | states | pack | declare | seconds per episode (mean of 20) |
+  |---|---|---|---|---|---|
+  | today | 128 | 1,280 | 6 s | 12 s | 2.1 |
+  | A, κ ∈ {0, 1/2} | 256 | 2,560 | 15 s | 26 s | 4.2 |
+  | A, κ ∈ {0, 1/4, 1/2} | 384 | 3,840 | 24 s | 41 s | 6.8 |
+  | B, η ∈ {0, 1/4} | 256 | 3,328 | 19 s | 33 s | 5.8 |
+  | B, η ∈ {0, 1/4, 1/2} | 384 | 5,376 | 35 s | 57 s | 9.0 |
+
+  Episode time grows with the states, and with the Counts a plate has gathered (2.24). For the real run's 21 plates
+  of 300 test questions, today's World needs about 7 hours of CPU, extrapolated: 2–3 hours on three cores. A with
+  two values of κ doubles that, and B with two values of η is about 2.7 times it. No API spend either way.
+
+  **Proposed: A with κ ∈ {0, 1/2}.** It nests today's World, adds no local, costs the least, and speaks to exactly
+  the question asked. Whatever is ruled goes on the scoreboard with E7's second-opinion lines. Those lines are
+  where the independent World fits worst in the all-Haiku dry run (0.33 after b0 → all, against 0.10 after
+  b0 → some, at p = 10, c = 1/10), and they are where a correlation would show. **Blocks:** the World.
 
 **Expected results, written before any spend** (for the frozen models, under the proposed numbers):
 - **2.13's four claims stand as written.** Revision 2 changes how wald learns, not what it is claimed to do.

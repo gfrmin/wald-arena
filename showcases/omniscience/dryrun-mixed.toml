@@ -1,0 +1,69 @@
+# The second dry run (2026-09-27): a different model in each role, so the instruments can disagree and the grader
+# does not grade its own answers. Otherwise dryrun.toml's numbers. Read only by
+# `python -m showcases.omniscience.run --dry-run --dry-run-file showcases/omniscience/dryrun-mixed.toml`; the runner
+# refuses any model outside DRY_RUN_MODELS, which holds no frozen model. Models checked against the providers' lists
+# at 2026-09-27T19:44Z.
+
+lambda_usd = "1"
+penalties = [1, 3, 10]
+# A subset of 2.10's grid, for time (QUESTIONS.md 2.24); "none" cannot be shipped calibration Counts that use the
+# second opinion (2.22).
+second_price_grid = ["1/10", "1"]
+split_seed = 20260923
+sampling_seed = 1
+plate_seed = 20260925                 # 2.20: the order questions enter each plate
+
+[confidence]
+cuts = [80]                           # ruled 2026-09-25 (2.15): two buckets, cut at 80
+unread = "b0"                         # ruled: an unreadable confidence joins the low bucket
+gate = "waived"                       # the owner's 2026-09-27 waiver for the Haiku dry run, carried here because the
+                                      # primary is the same Haiku; it stands for the real run
+
+# 2.15, ruled 2026-09-25: the Globals' hypotheses. P(Global) is uniform over their product, elicited.
+[globals]
+rho = ["7/20", "13/20", "17/20", "19/20"]               # per bucket; straddles p/(1+p) at p = 1, 3, 10
+agree = [["4/5", "1/5"], ["1/2", "1/2"]]                # (a+, a-): informative agreement, or not
+second = [["1/2", "4/5", "1/5"], ["1/10", "4/5", "1/2"]]  # (sigma, alpha, beta)
+grader = ["9/10", "1"]                                  # gamma
+
+[agreement]
+samples = 5
+price = "per_call"      # the primary's declared price per call, times the number of samples
+
+# Declared prices are upper bounds from list prices times the largest prompt each role sends and its max_tokens.
+# Primary, Haiku 4.5 ($1 / $5): <= 300 in, <= 64 out, <= $0.00062. Second, Sonnet 5 ($2 / $10; its tokenizer
+# counts about 30% more): <= 400 in, <= 64 out, <= $0.00144. Grader, Sonnet 4.6 ($3 / $15), thinking off:
+# <= 2,200 in, <= 16 out, <= $0.00684. The grader is a third Anthropic model because no other provider could be
+# called on 2026-09-27: the OpenAI account has no credit (429 credit_balance_exhausted), the Gemini project's prepaid
+# credit is used up, gemini-2.5-flash is refused to new users (404), and the OpenRouter key is unknown (401).
+[instruments.primary]
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+usd_per_call = "0.0007"
+max_tokens = 64
+
+[instruments.second]
+provider = "anthropic"
+model = "claude-sonnet-5"
+usd_per_call = "0.0015"
+max_tokens = 64
+thinking = "disabled"   # Sonnet 5 thinks unless told not to, and 64 tokens of thinking would leave no answer
+
+[instruments.grader]
+provider = "anthropic"
+model = "claude-sonnet-4-6"
+usd_per_call = "0.0069"
+max_tokens = 16
+thinking = "disabled"
+
+[list_price_per_mtok."claude-haiku-4-5-20251001"]
+input = "1"
+output = "5"
+
+[list_price_per_mtok."claude-sonnet-5"]
+input = "2"
+output = "10"
+
+[list_price_per_mtok."claude-sonnet-4-6"]
+input = "3"
+output = "15"

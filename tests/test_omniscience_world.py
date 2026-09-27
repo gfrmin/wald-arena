@@ -1,3 +1,4 @@
+import dataclasses
 import re
 import sys
 from fractions import Fraction as F
@@ -6,6 +7,8 @@ import pytest
 import wald
 
 from showcases.omniscience import board as B
+from showcases.omniscience import run as RUN
+from showcases.omniscience import scoreboard as SB
 from showcases.omniscience import world as W
 
 BUCKETS = ("b0", "b1", "unread")
@@ -117,3 +120,23 @@ def test_a_long_score_is_written_and_read_without_lifting_the_process_digit_limi
     assert len(wald.score(bare, counts)) > limit
     W.declare(W.text(BUCKETS, GRIDS, PR, "t", counts))
     assert sys.get_int_max_str_digits() == limit
+
+
+def test_every_e7_line_has_its_draw_count():
+    counts = calibrated(6)
+    _, world = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
+    n = RUN.draws_per_line(counts)
+    keys = [SB.e7_line(x)[:3] for x in str(wald.e7(world, counts)).splitlines()[1:]]
+    assert set(keys) == set(n)
+    assert sum(v for (h, a, e), v in n.items() if a == "grade") == sum(counts.values())
+
+
+def test_the_correlation_global_is_absent_unless_a_grid_names_it_and_couples_agreement_to_the_match():
+    assert "corr" not in W.text(BUCKETS, GRIDS, PR, "t")
+    tied = dataclasses.replace(GRIDS, corr=(F(0), F(1, 2)))
+    spec, _ = W.declare(W.text(BUCKETS, tied, PR, "t"))
+    assert [name for name, _ in spec["globals"]] == list(W.GLOBALS) + ["corr"]
+    K = spec["O"]["agreement"]["K"]
+    law = lambda t, s, k: {d["all"] for ((b, tt, ss), g), d in K.items() if (tt, ss, g[4]) == (t, s, f"corr {k}")}
+    assert law("neither", "same", "0") == law("neither", "different", "0") == {F(1, 5)}      # κ = 0: today's World
+    assert law("neither", "same", "1/2") == {F(3, 5)} and law("neither", "different", "1/2") == {F(1, 10)}

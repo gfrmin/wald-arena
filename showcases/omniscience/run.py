@@ -19,7 +19,7 @@ import random
 import time
 from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
 from pathlib import Path
@@ -40,7 +40,8 @@ from showcases.omniscience.grader import calls as grading_calls
 HERE = Path(__file__).resolve().parent
 OWNER = HERE / "owner.toml"
 DRY_RUN = HERE / "dryrun.toml"
-DRY_RUN_MODELS = ("claude-haiku-4-5-20251001",)
+# Stand-ins a dry run may call. None is a frozen model of brief 002 (gpt-6-astra, gpt-5.5, claude-opus-5-5).
+DRY_RUN_MODELS = ("claude-haiku-4-5-20251001", "claude-sonnet-5", "claude-sonnet-4-6")
 ROLES = ("primary", "second", "grader")
 
 
@@ -93,6 +94,7 @@ class Settings:
     samples: int
     grids: W.Grids
     gate: str = "stands"             # "waived" only for the Haiku dry run (owner, 2026-09-27); never for the real run
+    list_prices: dict = field(default_factory=dict)   # model -> (input, output) $ per million tokens, for the audit
 
     @property
     def buckets(self):
@@ -115,7 +117,9 @@ def settings(owner) -> Settings:
     return Settings(Fraction(need(owner, "lambda_usd")), fractions(need(owner, "penalties")), fractions(grid),
                     need(owner, "split_seed"), need(owner, "sampling_seed"), need(owner, "plate_seed"),
                     tuple(need(owner, "confidence.cuts")), need(owner, "confidence.unread"),
-                    need(owner, "agreement.samples"), grids, gate_ruling(optional(owner, "confidence.gate", "stands")))
+                    need(owner, "agreement.samples"), grids, gate_ruling(optional(owner, "confidence.gate", "stands")),
+                    {m: (Decimal(v["input"]), Decimal(v["output"]))
+                     for m, v in optional(owner, "list_price_per_mtok", {}).items()})
 
 
 def gate_ruling(value: str) -> str:
@@ -270,11 +274,25 @@ class PlateOut:
     realised: Fraction               # mean of answer utility less every price paid, the After-act's included
     realised_fresh: Fraction
     e7: str                          # wald.e7's lines for the plate's Counts, as wald writes them
+    e7_n: dict                       # draws each E7 line groups, keyed as the scoreboard displays a line
     disclosure: str
     first: tuple                     # the first test question's acts, with the shipped Counts and without
     differ: int                      # test questions whose acts differ with the Counts and without
     counts_n: int                    # records in the plate's Counts at its end
     seconds: float
+
+
+def draws_per_line(counts: Counter) -> dict:
+    """How many draws each of E7's lines groups: (history, draw, end) as the scoreboard shows a line, the history
+    "a=o → ..." or "(start)", and the end only on the After-act's line. Counting records is counting facts (S1)."""
+    n = Counter()
+    for (draws, end, after), k in counts.items():
+        shown = lambda h: " → ".join(f"{a}={o}" for a, o in h) or "(start)"
+        for j, (act, _) in enumerate(draws):
+            n[(shown(draws[:j]), act, "")] += k
+        if after is not None:
+            n[(shown(draws), W.AFTER, end)] += k
+    return dict(n)
 
 
 def realised(rows, plays, results, p, c) -> Fraction:
@@ -304,6 +322,7 @@ def test_plate(args) -> PlateOut:
     first = wald.plate(bare).run(B.RecordedDoor(test_rows[0], s.samples)).acts
     return PlateOut(p, c, plays, fplays, realised(test_rows, plays, results, p, c),
                     realised(test_rows, fplays, fresults, p, c), str(wald.e7(world, plate.counts())),
+                    draws_per_line(plate.counts()),
                     str(plate.disclosure()), (results[0].acts, first),
                     sum(a.acts != b.acts for a, b in zip(results, fresults)), sum(plate.counts().values()),
                     time.time() - t0)
@@ -392,18 +411,21 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--dry-run", action="store_true",
                    help=f"use dryrun.toml's proposals; only {', '.join(DRY_RUN_MODELS)} may be called")
+    p.add_argument("--dry-run-file", type=Path, default=DRY_RUN,
+                   help="another dry run's settings (its models still restricted to the list above)")
+    p.add_argument("--scoreboard", type=Path, default=HERE / "SCOREBOARD.md")
     p.add_argument("--budget-usd", type=Decimal, required=True)
     p.add_argument("--run-dir", type=Path)
     p.add_argument("--replay", action="store_true",
                    help="play from the answers and grades already recorded in the run directory; refuse any call")
     p.add_argument("--workers", type=int, help="test plates played in parallel (default: one per plate, up to the CPUs)")
     a = p.parse_args(argv)
-    owner = load(DRY_RUN if a.dry_run else OWNER)
+    owner = load(a.dry_run_file if a.dry_run else OWNER)
     run_dir = a.run_dir or HERE / "runs" / ("dry-run" if a.dry_run else "run")
     from showcases.omniscience import scoreboard
     outcome = run(owner, run_dir, a.budget_usd, a.dry_run, transport=replay_only if a.replay else None,
                   workers=a.workers)
-    path = HERE / "SCOREBOARD.md"
+    path = a.scoreboard
     path.write_text(scoreboard.render(outcome, dry_run=a.dry_run, run_dir=run_dir.relative_to(HERE.parent.parent)
                                       if run_dir.is_relative_to(HERE.parent.parent) else run_dir))
     print(f"-> {path}")

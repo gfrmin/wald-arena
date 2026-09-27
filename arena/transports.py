@@ -77,7 +77,10 @@ def require_env(name: str) -> str:
     return value
 
 
-def anthropic_transport(model: str, key_env: str = "LLM_API_KEY", max_tokens: int = 16000) -> Transport:
+def anthropic_transport(model: str, key_env: str = "LLM_API_KEY", max_tokens: int = 16000,
+                        thinking: str | None = None) -> Transport:
+    """`thinking`: the request's thinking type ("disabled", "adaptive"), or None to send none and take the model's
+    default. A model that thinks by default spends a short max_tokens on thinking and can return no text."""
     key = require_env(key_env)
     try:
         import anthropic
@@ -87,7 +90,8 @@ def anthropic_transport(model: str, key_env: str = "LLM_API_KEY", max_tokens: in
 
     def send(system: str, user: str) -> Reply:
         r = client.messages.create(model=model, max_tokens=max_tokens, messages=[{"role": "user", "content": user}],
-                                   **({"system": system} if system else {}))
+                                   **({"system": system} if system else {}),
+                                   **({"thinking": {"type": thinking}} if thinking else {}))
         text = "" if r.stop_reason == "refusal" else "".join(b.text for b in r.content if b.type == "text")
         return Reply(text, r.usage.input_tokens, r.usage.output_tokens)
 
@@ -116,7 +120,46 @@ def openai_transport(model: str, key_env: str = "OPENAI_API_KEY", max_tokens: in
     return send
 
 
-TRANSPORTS: dict[str, Callable[..., Transport]] = {"anthropic": anthropic_transport, "openai": openai_transport}
+def gemini_reply(r: dict) -> Reply:
+    """A generateContent response as a Reply. A blocked prompt or a safety stop is an empty reply, as for Anthropic.
+    Output tokens include the thinking tokens, which are billed as output."""
+    usage = r.get("usageMetadata", {})
+    cands = r.get("candidates") or []
+    blocked = "blockReason" in r.get("promptFeedback", {}) or not cands or cands[0].get("finishReason") in (
+        "SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII", "RECITATION")
+    text = "" if blocked else "".join(part.get("text", "") for part in cands[0].get("content", {}).get("parts", [])
+                                      if not part.get("thought"))
+    return Reply(text, usage.get("promptTokenCount", 0),
+                 usage.get("candidatesTokenCount", 0) + usage.get("thoughtsTokenCount", 0))
+
+
+def gemini_transport(model: str, key_env: str = "GEMINI_API_KEY", max_tokens: int = 16000,
+                     thinking: str | None = None) -> Transport:
+    """Google's Gemini API over HTTPS with the standard library. `thinking = "disabled"` sets a thinking budget of 0."""
+    key = require_env(key_env)
+    import json
+    import urllib.error
+    import urllib.request
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+    def send(system: str, user: str) -> Reply:
+        config = {"maxOutputTokens": max_tokens} | (
+            {"thinkingConfig": {"thinkingBudget": 0}} if thinking == "disabled" else {})
+        body = {"contents": [{"role": "user", "parts": [{"text": user}]}], "generationConfig": config} | (
+            {"systemInstruction": {"parts": [{"text": system}]}} if system else {})
+        req = urllib.request.Request(url, json.dumps(body).encode(), method="POST",
+                                     headers={"Content-Type": "application/json", "x-goog-api-key": key})
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return gemini_reply(json.load(resp))
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"gemini {model}: HTTP {e.code}: {e.read().decode(errors='replace')[:500]}") from e
+
+    return send
+
+
+TRANSPORTS: dict[str, Callable[..., Transport]] = {"anthropic": anthropic_transport, "openai": openai_transport,
+                                                    "gemini": gemini_transport}
 
 
 def from_owner(owner, name: str, transport: Callable[[str], Transport] | None = None) -> Instrument:
@@ -127,6 +170,7 @@ def from_owner(owner, name: str, transport: Callable[[str], Transport] | None = 
         if spec.provider not in TRANSPORTS:
             raise ValueError(f"instruments.{name}.provider = {spec.provider!r}; known: {', '.join(TRANSPORTS)}")
         factory = TRANSPORTS[spec.provider]
-        kwargs = {k: v for k, v in (("key_env", spec.key_env), ("max_tokens", spec.max_tokens)) if v is not None}
+        kwargs = {k: v for k, v in (("key_env", spec.key_env), ("max_tokens", spec.max_tokens),
+                                    ("thinking", spec.thinking)) if v is not None}
         transport = lambda m: factory(m, **kwargs)
     return Instrument(name=name, model=spec.model, usd_per_call=spec.usd_per_call, transport=transport(spec.model))
