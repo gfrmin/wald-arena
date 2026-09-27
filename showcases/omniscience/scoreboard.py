@@ -6,7 +6,6 @@ from fractions import Fraction
 
 import wald
 
-from arena import kit
 from arena.report import join_sections, table
 from showcases.omniscience import world as W
 from showcases.omniscience.board import CONTESTANTS, paired
@@ -24,13 +23,21 @@ def f3(x) -> str:
     return f"{float(x):+.3f}"
 
 
-def dec(x: Fraction) -> str:
-    "A decimal display of an exact rational (E7 prints the rational; the run directory holds it)."
-    return f"{float(x):.4f}"
+def ln_digits(n: str) -> float:
+    """The natural log of a positive integer written in decimal, read from its text: a Score has tens of thousands of
+    digits, past the 4,300 Python converts by default, and that limit is the whole process's, so nothing here lifts it."""
+    return (len(n) - 1 + math.log10(float(n[0] + "." + n[1:17]))) * math.log(10)
 
 
-def log_of(x: Fraction) -> float:
-    return math.log(x.numerator) - math.log(x.denominator)
+def log_of(r: str) -> float:
+    "The natural log of a rational as wald writes it, \"p/q\" or \"p\"."
+    num, _, den = r.partition("/")
+    return ln_digits(num) - (ln_digits(den) if den else 0.0)
+
+
+def dec(r: str) -> str:
+    "A decimal display of a rational as wald writes it (the exact text is in the run directory)."
+    return "0.0000" if r.partition("/")[0] == "0" else f"{math.exp(log_of(r)):.4f}"
 
 
 def header(o, dry_run: bool, run_dir) -> str:
@@ -140,7 +147,7 @@ def calibration(o) -> str:
             for b in o.settings.buckets]
     C = o.calibration
     n = sum(C.counts.values())
-    moved = [[comp, v, dec(C.before[comp][v]), dec(C.after[comp][v])] for comp in C.before for v in C.before[comp]]
+    num, _, den = C.score.partition("/")
     first = next(iter(o.plates.values())).first
     unread = "its own bucket" if o.settings.unread == "unread" else f"bucket {o.settings.unread}"
     return "\n".join([
@@ -159,30 +166,35 @@ def calibration(o) -> str:
         "second opinion, then an end and the grade of the answer it submits. The end reads only what the record "
         "shows: the read when the two answers match, and alternately the read and the second opinion when they "
         "differ. Ends: " + ", ".join(f"`{e}` {k}" for e, k in C.ends.most_common()) + f". {len(C.counts)} distinct "
-        "records. Every record's realisability and the digest and Score were checked with the kit's reference, and "
-        f"wald recomputed the digest and Score at every declaration. Digest `{C.digest}`. Score "
-        f"{len(str(C.score.numerator))}/{len(str(C.score.denominator))} digits (numerator/denominator), log "
+        "records. The digest and Score are wald's own (`wald.digest`, `wald.score`); declaring a pack that ships the "
+        "Counts is the check that every record could have been written (S13), and wald recomputed the digest and "
+        f"Score at every declaration. Digest `{C.digest}`. Score "
+        f"{len(num)}/{len(den)} digits (numerator/denominator), log "
         f"{log_of(C.score):.2f}, or {log_of(C.score) / n:.4f} per record. The records, digest and exact Score are in "
         "the run directory's `calibration_counts.json`.", "",
-        "**What the Counts moved.** P(Global) marginals, declared and after the calibration Counts (the kit's "
-        "`post_global`, a display: nothing that decides reads it):", "",
-        table(["Global", "value", "declared", "after the calibration Counts"], moved), "",
+        "**What the Counts moved.** wald hands a host no P(Global | Counts), so it is not printed here. What the "
+        "Counts moved shows in what wald does: E7 below, and the acts. "
         f"On the first test question, wald played `{' → '.join(first[0])}` with the calibration Counts and "
         f"`{' → '.join(first[1])}` from the declared prior. The number of test questions it played differently, per "
         "plate, is the last column of the tables above."])
 
 
-def history(h) -> str:
-    return " → ".join(f"{a}={o}" for a, o in h) or "(start)"
+def e7_line(line: str) -> tuple[str, str, str, str]:
+    """One of `wald.e7`'s lines, "after <history>[, then <end>]: <draw> <p/q>", as (history, draw, end, rational),
+    for the table. A display of wald's text: nothing reads it back."""
+    where, _, tail = line.rpartition(": ")
+    act, tv = tail.split(" ")
+    where = where.removeprefix("after ")
+    where, _, end = where.partition(", then ")
+    return ("(start)" if where == "the start" else where.replace("; ", " → "), act, end, tv)
 
 
 def plates(o) -> str:
     out = ["## E7 and S15, per plate", "",
-           "S15's disclosure is `Plate.disclosure()`, wald's own. E7's lines are the kit's reference "
-           "(`laws/counts_check.py` at the tag `wald.law` names; QUESTIONS.md 2.23). Each line is one draw, grouped by "
+           "S15's disclosure is `Plate.disclosure()`, and E7's lines are `wald.e7`: both wald's own. Each line is one draw, grouped by "
            "the history in its episode that led to it: the total variation between the empirical law of its outcome "
            "and its posterior predictive under P(Global | all the plate's Counts), the shipped calibration included. "
-           "Rationals are exact in the run directory's `e7.json`; the decimals here are a display. E7's policy values "
+           "Rationals are exact in the run directory's `e7.txt`, as wald wrote them; the decimals here are a display. E7's policy values "
            "are expectations under the declared model over the whole plate, and the one-run maximiser's value is "
            "another; both are beyond the kit's size bound for a World of this size and are not computed "
            "(QUESTIONS.md 2.24). The realised net per question, with the Counts and from the declared prior, stands "
@@ -192,15 +204,13 @@ def plates(o) -> str:
         seen_disclosures.setdefault(po.disclosure, []).append(f"p = {p}, c = {c}")
     out += ["", "**S15**, at declaration: " + " ".join(f"{'; '.join(k)}: *{d}*." for d, k in seen_disclosures.items())]
     for (p, c), po in sorted(o.plates.items()):
-        rows = []
-        for key, tv in sorted(po.e7.items(), key=lambda kv: (-kv[1], repr(kv[0]))):
-            h, act, end = key
-            rows.append([history(h), "grade" if act == kit.AFTER else act, end or "", str(po.n_by_line.get(key, "")),
-                         dec(tv)])
+        rows = sorted((e7_line(x) for x in po.e7.splitlines()[1:]), key=lambda r: (-log_of(r[3]) if r[3] != "0"
+                                                                                   else math.inf, r[:3]))
+        rows = [[h, a, e, dec(tv)] for h, a, e, tv in rows]
         out += ["", f"**E7, p = {p}, c = {c}** — {po.counts_n} records in the plate's Counts at its end; the largest "
-                f"line {dec(max(po.e7.values()))}. Realised net per question {f3(po.realised)} with Counts, "
+                f"line {rows[0][3]}. Realised net per question {f3(po.realised)} with Counts, "
                 f"{f3(po.realised_fresh)} from the declared prior.", "",
-                table(["history", "draw", "after end", "n", "total variation"], rows)]
+                table(["history", "draw", "after end", "total variation"], rows)]
     return "\n".join(out)
 def spend(o) -> str:
     by = Counter()

@@ -336,6 +336,13 @@ machine with wald 0.2.0.
     worth raising with wald.
 
   **Blocks:** the scoreboard.
+
+  **Superseded 2026-09-27 by wald v0.2.1**, which answers both points: `wald.digest`, `wald.score` and `wald.e7`
+  are public, and `load_pack` reads long literals itself. The fetched kit (`arena/kit.py`, `kit.lock`,
+  `fetch_kit.sh`) is gone, and so is the runner's lift of the digit limit, which had changed it for the whole
+  process. The Score is text now, and the scoreboard reads its size and log from the text. wald hands a host no
+  P(Global | Counts), so the Global marginals the kit gave are no longer printed; what the Counts moved shows in the
+  acts and in E7.
 - **2.24 Compute, and the one-run maximiser.** The one-run maximiser of E7 (the exact plate value) is beyond the
   kit's size bound at this World's size, so the scoreboard says so and prints the realised values with and
   without Counts instead.

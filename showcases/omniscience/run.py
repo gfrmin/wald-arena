@@ -26,7 +26,6 @@ from pathlib import Path
 
 import wald
 
-from arena import kit
 
 from arena.config import load, need, optional
 from arena.spend import append_new, read_rows
@@ -240,23 +239,26 @@ class Calibration:
     "The constructed calibration Counts every test pack ships."
     counts: Counter
     digest: str
-    score: Fraction
+    score: str                       # as wald.score writes it, "p/q" in however many digits: text, never a number
     ends: Counter                    # records by end
     shares: dict                     # each bucket's share of the calibration records
     thin: dict                       # buckets under a fifth: non-empty only where the owner waived the gate
     histogram: list                  # the calibration confidences by tens
-    before: dict                     # P(Global) marginals, declared (display)
-    after: dict                      # P(Global | calibration Counts) marginals (display)
 
 
 def calibrate(s: Settings, inst, cal_rows, shares, thin=None) -> Calibration:
+    """The constructed Counts, their digest and their Score, by wald's own `digest` and `score`. Declaring a pack that
+    ships them is the check that this declaration could have written every record and that together they have
+    positive probability under some Global value (S13): wald refuses the pack `PLATE` otherwise."""
     counts = construct(cal_rows, s.samples)
-    spec, _ = W.declare(W.text(s.buckets, s.grids, prices(inst, s, Fraction(1), Fraction(0)), "omniscience"))
-    bad = [rec for rec in counts if not kit.cc().realisable(spec, rec)]
-    if bad or not kit.cc().expressible(spec, counts):
-        raise ValueError(f"constructed calibration records this declaration could not have written: {bad[:3]}")
-    return Calibration(counts, kit.digest(counts), kit.score(spec, counts), Counter(end for _, end, _ in counts.elements()),
-                       shares, thin or {}, histogram(cal_rows), kit.marginals(spec, Counter()), kit.marginals(spec, counts))
+    pr = prices(inst, s, Fraction(1), Fraction(0))
+    _, bare = W.declare(W.text(s.buckets, s.grids, pr, "omniscience"))
+    try:
+        W.declare(W.text(s.buckets, s.grids, pr, "omniscience", counts))
+    except wald.refusals.Refused as e:
+        raise ValueError(f"constructed calibration records this declaration could not have written: {e}") from e
+    return Calibration(counts, wald.digest(counts), wald.score(bare, counts),
+                       Counter(end for _, end, _ in counts.elements()), shares, thin or {}, histogram(cal_rows))
 
 
 @dataclass
@@ -267,8 +269,7 @@ class PlateOut:
     fresh: list                      # the same rows from the declared prior, Counts never conditioned on
     realised: Fraction               # mean of answer utility less every price paid, the After-act's included
     realised_fresh: Fraction
-    e7: dict                         # {(history, act, end): total variation}
-    n_by_line: dict                  # {(history, act, end): draws the line groups}
+    e7: str                          # wald.e7's lines for the plate's Counts, as wald writes them
     disclosure: str
     first: tuple                     # the first test question's acts, with the shipped Counts and without
     differ: int                      # test questions whose acts differ with the Counts and without
@@ -289,8 +290,8 @@ def test_plate(args) -> PlateOut:
     pr = W.Prices(p, inst_prices.agreement, c, inst_prices.grade)
     name = f"omniscience-p{W.num(p).replace('/', '_')}-c{W.num(c).replace('/', '_')}"
     pack = W.text(s.buckets, s.grids, pr, name, cal_counts)
-    spec, world = W.declare(pack)
-    bare_spec, bare = W.declare(W.text(s.buckets, s.grids, pr, name + "-no-counts"))
+    _, world = W.declare(pack)
+    _, bare = W.declare(W.text(s.buckets, s.grids, pr, name + "-no-counts"))
     if out:
         out.mkdir(parents=True, exist_ok=True)
         (out / f"{name}.py").write_text(pack)
@@ -300,8 +301,7 @@ def test_plate(args) -> PlateOut:
     fplays, fresults = [x[0] for x in fresh], [x[1] for x in fresh]
     first = wald.plate(bare).run(B.RecordedDoor(test_rows[0], s.samples)).acts
     return PlateOut(p, c, plays, fplays, realised(test_rows, plays, results, p, c),
-                    realised(test_rows, fplays, fresults, p, c), kit.e7(spec, plate.counts()),
-                    dict(kit.e7_sizes(plate.counts())),
+                    realised(test_rows, fplays, fresults, p, c), str(wald.e7(world, plate.counts())),
                     str(plate.disclosure()), (results[0].acts, first),
                     sum(a.acts != b.acts for a, b in zip(results, fresults)), sum(plate.counts().values()),
                     time.time() - t0)
@@ -361,11 +361,11 @@ def run(owner, run_dir: Path, budget: Decimal, dry_run: bool, transport=None, qu
     t0 = time.time()
     calib = calibrate(s, inst, cal_rows, shares, thin)
     print(f"calibration Counts: {sum(calib.counts.values())} records, {len(calib.counts)} distinct, "
-          f"Score and digest by the kit in {time.time() - t0:.0f}s", flush=True)
+          f"Score and digest by wald in {time.time() - t0:.0f}s", flush=True)
     (run_dir / "calibration_counts.json").write_text(json.dumps(
         {"records": [[[list(d) for d in draws], end, after, n] for (draws, end, after), n in
                      sorted(calib.counts.items(), key=repr)],
-         "sha256": calib.digest, "score": W.num(calib.score)}, indent=1) + "\n")
+         "sha256": calib.digest, "score": calib.score}, indent=1) + "\n")
 
     base = prices(inst, s, Fraction(1), Fraction(0))
     jobs = [(s, base, p, c, test_rows, calib.counts, packs) for p in s.penalties for c in s.grid]
@@ -377,11 +377,7 @@ def run(owner, run_dir: Path, budget: Decimal, dry_run: bool, transport=None, qu
     plates = {(o.p, o.c): o for o in outs}
     for o in outs:
         print(f"plate p={o.p} c={o.c}: {o.seconds:.0f}s", flush=True)
-    (run_dir / "e7.json").write_text(json.dumps(
-        {f"p={W.num(o.p)} c={W.num(o.c)}": [{"history": [list(d) for d in h], "draw": act, "end": end,
-                                             "n": o.n_by_line.get((h, act, end)), "total_variation": W.num(tv)}
-                                            for (h, act, end), tv in sorted(o.e7.items(), key=repr)]
-         for o in outs}, indent=1) + "\n")
+    (run_dir / "e7.txt").write_text("".join(f"# p={W.num(o.p)} c={W.num(o.c)}\n{o.e7}\n\n" for o in outs))
 
     lines = {}
     for (p, c), po in plates.items():

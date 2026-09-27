@@ -15,8 +15,6 @@ from fractions import Fraction
 
 import wald
 
-from arena import kit
-
 T = ("primary", "second", "neither")
 S = ("same", "different")
 TS = (("primary", "same"), ("primary", "different"), ("second", "different"), ("neither", "same"),
@@ -96,8 +94,8 @@ def _dist(d) -> str:
 
 
 def text(buckets, grids: Grids, pr: Prices, name: str, counts: Counter | None = None) -> str:
-    """The pack. With `counts`, it ships them inline with their digest and Score (V2.6, V2.8, V2.13); the Score and the
-    digest are the kit's, and wald recomputes both at declaration."""
+    """The pack. With `counts`, it ships them inline with their digest and Score (V2.6, V2.8, V2.13), written by
+    `wald.digest` and `wald.score`; wald recomputes both at declaration."""
     h = hypotheses(buckets, grids)
     gs = list(itertools.product(*(h[c] for c in GLOBALS)))
     lp = {g: local_prior(h, buckets, g) for g in gs}
@@ -140,11 +138,11 @@ def text(buckets, grids: Grids, pr: Prices, name: str, counts: Counter | None = 
     body = "\n".join(L) + "\n"
     if not counts:
         return body
-    W = wald.load_pack(body, ".")
+    bare = wald.declare(wald.load_pack(body, "."))
     rows = ", ".join("[" + repr([list(d) for d in draws]).replace("'", '"') + f', "{end}", "{after}", {n}]'
                      for (draws, end, after), n in sorted(counts.items(), key=repr))
-    return (body + f'counts([{rows}], sha256="{kit.digest(counts)}", source="data")\n'
-            + f'score({num(kit.score(W, counts))}, of="counts", source="data")\n')
+    return (body + f'counts([{rows}], sha256="{wald.digest(counts)}", source="data")\n'
+            + f'score({wald.score(bare, counts)}, of="counts", source="data")\n')
 
 
 def declare(pack: str):

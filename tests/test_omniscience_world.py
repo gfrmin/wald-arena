@@ -1,11 +1,10 @@
 import re
-from collections import Counter
+import sys
 from fractions import Fraction as F
 
 import pytest
 import wald
 
-from arena import kit
 from showcases.omniscience import board as B
 from showcases.omniscience import world as W
 
@@ -53,11 +52,14 @@ def test_the_door_grades_the_submitted_answer_and_the_read_on_abstention():
     assert d.outcome("agreement") == "all" and B.RecordedDoor(row(k=4), 5).outcome("agreement") == "some"
 
 
-def test_shipped_counts_carry_the_kits_digest_and_score_and_wald_recomputes_them():
+def test_shipped_counts_carry_walds_digest_and_score_and_wald_recomputes_them():
     counts = calibrated()
     pack = W.text(BUCKETS, GRIDS, PR, "t", counts)
+    _, bare = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
+    assert f'sha256="{wald.digest(counts)}"' in pack and f"score({wald.score(bare, counts)}," in pack
     W.declare(pack)
-    wrong_score = re.sub(r"score\((\d+)/", lambda m: f"score({int(m.group(1)) + 1}/", pack)
+    bump = lambda m: f"score({m.group(1)[:-1]}{(int(m.group(1)[-1]) + 1) % 10}/"     # the numerator's last digit
+    wrong_score = re.sub(r"score\((\d+)/", bump, pack)
     with pytest.raises(wald.refusals.Refused) as e:
         W.declare(wrong_score)
     assert e.value.name == "UNSCORED"
@@ -67,13 +69,8 @@ def test_shipped_counts_carry_the_kits_digest_and_score_and_wald_recomputes_them
     assert e.value.name == "PLATE"
 
 
-def test_a_shipped_calibration_moves_the_prior():
+def test_a_shipped_calibration_changes_what_wald_does():
     counts = calibrated()
-    spec, _ = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
-    before, after = kit.marginals(spec, Counter()), kit.marginals(spec, counts)
-    hi = lambda m: sum(p for v, p in m["calib"].items() if v.split()[2] == "7/10")    # rho_b1 = 7/10
-    lo = lambda m: sum(p for v, p in m["calib"].items() if v.split()[1] == "7/10")    # rho_b0 = 7/10
-    assert hi(after) > hi(before) == F(1, 2) and lo(after) < lo(before)
     _, bare = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
     _, shipped = W.declare(W.text(BUCKETS, GRIDS, PR, "t", counts))
     door = lambda: B.RecordedDoor(row("b0", 1, "different", "INCORRECT", "INCORRECT"), 5)
@@ -82,10 +79,12 @@ def test_a_shipped_calibration_moves_the_prior():
 
 def test_e7_has_a_line_for_every_draw_and_a_blind_switch_is_marked():
     counts = calibrated(6)
-    spec, _ = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
-    lines, sizes = kit.e7(spec, counts), kit.e7_sizes(counts)
-    assert set(lines) == set(sizes) and all(0 <= v <= 1 for v in lines.values())
-    assert sum(n for (h, act, _), n in sizes.items() if act == kit.AFTER) == sum(counts.values())
+    _, world = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
+    lines = str(wald.e7(world, counts)).splitlines()
+    histories = {(draws[:j], draws[j][0]) for draws, _, _ in counts for j in range(len(draws))} | \
+                {(draws, end) for draws, end, after in counts if after is not None}
+    assert lines[0].startswith("E7:") and len(lines) - 1 == len(histories)
+    assert all(0 <= F(line.rsplit(" ", 1)[1]) <= 1 for line in lines[1:])
 
     class R:
         acts = ("answer_second",)
@@ -100,3 +99,12 @@ def test_the_threshold_is_a_baseline_on_calibration_counts():
     assert rates["b1"]["right"] == F(9, 11) and rates["unread"]["right"] == F(1, 3)
     assert B.threshold(dict(b="b1"), rates, F(1)).submitted == "primary"
     assert B.threshold(dict(b="b0"), rates, F(1)).submitted == "abstain"
+
+
+def test_a_long_score_is_written_and_read_without_lifting_the_process_digit_limit():
+    limit = sys.get_int_max_str_digits()
+    counts = calibrated(40)
+    _, bare = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
+    assert len(wald.score(bare, counts)) > limit
+    W.declare(W.text(BUCKETS, GRIDS, PR, "t", counts))
+    assert sys.get_int_max_str_digits() == limit

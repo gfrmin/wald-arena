@@ -2,7 +2,7 @@
 
 The first showcase: wald entered on a public board. The board is AA-Omniscience (Artificial Analysis): short
 factual questions with free-text answers, where a wrong answer costs and an abstention does not. wald is consumed
-at `v0.2.0` (`wald.law` = charter-v0.2 / surface-v0.2 / kit-v0.12). Everything the contestant believes sits in
+at `v0.2.1` (`wald.law` = charter-v0.2 / surface-v0.2 / kit-v0.13). Everything the contestant believes sits in
 generated packs `wald.load_pack` accepts. What it learns about its instruments it learns inside the law, as Counts
 on a plate. The host holds counts and dollars, never a probability.
 
@@ -126,14 +126,13 @@ No reliability is fitted in Python. The calibration Counts are constructed from 
 `confidence`, `agreement`, `second_opinion`. Then comes an end, and the grade of the answer that end submits. The end
 reads only what the record shows, never a grade, so the design is ignorable (C2 §4). When the two answers match, the
 end submits the read. When they differ, the records alternate in question order between submitting the read and
-submitting the second opinion. Every record is checked realisable under the test declaration, and the whole
-multiset possible under some Global value (S13), with the kit's reference.
+submitting the second opinion. Declaring a pack that ships them checks that every record is realisable under the
+test declaration and the whole multiset possible under some Global value (S13): wald refuses it `PLATE` otherwise.
 
 Every test pack ships the same Counts inline (V2.6), with their digest (V2.13) and their Score (C2.S14, V2.8). The
-Score is the leave-one-out predictive probability of the shipped records. The Score and the digest are computed by
-the kit's reference (`laws/counts_check.py`, fetched at the kit tag `wald.law` names and verified against
-`arena/allowed_signers`). wald recomputes both at declaration, and a pack whose numbers differ is refused
-`UNSCORED` or `PLATE`.
+Score is the leave-one-out predictive probability of the shipped records. The Score and the digest are wald's own,
+`wald.score` and `wald.digest` (v0.2.1); the Score comes back as text, as the pack writes it, however many digits.
+wald recomputes both at declaration, and a pack whose numbers differ is refused `UNSCORED` or `PLATE`.
 
 **Before any test question is played**, the runner prints the calibration split's confidence histogram and each
 bucket's share of the calibration records. It stops for the owner if a bucket holds under a fifth of them (2.15 as
@@ -166,14 +165,14 @@ second opinion, grading. Then, per plate:
 - **E7**:
   - every draw's line, grouped by the history in its episode that led to it. Each line is the total variation
     between the empirical law of its outcome and its posterior predictive, as an exact rational with a decimal
-    display, computed by the kit's reference;
+    display, as `wald.e7` writes it;
   - the plate's realised net utility with its Counts, and the same questions played from the declared prior with
     Counts never conditioned on;
   - the one-run maximiser's value, or the statement that the kit's size bound does not admit it;
   - the Score of the shipped Counts.
-- **What the Counts moved**: the Global marginals before and after the shipped calibration (a display from the
-  kit's reference), wald's first act on the first test question with and without them, and how many test episodes
-  took a different act.
+- **What the Counts moved**: wald's first act on the first test question with and without them, and how many test
+  episodes took a different act. wald hands a host no P(Global | Counts), so the Global marginals are not printed
+  (they were the kit's display before v0.2.1).
 - **Every approximation named above, measured**: blind switches and their undercharge.
 - The grader line: which model graded, and that it is not AA's.
 
