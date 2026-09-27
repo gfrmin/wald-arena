@@ -93,17 +93,19 @@ def by_penalty(o) -> str:
             (dt, st), (dr, sr) = paired(w, L["calibrated threshold"]), paired(w, L["raw model"])
             body.append([str(c)] + [f3(L[k].net) for k in CONTESTANTS]
                         + [f"{100 * w.consult_rate:.0f}% / {100 * w.agreement_rate:.0f}%",
-                           f"{w.blind} / {W.num(c * w.blind)}",
+                           f"{w.blind}", f"{w.overcharged} / {W.num(c * w.overcharged)}",
                            f"{dt:+.3f} ± {2 * st:.3f}", f"{dr:+.3f} ± {2 * sr:.3f}",
                            f3(po.realised), f3(po.realised_fresh), str(po.differ)])
         out += ["", f"**p = {p}**", "", table(
-            ["c"] + list(CONTESTANTS) + ["wald consults / agreement", "blind switches / total undercharge (2.19)", "Δ wald − threshold",
+            ["c"] + list(CONTESTANTS) + ["wald consults / agreement", "blind switches", "switches after consulting / total overcharge (2.19)", "Δ wald − threshold",
                                          "Δ wald − raw", "wald realised, with Counts", "without Counts",
                                          "questions acted differently"], body)]
-    out += ["", "A blind switch fires `answer_second` without looking at the second opinion. The World prices it at 0; "
-                "the door buys the second opinion, and every net and realised figure above charges c for it. The "
-                "total undercharge is c × the number of blind switches, in utility over the plate (QUESTIONS.md "
-                "2.19). *Without Counts*: the same questions, each played from the declared prior, never conditioned "
+    out += ["", "`answer_second` costs c in the World in every state (QUESTIONS.md 2.19 as revised 2026-09-27). A blind "
+                "switch, `answer_second` without looking at the second opinion, is then priced exactly: the door buys "
+                "the second opinion once. A switch after `second_opinion` pays c for the look and c again in the "
+                "utility, so the World overcharges it by c; the total overcharge is c × those switches, in utility "
+                "over the plate. Every net and realised figure above charges the second opinion once, as bought. "
+                "*Without Counts*: the same questions, each played from the declared prior, never conditioned "
                 "on the calibration or on earlier test questions."]
     return "\n".join(out)
 

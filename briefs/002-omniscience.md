@@ -111,9 +111,11 @@ reliability γ. It changes no earned utility and adds no value to any act (S12).
 learns, and a check on the model.
 
 **Where this is an approximation, each named for the owner:**
-- `answer_second` can be fired without `second_opinion`, and the World prices it at 0. The door then buys the
-  second opinion, and the scoreboard charges c for it. wald's blind switches are counted and their undercharge
-  printed (2.19).
+- `answer_second` can be fired without `second_opinion`, since a terminal cannot wait for an observation. Its
+  utility carries −c in every state, so a blind switch is priced exactly: the door buys the second opinion once.
+  A switch after `second_opinion` is then charged c twice by the World, overcharged by c. The scoreboard counts
+  those switches and prints their total overcharge; its net and realised figures charge the second opinion once
+  (2.19, revised 2026-09-27).
 - Agreement is binary (all five match or not), and its kernel reads `t` alone. Given `t`, the agreement samples
   are declared independent of the bucket (2.16).
 - The episode decomposition (C2.J21): wald maximises within a question, never acts in order to learn. E7 prints
@@ -173,7 +175,7 @@ second opinion, grading. Then, per plate:
 - **What the Counts moved**: wald's first act on the first test question with and without them, and how many test
   episodes took a different act. wald hands a host no P(Global | Counts), so the Global marginals are not printed
   (they were the kit's display before v0.2.1).
-- **Every approximation named above, measured**: blind switches and their undercharge.
+- **Every approximation named above, measured**: blind switches, and the switches after consulting with their overcharge.
 - The grader line: which model graded, and that it is not AA's.
 
 ## What this teaches for the agent

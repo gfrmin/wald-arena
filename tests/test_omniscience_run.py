@@ -90,7 +90,7 @@ def test_end_to_end_resumes_without_paying_twice_and_scores_every_contestant(tmp
         assert po.e7 and "no class" in po.disclosure
     md = SB.render(o, dry_run=True, run_dir="runs/test")
     for said in ("self-graded, degenerate", "not AA's grader", "| wald |", "What the Counts moved", "E7, p = 1",
-                 "S15", "blind switches"):
+                 "S15", "blind switches", "switches after consulting"):
         assert said in md, said
 
 

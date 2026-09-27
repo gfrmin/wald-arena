@@ -32,7 +32,8 @@ class Played:
     submitted: str          # primary | second | abstain
     agreement: bool
     consulted: bool         # the second opinion was bought: looked at, or fired blind
-    blind: bool = False     # `answer_second` fired without `second_opinion` (QUESTIONS.md 2.19)
+    blind: bool = False     # `answer_second` fired without `second_opinion`: priced exactly (QUESTIONS.md 2.19)
+    overcharged: bool = False  # `answer_second` after `second_opinion`: the World charged c twice (2.19)
 
 
 # ---------------------------------------------------------------- the baselines
@@ -94,7 +95,7 @@ def played(result) -> Played:
     looked = "second_opinion" in acts
     blind = end == "answer_second" and not looked
     return Played({"answer_primary": "primary", "answer_second": "second", "abstain": "abstain"}[end],
-                  "agreement" in acts, looked or blind, blind)
+                  "agreement" in acts, looked or blind, blind, end == "answer_second" and looked)
 
 
 def play_plate(world, rows: Sequence, samples: int, fresh: bool = False):
@@ -136,6 +137,7 @@ class Line:
     consult_rate: float
     agreement_rate: float
     blind: int
+    overcharged: int
     nets: tuple             # per question, for paired differences
 
 
@@ -147,7 +149,8 @@ def line(name: str, rows: Sequence, plays: Sequence[Played], p, agreement, c) ->
     return Line(name, n, statistics.mean(float(answer_utility(r, pl, p)) for r, pl in zip(rows, plays)),
                 statistics.mean(nets), sum(pl.submitted != "abstain" for pl in plays) / n, right / n,
                 wrong / (n - right) if n > right else math.nan, sum(pl.consulted for pl in plays) / n,
-                sum(pl.agreement for pl in plays) / n, sum(pl.blind for pl in plays), nets)
+                sum(pl.agreement for pl in plays) / n, sum(pl.blind for pl in plays),
+                sum(pl.overcharged for pl in plays), nets)
 
 
 def paired(a: Line, b: Line) -> tuple[float, float]:

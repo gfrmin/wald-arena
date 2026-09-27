@@ -88,9 +88,18 @@ def test_e7_has_a_line_for_every_draw_and_a_blind_switch_is_marked():
 
     class R:
         acts = ("answer_second",)
-    assert B.played(R()) == B.Played("second", False, True, True)
+    assert B.played(R()) == B.Played("second", False, True, True, False)
     R.acts = ("second_opinion", "answer_second")
-    assert B.played(R()) == B.Played("second", False, True, False)
+    assert B.played(R()) == B.Played("second", False, True, False, True)
+
+
+def test_answer_second_costs_c_in_every_state():
+    spec, _ = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
+    second, primary = spec["T"]["answer_second"], spec["T"]["answer_primary"]
+    for (l, g), v in second.items():
+        b, t, s = l
+        assert v == (1 if W.right("answer_second", t, s) else -PR.p) - PR.second
+    assert set(primary.values()) == {1, -PR.p}
 
 
 def test_the_threshold_is_a_baseline_on_calibration_counts():

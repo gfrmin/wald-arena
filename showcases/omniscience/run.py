@@ -278,7 +278,9 @@ class PlateOut:
 
 
 def realised(rows, plays, results, p, c) -> Fraction:
-    "Answer utility less every price paid, the After-act's included, and c for a blind switch, which the door buys."
+    """What wald's episodes actually cost: answer utility less every price paid, the After-act's included, and c for a
+    blind switch, whose second opinion the door buys. The World's −c on `answer_second` is not taken again here: the
+    second opinion is bought once whichever way it came (2.19)."""
     return sum((B.answer_utility(r, pl, p) - res.paid - c * pl.blind for r, pl, res in zip(rows, plays, results)),
                Fraction(0)) / len(rows)
 

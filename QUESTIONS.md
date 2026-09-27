@@ -308,6 +308,8 @@ machine with wald 0.2.0.
   wald may fire it without `second_opinion`, and the World prices that at 0. The door then buys the second opinion
   and the scoreboard charges c. Proposed: accept, and print how often it happens and what it undercharged. The
   alternative puts −c in `answer_second`'s utility, which charges twice after a consult. **Blocks:** the terminals.
+  **Revised 2026-09-27:** the alternative. `answer_second` costs c in every state, so a blind switch is priced
+  exactly; a switch after `second_opinion` is overcharged by c, and the scoreboard prints how often and what it cost.
 - **2.20 The plate's order (`plate_seed`).** What wald knows at question n depends on questions 1 to n − 1, so the
   test questions enter each plate in a seeded order, the same for every (p, c). Proposed: 20260925. **Blocks:**
   the test plates.
@@ -371,6 +373,10 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-27, 2.19 revised:** `answer_second` is charged its consulting cost c in every state, so a blind switch
+  is priced exactly. A switch after `second_opinion` is then overcharged by c; the scoreboard prints how often that
+  happens and the total overcharge.
 
 - **2026-09-27, the bucket gate:** waived for the Haiku dry run only, and said plainly in its report. The gate
   stands for the real run: once the frozen model's calibration split is drawn, its histogram and bucket shares are

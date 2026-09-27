@@ -79,10 +79,13 @@ def right(end: str, t: str, s: str) -> bool:
     return t == "primary"
 
 
-def utility(end: str, t: str, s: str, p: Fraction) -> Fraction:
+def utility(end: str, t: str, s: str, p: Fraction, c: Fraction) -> Fraction:
+    """+1 right, -p wrong, 0 on abstention; `answer_second` also costs c, the second opinion's price, in every state
+    (2.19 as revised 2026-09-27). A terminal cannot wait for an observation, so this prices a blind switch exactly,
+    and overcharges by c a switch made after `second_opinion` was bought."""
     if end == "abstain":
         return Fraction(0)
-    return Fraction(1) if right(end, t, s) else -p
+    return (Fraction(1) if right(end, t, s) else -p) - (c if end == "answer_second" else 0)
 
 
 def _key(x) -> str:
@@ -108,7 +111,7 @@ def text(buckets, grids: Grids, pr: Prices, name: str, counts: Counter | None = 
          "globals(" + repr(list(GLOBALS)) + ")",
          "prior({" + ", ".join(f"{_key(g)}: 1/{len(gs)}" for g in gs) + '}, source="elicited")',
          "local_prior({" + ", ".join(f"{_key(g)}: {_dist(lp[g])}" for g in gs) + '}, source="elicited")',
-         "utility({" + ", ".join(f'"{a}": {{' + ", ".join(f"{_key(st)}: {num(utility(a, st[1], st[2], pr.p))}"
+         "utility({" + ", ".join(f'"{a}": {{' + ", ".join(f"{_key(st)}: {num(utility(a, st[1], st[2], pr.p, pr.second))}"
                                                           for st in states) + "}" for a in TERMINALS)
          + '}, source="elicited")',
          "price({" + ", ".join(f'"{k}": {num(v)}' for k, v in (("confidence", 0), ("agreement", pr.agreement),
