@@ -148,6 +148,12 @@ def calibration(o) -> str:
         f"The calibration split's confidences, by tens, checked before any test question was played: "
         + ", ".join(f"{k} {v}" for k, v in C.histogram) + f". Unreadable confidences go to {unread}. The gate "
         "(2.15 as ruled) stops the run if a bucket holds under a fifth of the calibration records.", "",
+        *([f"**The gate was waived for this dry run, and only for it** (the owner's ruling of 2026-09-27): "
+           + ", ".join(f"{b} holds {float(v):.1%}" for b, v in C.thin.items())
+           + " of the calibration records, under the fifth that stops a run. The gate stands for the real run: "
+           "the frozen model's calibration histogram and bucket shares are printed before any test question is "
+           "played, and a bucket under a fifth stops it for the owner to rule the cut again.", ""]
+          if C.thin else []),
         table(["bucket", "n", "share", "read right", "partial / declined", "wrong"], body), "",
         f"One record per calibration question ({n}), every instrument drawn: the bucket, the agreement samples and the "
         "second opinion, then an end and the grade of the answer it submits. The end reads only what the record "

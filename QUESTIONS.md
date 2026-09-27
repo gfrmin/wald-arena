@@ -226,6 +226,10 @@ frozen primary, whose histogram will differ, but the gate applies to it as ruled
 gives b1 28 of 144 (19.4%), still under a fifth. A cut at 30 gives 29 of 144 (20.1%). Moving unread to b1 with
 the cut at 80 gives 38 of 144 (26.4%).
 
+Ruled 2026-09-27: the gate is waived for this Haiku dry run only (`dryrun.toml`'s `confidence.gate = "waived"`),
+and the dry-run scoreboard says so. It stands for the real run: `owner.toml` says `gate = "stands"`, and the runner
+refuses `waived` outside `--dry-run` before any call.
+
 **The dollar estimate.** 600 questions, each with 7 primary calls, 1 second-opinion call and at most 2 grades.
 Input tokens are the dry run's measured means: an answer 130, a confidence call 150, a grade 1,658. Visible
 output is 51 tokens an answer, as measured (Haiku explains its answer; a frozen model may write less). R is the
@@ -255,7 +259,6 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 - 2.12: `claude-opus-5-5`'s reasoning effort and max tokens, and whether its key becomes `ANTHROPIC_API_KEY`.
 - 2.13: the claims.
 - 2.14: seeds and the budget ceiling.
-- The gate on the dry run, above.
 - The reading of 2.21, above.
 
 ### Revision 2: brief 002 on wald 0.2 (2.15–2.24)
@@ -361,6 +364,11 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-27, the bucket gate:** waived for the Haiku dry run only, and said plainly in its report. The gate
+  stands for the real run: once the frozen model's calibration split is drawn, its histogram and bucket shares are
+  printed before any test question is played, and if either bucket holds under a fifth of its records the run stops
+  for the owner to rule the cut again from that model's calibration data. Cut 80, unread → b0, stand for now.
 
 - **2026-09-25, brief 002 revision 2:**
   - **2.15:** two confidence buckets, cut at 80 (b0 = 0–79, b1 = 80–100). An unreadable confidence joins b0. Each

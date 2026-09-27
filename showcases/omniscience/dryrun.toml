@@ -15,6 +15,8 @@ plate_seed = 20260925                 # 2.20: the order questions enter each pla
 [confidence]
 cuts = [80]                           # ruled 2026-09-25 (2.15): two buckets, cut at 80
 unread = "b0"                         # ruled: an unreadable confidence joins the low bucket
+gate = "waived"                       # ruled 2026-09-27: the fifth-per-bucket stop is waived for this Haiku dry run
+                                      # only; it stands for the real run, whose owner.toml never says "waived"
 
 # 2.15, ruled 2026-09-25: the Globals' hypotheses. P(Global) is uniform over their product, elicited.
 [globals]

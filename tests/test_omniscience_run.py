@@ -114,9 +114,30 @@ def test_no_second_opinion_cannot_be_priced_none():
 def test_a_thin_bucket_stops_the_run_before_any_test_question(tmp_path):
     owner = small(load(RUN.DRY_RUN))
     owner["confidence"]["cuts"] = [95]            # the scripted model states 90 or 30: nothing reaches 95
+    owner["confidence"]["gate"] = "stands"
     with pytest.raises(RUN.BucketGate, match="under a fifth"):
         RUN.run(owner, tmp_path / "run", Decimal("1"), True, transport=Scripted(), questions=questions(10),
                 write_packs=False, workers=1)
+
+
+def test_the_gate_waived_for_the_dry_run_reports_the_thin_bucket_and_plays_on(tmp_path):
+    owner = small(load(RUN.DRY_RUN))
+    owner["confidence"]["cuts"] = [95]
+    owner["confidence"]["gate"] = "waived"
+    o = RUN.run(owner, tmp_path / "run", Decimal("1"), True, transport=Scripted(), questions=questions(10),
+                write_packs=False, workers=1)
+    assert o.calibration.thin and o.plates
+    assert "The gate was waived for this dry run" in SB.calibration(o)
+
+
+def test_the_gate_cannot_be_waived_for_the_real_run(tmp_path):
+    owner = small(load(RUN.DRY_RUN))
+    owner["confidence"]["gate"] = "waived"
+    fake = Scripted()
+    with pytest.raises(ValueError, match="the gate stands for the real run"):
+        RUN.run(owner, tmp_path / "run", Decimal("1"), False, transport=fake, questions=questions(10),
+                write_packs=False, workers=1)
+    assert not (tmp_path / "run" / "records.jsonl").exists()      # refused before any call
 
 
 def test_calibration_counts_are_constructed_one_record_per_question_every_instrument_drawn(tmp_path):

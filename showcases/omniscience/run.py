@@ -28,7 +28,7 @@ import wald
 
 from arena import kit
 
-from arena.config import load, need
+from arena.config import load, need, optional
 from arena.spend import append_new, read_rows
 from arena.transports import Call, Instrument, from_owner
 from showcases.omniscience import board as B
@@ -93,6 +93,7 @@ class Settings:
     unread: str
     samples: int
     grids: W.Grids
+    gate: str = "stands"             # "waived" only for the Haiku dry run (owner, 2026-09-27); never for the real run
 
     @property
     def buckets(self):
@@ -115,7 +116,13 @@ def settings(owner) -> Settings:
     return Settings(Fraction(need(owner, "lambda_usd")), fractions(need(owner, "penalties")), fractions(grid),
                     need(owner, "split_seed"), need(owner, "sampling_seed"), need(owner, "plate_seed"),
                     tuple(need(owner, "confidence.cuts")), need(owner, "confidence.unread"),
-                    need(owner, "agreement.samples"), grids)
+                    need(owner, "agreement.samples"), grids, gate_ruling(optional(owner, "confidence.gate", "stands")))
+
+
+def gate_ruling(value: str) -> str:
+    if value not in ("stands", "waived"):
+        raise ValueError(f"confidence.gate = {value!r}: 'stands' or 'waived'")
+    return value
 
 
 def instruments(owner, dry_run: bool, transport=None) -> dict[str, Instrument]:
@@ -185,19 +192,23 @@ def bucket_shares(cal_rows, buckets) -> dict[str, Fraction]:
     return {b: Fraction(n[b], len(cal_rows)) for b in buckets}
 
 
-def gate(cal_rows, s: Settings) -> dict[str, Fraction]:
+def bucket_gate(cal_rows, s: Settings, dry_run: bool) -> tuple[dict[str, Fraction], dict[str, Fraction]]:
     """Before any test question is played: print the calibration histogram and each bucket's share, and stop if a
-    bucket holds under a fifth of the calibration records (the owner's ruling on 2.15). Calibration data only."""
+    bucket holds under a fifth of the calibration records (the owner's ruling on 2.15). Calibration data only.
+    The owner waived the stop for the Haiku dry run alone (2026-09-27): there the thin buckets are printed, returned
+    and reported, and the run goes on. Returns (shares, the buckets under a fifth)."""
     shares = bucket_shares(cal_rows, s.buckets)
     print("calibration confidences: " + ", ".join(f"{k} {n}" for k, n in histogram(cal_rows)), flush=True)
     print("bucket shares: " + ", ".join(f"{b} {n.numerator}/{n.denominator} ({float(n):.1%})"
                                         for b, n in shares.items()), flush=True)
     thin = {b: n for b, n in shares.items() if n < GATE}
-    if thin:
-        raise BucketGate(f"under a fifth of the {len(cal_rows)} calibration records: "
-                         + ", ".join(f"{b} {float(n):.1%}" for b, n in thin.items())
-                         + f" (cuts {list(s.cuts)}, unread -> {s.unread}); the owner rules again (2.15)")
-    return shares
+    say = (f"under a fifth of the {len(cal_rows)} calibration records: "
+           + ", ".join(f"{b} {float(n):.1%}" for b, n in thin.items()) + f" (cuts {list(s.cuts)}, unread -> {s.unread})")
+    if thin and s.gate == "waived":
+        print(f"GATE WAIVED for this dry run (owner, 2026-09-27): {say}", flush=True)
+    elif thin:
+        raise BucketGate(say + "; the owner rules again (2.15)")
+    return shares, thin
 
 
 def calibration_end(row, index_among_different: int) -> str:
@@ -232,19 +243,20 @@ class Calibration:
     score: Fraction
     ends: Counter                    # records by end
     shares: dict                     # each bucket's share of the calibration records
+    thin: dict                       # buckets under a fifth: non-empty only where the owner waived the gate
     histogram: list                  # the calibration confidences by tens
     before: dict                     # P(Global) marginals, declared (display)
     after: dict                      # P(Global | calibration Counts) marginals (display)
 
 
-def calibrate(s: Settings, inst, cal_rows, shares) -> Calibration:
+def calibrate(s: Settings, inst, cal_rows, shares, thin=None) -> Calibration:
     counts = construct(cal_rows, s.samples)
     spec, _ = W.declare(W.text(s.buckets, s.grids, prices(inst, s, Fraction(1), Fraction(0)), "omniscience"))
     bad = [rec for rec in counts if not kit.cc().realisable(spec, rec)]
     if bad or not kit.cc().expressible(spec, counts):
         raise ValueError(f"constructed calibration records this declaration could not have written: {bad[:3]}")
     return Calibration(counts, kit.digest(counts), kit.score(spec, counts), Counter(end for _, end, _ in counts.elements()),
-                       shares, histogram(cal_rows), kit.marginals(spec, Counter()), kit.marginals(spec, counts))
+                       shares, thin or {}, histogram(cal_rows), kit.marginals(spec, Counter()), kit.marginals(spec, counts))
 
 
 @dataclass
@@ -312,6 +324,8 @@ class Outcome:
 def run(owner, run_dir: Path, budget: Decimal, dry_run: bool, transport=None, questions=None,
         write_packs: bool = True, workers: int | None = None) -> Outcome:
     s = settings(owner)
+    if s.gate == "waived" and not dry_run:
+        raise ValueError("confidence.gate = 'waived' is the Haiku dry run's alone; the gate stands for the real run")
     inst = instruments(owner, dry_run, transport)
     run_dir.mkdir(parents=True, exist_ok=True)
     qs = questions if questions is not None else QS.load()
@@ -343,9 +357,9 @@ def run(owner, run_dir: Path, budget: Decimal, dry_run: bool, transport=None, qu
     cal_rows = [r for r in rows if r["split"] == "calibration"]
     test_rows = plate_order([r for r in rows if r["split"] == "test"], s.plate_seed)
     packs = run_dir / "packs" if write_packs else None
-    shares = gate(cal_rows, s)
+    shares, thin = bucket_gate(cal_rows, s, dry_run)
     t0 = time.time()
-    calib = calibrate(s, inst, cal_rows, shares)
+    calib = calibrate(s, inst, cal_rows, shares, thin)
     print(f"calibration Counts: {sum(calib.counts.values())} records, {len(calib.counts)} distinct, "
           f"Score and digest by the kit in {time.time() - t0:.0f}s", flush=True)
     (run_dir / "calibration_counts.json").write_text(json.dumps(
