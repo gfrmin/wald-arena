@@ -34,7 +34,7 @@ stage2 = ""
 per_domain = 10
 
 [confidence]                                            # 2.5: a separate confidence call
-cuts = [80]                                             # 2.15: two buckets, b0 = 0-79, b1 = 80-100
+cuts = [90]                                             # ruled 2026-09-28 from the pilot: b0 = 0-89 or unread, b1 = 90-100
 unread = "b0"                                           # 2.15: an unreadable confidence joins b0
 gate = "stands"                                         # a bucket under a fifth of the calibration records stops
 
@@ -74,7 +74,7 @@ listed = "2026-09-28T11:21Z"            # Anthropic /v1/models, on the day
 provider = "gemini"
 key_env = "GEMINI_API_KEY"
 model = "gemini-3.8-flash"
-thinking = "disabled"                                   # reasoning off if the API allows; else "low", recorded
+thinking = "low"                                        # ruled 2026-09-28: "off" is not honoured; low, recorded per call
 max_tokens = 1024
 truncation = "stop"
 usd_per_call = "measured"
@@ -84,7 +84,7 @@ listed = "2026-09-28T11:21Z"            # Gemini v1beta/models, on the day
 provider = "gemini"
 key_env = "GEMINI_API_KEY"
 model = "gemini-3.8-flash"
-thinking = "disabled"
+thinking = "low"
 max_tokens = 1024
 truncation = "stop"
 usd_per_call = "measured"

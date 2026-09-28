@@ -247,7 +247,7 @@ Anthropic as above.
 
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
-**Still open:** the cut, and Gemini's thinking; see "The pilot's calibration stage", below.
+**Still open:** the owner's go on the pilot's test half (`go.pilot_test`).
 
 **Previously open (now done: funded, pinned 2026-09-28T11:21Z, pilot-calibration run):**
 - Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
@@ -255,6 +255,39 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
   setting (item 6 of "The pilot, built", above).
 - Then `--stage pilot-calibration`, which stops at the gate and the re-estimate. `pilot-test` and `stage2` each wait
   for the owner's go.
+
+### The pilot's calibration Counts, under the rulings of 2026-09-28 (the cut at 90; Gemini at `low`)
+
+**Done, and stopped for the owner's go on the pilot's test half.** No test question has been drawn or played.
+
+- **Re-sorted and re-graded at `low`:** 50 equivalence calls ($0.031) and 98 grades ($0.155). The 148 Gemini calls
+  made under "off" stay in `calls.jsonl`, marked `superseded`; the old grade memo is `grades.superseded.jsonl`; each
+  record keeps its old classes, k, s and equivalence call under `superseded`. Every grade came back the same at
+  `low` as under "off", and one record's k changed (1 → 0).
+- **Spend so far:** $3.2032 (wallet and call log agree), of which $0.1904 is the superseded grading. Projected: pilot
+  test $3.01, stage 2 $30.13, whole run $36.34.
+- **Gate at cut 90:** b0 18 of 50 (36%), b1 32 (64%): passes.
+- **Counts:** 50 records, 15 distinct, sha256 `0aba0eb73f3f204016fae623c1110ec86ad299553d7c4824d0950190ad5db194`
+  (`runs/run/calibration_counts.json`).
+
+**P(Global | Counts)**, wald's (`wald.counts.posterior_global`, rendered by `wald.report`; the full joint over the
+384 Global values, exact, is `runs/run/posterior.json`). Each marginal below is that text's rationals summed, for the
+owner to read; no contestant reads it. The prior is uniform over every grid.
+
+| Global | posterior |
+|---|---|
+| ρ_b0, P(primary right \| 0–89) | 7/20: 97.0%; 13/20: 3.2%; 17/20 and 19/20: under 0.1% |
+| ρ_b1, P(primary right \| 90–100) | 13/20: 24.3%; 17/20: 72.0%; 19/20: 3.8%; 7/20: under 0.1% |
+| agree (a⁺, a⁻) | (4/5, 1/5): 99.1%; (1/2, 1/2): 0.9% |
+| second (σ, α, β) | (1/2, 4/5, 1/5): 99.3%; (1/10, 4/5, 1/2): 0.7% |
+| grader γ | 9/10: 45.0%; 1: 55.0% (barely moved: the Counts say little about the grader until the audit) |
+| κ (2.25) | 0: 23.4%; 1/2: 76.6%; 9/10: 0.1% |
+
+The most probable joint value is ρ = (7/20, 17/20), agree (4/5, 1/5), second (1/2, 4/5, 1/5), γ = 1, κ = 1/2, at
+29.0%.
+
+**S15's disclosure** (`Plate.disclosure()`, with the Counts shipped), the same at all 21 (p, c) declarations:
+*no class of inseparable Global values settles anything an act can feel* (`runs/run/disclosure.txt`).
 
 ### The pilot's calibration stage (2026-09-28): the gate fired; two rulings wanted
 
@@ -650,6 +683,16 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-28, the pilot's calibration stage:**
+  - **(a) The cut is 90:** b0 = 0–89 or unread, b1 = 90–100. On the pilot's 50 records both buckets pass the gate and
+    the accuracy gap is largest (33% vs 78%). The gate and the cut are rechecked on stage 2's 300 calibration records
+    before any stage-2 test question; if a different cut then separates the buckets clearly better, stop and ask.
+  - **(b) Gemini's thinking is fixed at `low`**, recorded per call. The pilot's 50 calibration questions are re-graded
+    and re-sorted at `low` (no new primary or Opus calls), so every grade comes from one grader configuration. The
+    unhonoured-"off" records stay in the log, marked superseded.
+  - Then build the pilot's calibration Counts under these rulings, show the posterior over the Globals and S15's
+    disclosure, and stop for the owner's go on the pilot's test half.
 
 - **2026-09-28, "The pilot, built", items 1–8:** confirmed as proposed, with two clarifications.
   - **7:** stage 2's calibration is all 300 records, the pilot's 50 and stage 2's 250, shipped as one set of Counts;
