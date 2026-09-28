@@ -276,7 +276,7 @@ owner to read; no contestant reads it. The prior is uniform over every grid.
 
 | Global | posterior |
 |---|---|
-| ρ_b0, P(primary right \| 0–89) | 7/20: 97.0%; 13/20: 3.2%; 17/20 and 19/20: under 0.1% |
+| ρ_b0, P(primary right \| 0–89) | 7/20: 96.8%; 13/20: 3.2%; 17/20 and 19/20: under 0.1% |
 | ρ_b1, P(primary right \| 90–100) | 13/20: 24.3%; 17/20: 72.0%; 19/20: 3.8%; 7/20: under 0.1% |
 | agree (a⁺, a⁻) | (4/5, 1/5): 99.1%; (1/2, 1/2): 0.9% |
 | second (σ, α, β) | (1/2, 4/5, 1/5): 99.3%; (1/10, 4/5, 1/2): 0.7% |
