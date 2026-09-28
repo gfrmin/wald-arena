@@ -1,0 +1,31 @@
+# The owner's numbers: brief 001 and the owner's rulings. Rule 6: nothing here is chosen by the repository.
+# A key that is absent is TBD. Code that needs it fails loud, naming the key; QUESTIONS.md says what is open.
+
+[ladder]
+# Brief 001 (ruling 2026-09-22): the US 15-rung ladder, $100 -> $1,000,000, safe havens at Q5 and Q10.
+prizes = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 1000000]
+havens = [5, 10]  # question numbers, 1-based: $1,000 and $32,000
+
+[rulings]
+# 2026-09-22: the LLM read is the stage prior, taken at the start of every question and always paid;
+# the stage menu is the three lifelines.
+read_first = true
+# 2026-09-22: 50:50 is free; phone and audience are charged their API cost x lambda_usd plus option value.
+fifty_usd = "0"
+
+[calibration]
+per_tier = 200           # brief 001
+held_out_per_tier = 100  # brief 001
+
+[games]
+per_contestant = 500     # brief 001
+
+# TBD -- see QUESTIONS.md. Shapes, once ruled:
+#
+# lambda_usd = "1"                        utility per dollar of instrument spend
+# split_seed = 0                          the calibration / held-out / play split
+# [games]  seed = 0                       the question draw and the 50:50 draws for the games
+# [questions]  path = "questions.jsonl"             relative to this file
+# [instruments.llm]       provider = "anthropic", model = "...", usd_per_call = "..."
+# [instruments.phone]     provider = "anthropic", model = "...", usd_per_call = "..."
+# [instruments.audience]  provider = "anthropic", model = "...", usd_per_call = "..."

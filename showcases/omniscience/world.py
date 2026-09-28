@@ -1,0 +1,167 @@
+"""The v0.2 pack for AA-Omniscience (brief 002, revision 2), generated from the owner's numbers, never edited (rule 3).
+
+One episode is one question. The local is (b, t, s): the read's confidence bucket; which answer is right, `primary`,
+`second` or `neither`; and whether the second opinion's answer matches the read. The Globals are grids of named
+hypotheses: `calib` (ρ_b, the primary's reliability per bucket), `agree` (a⁺, a⁻, what the agreement samples say),
+`second` (σ, α, β, the second opinion jointly with the primary) and `grader` (γ). The grader is the After-act.
+
+This module writes numbers into a pack and never reads one back to choose anything: the probabilities below are the
+hypotheses the owner declares, turned into cells.
+"""
+import itertools
+from collections import Counter
+from dataclasses import dataclass
+from fractions import Fraction
+
+import wald
+
+T = ("primary", "second", "neither")
+S = ("same", "different")
+TS = (("primary", "same"), ("primary", "different"), ("second", "different"), ("neither", "same"),
+      ("neither", "different"))
+TERMINALS = ("answer_primary", "answer_second", "abstain")
+AFTER = "grade"
+GLOBALS = ("calib", "agree", "second", "grader")
+
+
+def num(x) -> str:
+    x = Fraction(x)
+    return str(x.numerator) if x.denominator == 1 else f"{x.numerator}/{x.denominator}"
+
+
+@dataclass(frozen=True)
+class Grids:
+    "The Globals' hypotheses (QUESTIONS.md 2.15), each a tuple of values."
+    rho: tuple[Fraction, ...]                                   # ρ_b's grid, the same for every bucket
+    agree: tuple[tuple[Fraction, Fraction], ...]                # (a⁺, a⁻)
+    second: tuple[tuple[Fraction, Fraction, Fraction], ...]     # (σ, α, β)
+    grader: tuple[Fraction, ...]                                # γ
+    corr: tuple[Fraction, ...] = ()                             # κ, the correlation Global (2.25, proposed): () omits it
+
+
+@dataclass(frozen=True)
+class Prices:
+    "In utility, where a right answer is 1."
+    p: Fraction                 # the penalty for a wrong answer
+    agreement: Fraction
+    second: Fraction            # c, the second opinion's price
+    grade: Fraction             # the After-act's
+
+
+def globals_of(g: Grids) -> tuple[str, ...]:
+    return GLOBALS + (("corr",) if g.corr else ())
+
+
+def hypotheses(buckets, g: Grids) -> dict[str, dict]:
+    "Every Global component's named values and what each declares."
+    calib = {"rho " + " ".join(num(r) for r in combo): dict(zip(buckets, combo))
+             for combo in itertools.product(g.rho, repeat=len(buckets))}
+    return {"calib": calib,
+            "agree": {"agree " + " ".join(map(num, a)): a for a in g.agree},
+            "second": {"second " + " ".join(map(num, x)): x for x in g.second},
+            "grader": {"grader " + num(x): x for x in g.grader}} | (
+        {"corr": {"corr " + num(x): x for x in g.corr}} if g.corr else {})
+
+
+def local_prior(h, buckets, g) -> dict:
+    "P(b, t, s | Global): P(b) uniform (2.17) · P(t | b) · P(s | t)."
+    calib, (sigma, alpha, beta) = h["calib"][g[0]], h["second"][g[2]]
+    out = {}
+    for b in buckets:
+        rho = calib[b]
+        pt = {"primary": rho, "second": (1 - rho) * sigma, "neither": (1 - rho) * (1 - sigma)}
+        for t, s in TS:
+            ps = {"primary": alpha, "second": Fraction(0), "neither": beta}[t]
+            q = Fraction(1, len(buckets)) * pt[t] * (ps if s == "same" else 1 - ps)
+            if q:
+                out[(b, t, s)] = q
+    return out
+
+
+def right(end: str, t: str, s: str) -> bool:
+    "Whether the answer an end submits (on `abstain`, the read, which the After-act grades) is right in (t, s)."
+    if end == "answer_second":
+        return t == "second" or (t == "primary" and s == "same")
+    return t == "primary"
+
+
+def utility(end: str, t: str, s: str, p: Fraction, c: Fraction) -> Fraction:
+    """+1 right, -p wrong, 0 on abstention; `answer_second` also costs c, the second opinion's price, in every state
+    (2.19 as revised 2026-09-27). A terminal cannot wait for an observation, so this prices a blind switch exactly,
+    and overcharges by c a switch made after `second_opinion` was bought."""
+    if end == "abstain":
+        return Fraction(0)
+    return (Fraction(1) if right(end, t, s) else -p) - (c if end == "answer_second" else 0)
+
+
+def _key(x) -> str:
+    return "(" + ", ".join(repr(v) for v in x) + ")" if isinstance(x, tuple) else repr(x)
+
+
+def _dist(d) -> str:
+    return "{" + ", ".join(f"{_key(o)}: {num(q)}" for o, q in d.items() if q) + "}"
+
+
+def text(buckets, grids: Grids, pr: Prices, name: str, counts: Counter | None = None) -> str:
+    """The pack. With `counts`, it ships them inline with their digest and Score (V2.6, V2.8, V2.13), written by
+    `wald.digest` and `wald.score`; wald recomputes both at declaration."""
+    h = hypotheses(buckets, grids)
+    gnames = globals_of(grids)
+    gs = list(itertools.product(*(h[c] for c in gnames)))
+    lp = {g: local_prior(h, buckets, g) for g in gs}
+    states = [l + g for g in gs for l in lp[g]]
+    L = [f"# {name}: generated by showcases/omniscience/world.py from the owner's numbers; do not edit (rule 3).",
+         f'world("{name}", closed=True)',
+         'horizon(3, source="elicited")',
+         'depth(3, source="elicited")',
+         "space(" + repr({"b": list(buckets), "t": list(T), "s": list(S), **{c: list(h[c]) for c in gnames}}) + ")",
+         "globals(" + repr(list(gnames)) + ")",
+         "prior({" + ", ".join(f"{_key(g)}: 1/{len(gs)}" for g in gs) + '}, source="elicited")',
+         "local_prior({" + ", ".join(f"{_key(g)}: {_dist(lp[g])}" for g in gs) + '}, source="elicited")',
+         "utility({" + ", ".join(f'"{a}": {{' + ", ".join(f"{_key(st)}: {num(utility(a, st[1], st[2], pr.p, pr.second))}"
+                                                          for st in states) + "}" for a in TERMINALS)
+         + '}, source="elicited")',
+         "price({" + ", ".join(f'"{k}": {num(v)}' for k, v in (("confidence", 0), ("agreement", pr.agreement),
+                                                               ("second_opinion", pr.second), (AFTER, pr.grade)))
+         + '}, source="elicited")',
+         'act("confidence", once=True, kernel=point("b"), reads=["b"])']
+
+    def agreement(st):
+        """P(all | t) = a⁺ or a⁻. With κ (2.25, proposed), a mixture: with probability κ the instruments are tied,
+        all five samples match exactly when the second opinion matches the read, so they can be wrong together."""
+        plus, minus = h["agree"][st[4]]
+        a = plus if st[1] == "primary" else minus
+        if grids.corr:
+            k = h["corr"][st[7]]
+            a = (1 - k) * a + k * (st[2] == "same")
+        return {"all": a, "some": 1 - a}
+
+    L.append('act("agreement", once=True, kernel=table({'
+             + ", ".join(f"{_key(st)}: {_dist(agreement(st))}" for st in states)
+             + '}, source="elicited"), reads=' + ('["t", "s", "agree", "corr"]' if grids.corr else '["t", "agree"]')
+             + ')')
+    L.append('act("second_opinion", once=True, kernel=point("s"), reads=["s"])')
+
+    def graded(end, st):
+        gamma = h["grader"][st[6]]
+        ok = right(end, st[1], st[2])
+        return {"right": gamma if ok else 1 - gamma, "not": 1 - gamma if ok else gamma}
+
+    L.append(f'after("{AFTER}", kernel=table({{'
+             + ", ".join(f'"{e}": {{' + ", ".join(f"{_key(st)}: {_dist(graded(e, st))}" for st in states) + "}"
+                         for e in TERMINALS)
+             + '}, source="elicited"), reads=["t", "s", "grader"])')
+    body = "\n".join(L) + "\n"
+    if not counts:
+        return body
+    bare = wald.declare(wald.load_pack(body, "."))
+    rows = ", ".join("[" + repr([list(d) for d in draws]).replace("'", '"') + f', "{end}", "{after}", {n}]'
+                     for (draws, end, after), n in sorted(counts.items(), key=repr))
+    return (body + f'counts([{rows}], sha256="{wald.digest(counts)}", source="data")\n'
+            + f'score({wald.score(bare, counts)}, of="counts", source="data")\n')
+
+
+def declare(pack: str):
+    "The pack's spec (for the kit's evaluators) and its declared World (for the plate); wald refuses a bad pack here."
+    spec = wald.load_pack(pack, ".")
+    return spec, wald.declare(spec)

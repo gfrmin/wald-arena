@@ -2,7 +2,7 @@ from fractions import Fraction as F
 
 import pytest
 
-from data.owner import MissingOwnerNumber, havens, ladder, lambda_usd, load, need, prices
+from explainers.millionaire.owner import MissingOwnerNumber, havens, ladder, lambda_usd, load, need, prices
 
 
 def test_brief_ladder_and_havens():

@@ -3,8 +3,8 @@ import random
 
 import pytest
 
-from data.questions import QuestionSetError, draw_game, load, parse, split
-from oracle.game import tiers_by_fives
+from explainers.millionaire.questions import QuestionSetError, draw_game, load, parse, split
+from explainers.millionaire.oracle.game import tiers_by_fives
 from tests.conftest import as_record, make_questions
 
 

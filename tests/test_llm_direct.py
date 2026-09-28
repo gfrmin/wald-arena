@@ -4,10 +4,10 @@ from fractions import Fraction as F
 
 import pytest
 
-from baselines import llm_direct
-from calibration.instruments import Instrument, Reply
-from data.questions import draw_game
-from oracle.host import INVALID, View, play
+from explainers.millionaire.baselines import llm_direct
+from arena.transports import Instrument, Reply
+from explainers.millionaire.questions import draw_game
+from explainers.millionaire.oracle.host import INVALID, View, play
 from tests.test_host_and_always_answer import BRIEF, PLAY
 
 
