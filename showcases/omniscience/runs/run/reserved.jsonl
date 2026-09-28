@@ -1,0 +1,896 @@
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 0, "usd": "0.01644"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 2, "usd": "0.00854"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 4, "usd": "0.00468"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 6, "usd": "0.00753"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 8, "usd": "0.0108"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 10, "usd": "0.005936"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 12, "usd": "0.00031425"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 14, "usd": "0.006355"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 16, "usd": "0.003795"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 18, "usd": "0.005935"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 20, "usd": "0.004465"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 22, "usd": "0.004375"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 24, "usd": "0.007216"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 26, "usd": "0.00025575"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 28, "usd": "0.016285"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 30, "usd": "0.009215"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 32, "usd": "0.010075"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 34, "usd": "0.014395"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 36, "usd": "0.014365"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 38, "usd": "0.003188"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 40, "usd": "0.00025575"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 42, "usd": "0.00827"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 44, "usd": "0.016175"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 46, "usd": "0.01436"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 48, "usd": "0.01052"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 50, "usd": "0.01043"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 52, "usd": "0.005516"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 54, "usd": "0.000651"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 56, "usd": "0.008475"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 58, "usd": "0.00989"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 60, "usd": "0.010125"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 62, "usd": "0.008715"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 64, "usd": "0.014955"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 66, "usd": "0.004952"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 68, "usd": "0.00064425"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 70, "usd": "0.013765"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 72, "usd": "0.005605"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 74, "usd": "0.016435"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 76, "usd": "0.016435"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 78, "usd": "0.016435"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 80, "usd": "0.00518"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 82, "usd": "0.00030675"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 84, "usd": "0.005245"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 86, "usd": "0.007435"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 88, "usd": "0.007255"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 90, "usd": "0.005785"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 92, "usd": "0.006985"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 94, "usd": "0.004008"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 96, "usd": "0.0002535"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 98, "usd": "0.00378"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 100, "usd": "0.003395"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 102, "usd": "0.00315"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 104, "usd": "0.00195"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 106, "usd": "0.00285"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 108, "usd": "0.003516"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 110, "usd": "0.000288"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 112, "usd": "0.009525"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 114, "usd": "0.006"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 116, "usd": "0.011565"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 118, "usd": "0.013515"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 120, "usd": "0.007695"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 122, "usd": "0.006204"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 124, "usd": "0.002727"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 126, "usd": "0.00828"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 128, "usd": "0.010785"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 130, "usd": "0.01191"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 132, "usd": "0.01122"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 134, "usd": "0.00885"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 136, "usd": "0.00082"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 138, "usd": "0.00118725"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 140, "usd": "0.00427"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 142, "usd": "0.00493"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 144, "usd": "0.00391"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 146, "usd": "0.00082"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 148, "usd": "0.00448"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 150, "usd": "0.003956"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 152, "usd": "0.00143025"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 154, "usd": "0.016425"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 156, "usd": "0.016265"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 158, "usd": "0.016425"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 160, "usd": "0.011055"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 162, "usd": "0.015435"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 164, "usd": "0.0059"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 166, "usd": "0.0003345"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 168, "usd": "0.005175"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 170, "usd": "0.003295"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 172, "usd": "0.006615"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 174, "usd": "0.006825"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 176, "usd": "0.005295"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 178, "usd": "0.004188"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 180, "usd": "0.0003105"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 182, "usd": "0.03076"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 184, "usd": "0.01123"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 186, "usd": "0.01264"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 188, "usd": "0.01054"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 190, "usd": "0.01633"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 192, "usd": "0.000676"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 194, "usd": "0.0007575"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 196, "usd": "0.003405"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 198, "usd": "0.00311"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 200, "usd": "0.003225"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 202, "usd": "0.000795"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 204, "usd": "0.004785"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 206, "usd": "0.000756"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 208, "usd": "0.00028125"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 210, "usd": "0.00901"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 212, "usd": "0.005565"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 214, "usd": "0.00412"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 216, "usd": "0.00295"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 218, "usd": "0.001"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 220, "usd": "0.000768"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 222, "usd": "0.00096675"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 224, "usd": "0.00754"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 226, "usd": "0.004825"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 228, "usd": "0.01633"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 230, "usd": "0.00796"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 232, "usd": "0.01033"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 234, "usd": "0.007036"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 236, "usd": "0.000666"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 238, "usd": "0.007905"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 240, "usd": "0.0161"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 242, "usd": "0.008055"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 244, "usd": "0.010935"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 246, "usd": "0.009375"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 248, "usd": "0.00966"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 250, "usd": "0.0008865"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 252, "usd": "0.02262"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 254, "usd": "0.00821"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 256, "usd": "0.01623"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 258, "usd": "0.0162"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 260, "usd": "0.0162"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 262, "usd": "0.007216"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 264, "usd": "0.000759"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 266, "usd": "0.00479"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 268, "usd": "0.00488"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 270, "usd": "0.0035"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 272, "usd": "0.00515"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 274, "usd": "0.0044"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 276, "usd": "0.006556"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 278, "usd": "0.0002805"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 280, "usd": "0.016445"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 282, "usd": "0.003365"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 284, "usd": "0.016445"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 286, "usd": "0.016385"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 288, "usd": "0.016445"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 290, "usd": "0.010272"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 292, "usd": "0.000303"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 294, "usd": "0.004935"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 296, "usd": "0.006135"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 298, "usd": "0.005115"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 300, "usd": "0.011145"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 302, "usd": "0.003945"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 304, "usd": "0.004892"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 306, "usd": "0.0002415"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 308, "usd": "0.01633"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 310, "usd": "0.005965"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 312, "usd": "0.0163"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 314, "usd": "0.01462"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 316, "usd": "0.0163"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 318, "usd": "0.009568"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 320, "usd": "0.000735"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 322, "usd": "0.031995"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 324, "usd": "0.016215"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 326, "usd": "0.016365"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 328, "usd": "0.039135"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 330, "usd": "0.016335"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 332, "usd": "0.00828"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 334, "usd": "0.00113475"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 336, "usd": "0.00511"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 338, "usd": "0.008395"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 340, "usd": "0.00553"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 342, "usd": "0.0034"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 344, "usd": "0.0064"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 346, "usd": "0.004472"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 348, "usd": "0.00026325"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 350, "usd": "0.016395"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 352, "usd": "0.004825"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 354, "usd": "0.006585"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 356, "usd": "0.006705"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 358, "usd": "0.004875"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 360, "usd": "0.006644"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 362, "usd": "0.00050175"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 364, "usd": "0.01633"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 366, "usd": "0.01519"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 368, "usd": "0.00883"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 370, "usd": "0.01633"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 372, "usd": "0.01633"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 374, "usd": "0.011012"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 376, "usd": "0.0002955"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 378, "usd": "0.006785"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 380, "usd": "0.005015"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 382, "usd": "0.015815"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 384, "usd": "0.005075"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 386, "usd": "0.005255"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 388, "usd": "0.005196"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 390, "usd": "0.0002475"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 392, "usd": "0.00428"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 394, "usd": "0.00466"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 396, "usd": "0.00491"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 398, "usd": "0.00473"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 400, "usd": "0.00368"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 402, "usd": "0.003072"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 404, "usd": "0.00057525"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 406, "usd": "0.01554"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 408, "usd": "0.029525"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 410, "usd": "0.03573"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 412, "usd": "0.02061"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 414, "usd": "0.01386"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 416, "usd": "0.003448"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 418, "usd": "0.000672"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 420, "usd": "0.00954"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 422, "usd": "0.006025"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 424, "usd": "0.00717"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 426, "usd": "0.0072"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 428, "usd": "0.00618"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 430, "usd": "0.0088"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 432, "usd": "0.00129225"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 434, "usd": "0.007695"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 436, "usd": "0.012785"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 438, "usd": "0.013095"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 440, "usd": "0.006525"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 442, "usd": "0.014895"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 444, "usd": "0.006508"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 446, "usd": "0.0003165"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 448, "usd": "0.01489"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 450, "usd": "0.016235"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 452, "usd": "0.01651"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 454, "usd": "0.01651"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 456, "usd": "0.01651"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 458, "usd": "0.014832"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 460, "usd": "0.0017085"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 462, "usd": "0.031925"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 464, "usd": "0.01626"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 466, "usd": "0.039125"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 468, "usd": "0.031925"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 470, "usd": "0.045065"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 472, "usd": "0.012748"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 474, "usd": "0.00084675"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 476, "usd": "0.00416"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 478, "usd": "0.003515"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 480, "usd": "0.00482"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 482, "usd": "0.0044"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 484, "usd": "0.0065"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 486, "usd": "0.010312"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 488, "usd": "0.0013545"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 490, "usd": "0.005395"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 492, "usd": "0.00664"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 494, "usd": "0.004795"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 496, "usd": "0.006205"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 498, "usd": "0.008995"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 500, "usd": "0.010136"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 502, "usd": "0.00084375"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 504, "usd": "0.01343"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 506, "usd": "0.016505"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 508, "usd": "0.00848"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 510, "usd": "0.00911"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 512, "usd": "0.01277"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 514, "usd": "0.016232"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 516, "usd": "0.000885"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 518, "usd": "0.01636"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 520, "usd": "0.01059"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 522, "usd": "0.01237"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 524, "usd": "0.00787"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 526, "usd": "0.01216"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 528, "usd": "0.006016"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 530, "usd": "0.0003135"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 532, "usd": "0.00153"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 534, "usd": "0.0009"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 536, "usd": "0.00153"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 538, "usd": "0.00153"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 540, "usd": "0.00153"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 542, "usd": "0.004424"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 544, "usd": "0.000387"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 546, "usd": "0.00441"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 548, "usd": "0.004445"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 550, "usd": "0.00669"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 552, "usd": "0.00732"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 554, "usd": "0.00552"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 556, "usd": "0.005132"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 558, "usd": "0.000273"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 560, "usd": "0.01672"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 562, "usd": "0.0115"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 564, "usd": "0.01174"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 566, "usd": "0.01063"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 568, "usd": "0.01147"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 570, "usd": "0.006332"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 572, "usd": "0.000339"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 574, "usd": "0.01551"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 576, "usd": "0.01312"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 578, "usd": "0.01272"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 580, "usd": "0.01209"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 582, "usd": "0.01572"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 584, "usd": "0.010864"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 586, "usd": "0.0006795"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 588, "usd": "0.006095"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 590, "usd": "0.005475"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 592, "usd": "0.003995"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 594, "usd": "0.004115"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 596, "usd": "0.004835"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 598, "usd": "0.002928"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 600, "usd": "0.00074925"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 602, "usd": "0.001615"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 604, "usd": "0.001905"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 606, "usd": "0.001585"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 608, "usd": "0.001615"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 610, "usd": "0.001795"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 612, "usd": "0.001168"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 614, "usd": "0.00027"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 616, "usd": "0.00639"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 618, "usd": "0.01617"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 620, "usd": "0.00864"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 622, "usd": "0.01422"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 624, "usd": "0.02208"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 626, "usd": "0.007328"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 628, "usd": "0.00029925"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 630, "usd": "0.001"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 632, "usd": "0.00284"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 634, "usd": "0.00097"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 636, "usd": "0.00097"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 638, "usd": "0.00097"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 640, "usd": "0.002236"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 642, "usd": "0.000288"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 644, "usd": "0.031975"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 646, "usd": "0.01623"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 648, "usd": "0.031975"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 650, "usd": "0.021985"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 652, "usd": "0.009265"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 654, "usd": "0.00634"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 656, "usd": "0.00114"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 658, "usd": "0.003875"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 660, "usd": "0.004125"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 662, "usd": "0.005225"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 664, "usd": "0.008375"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 666, "usd": "0.005825"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 668, "usd": "0.008216"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 670, "usd": "0.000249"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 672, "usd": "0.00216"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 674, "usd": "0.00306"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 676, "usd": "0.00249"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 678, "usd": "0.00192"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 680, "usd": "0.00198"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 682, "usd": "0.001388"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 684, "usd": "0.000498"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 686, "usd": "0.00978"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 688, "usd": "0.01621"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 690, "usd": "0.01386"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 692, "usd": "0.0132"}
+{"instrument": "primary", "usd": "0.5", "stage": "pilot"}
+{"settle": 694, "usd": "0.01065"}
+{"instrument": "second", "usd": "0.336", "stage": "pilot"}
+{"settle": 696, "usd": "0.008688"}
+{"instrument": "equivalence", "usd": "0.00684", "stage": "pilot"}
+{"settle": 698, "usd": "0.00090225"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 700, "usd": "0.00160125"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 702, "usd": "0.001626"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 704, "usd": "0.00146775"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 706, "usd": "0.00113475"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 708, "usd": "0.00137775"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 710, "usd": "0.00136725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 712, "usd": "0.001431"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 714, "usd": "0.0016845"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 716, "usd": "0.00126825"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 718, "usd": "0.00163125"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 720, "usd": "0.00135375"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 722, "usd": "0.00130725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 724, "usd": "0.0011325"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 726, "usd": "0.00113025"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 728, "usd": "0.001167"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 730, "usd": "0.00167475"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 732, "usd": "0.0015195"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 734, "usd": "0.001155"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 736, "usd": "0.00140025"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 738, "usd": "0.00164325"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 740, "usd": "0.0018075"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 742, "usd": "0.0011505"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 744, "usd": "0.00157725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 746, "usd": "0.001626"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 748, "usd": "0.00163875"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 750, "usd": "0.00138075"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 752, "usd": "0.0013845"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 754, "usd": "0.001572"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 756, "usd": "0.0013515"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 758, "usd": "0.0013755"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 760, "usd": "0.00139725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 762, "usd": "0.00138675"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 764, "usd": "0.00113325"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 766, "usd": "0.0011265"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 768, "usd": "0.0011835"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 770, "usd": "0.00138375"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 772, "usd": "0.001155"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 774, "usd": "0.0013095"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 776, "usd": "0.00116325"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 778, "usd": "0.0017265"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 780, "usd": "0.0015735"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 782, "usd": "0.001125"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 784, "usd": "0.00112725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 786, "usd": "0.001131"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 788, "usd": "0.00143925"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 790, "usd": "0.00188625"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 792, "usd": "0.00210825"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 794, "usd": "0.00134025"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 796, "usd": "0.00153"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 798, "usd": "0.001341"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 800, "usd": "0.0011415"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 802, "usd": "0.00135225"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 804, "usd": "0.00140325"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 806, "usd": "0.001377"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 808, "usd": "0.0030945"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 810, "usd": "0.00147975"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 812, "usd": "0.00134925"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 814, "usd": "0.00154875"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 816, "usd": "0.004257"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 818, "usd": "0.004851"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 820, "usd": "0.0014625"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 822, "usd": "0.0014715"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 824, "usd": "0.00162"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 826, "usd": "0.0027705"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 828, "usd": "0.00155175"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 830, "usd": "0.00182625"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 832, "usd": "0.0021765"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 834, "usd": "0.001908"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 836, "usd": "0.001305"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 838, "usd": "0.0012615"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 840, "usd": "0.00139425"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 842, "usd": "0.00160725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 844, "usd": "0.00139275"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 846, "usd": "0.00149775"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 848, "usd": "0.00118125"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 850, "usd": "0.00150975"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 852, "usd": "0.002394"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 854, "usd": "0.00339225"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 856, "usd": "0.0015645"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 858, "usd": "0.00180675"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 860, "usd": "0.00432375"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 862, "usd": "0.00382725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 864, "usd": "0.001128"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 866, "usd": "0.00151425"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 868, "usd": "0.00125325"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 870, "usd": "0.001146"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 872, "usd": "0.00164325"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 874, "usd": "0.00171825"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 876, "usd": "0.00142725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 878, "usd": "0.00151125"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 880, "usd": "0.00165825"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 882, "usd": "0.00153"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 884, "usd": "0.00146625"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 886, "usd": "0.00141825"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 888, "usd": "0.00132825"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 890, "usd": "0.00127725"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 892, "usd": "0.0011445"}
+{"instrument": "grader", "usd": "0.00684", "stage": "pilot"}
+{"settle": 894, "usd": "0.001521"}

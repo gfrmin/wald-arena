@@ -1,0 +1,21 @@
+{
+ "n": 50,
+ "per_question": {
+  "primary": "0.0502612",
+  "second": "0.00621464",
+  "equivalence": "0.000643215",
+  "grader": "0.00316578"
+ },
+ "reasoning_tokens_per_call": {
+  "primary": 304.096,
+  "second": 0.0,
+  "equivalence": 92.54,
+  "grader": 122.54081632653062
+ },
+ "projected": {
+  "pilot test": "3.014241750",
+  "stage 2": "30.142417500",
+  "whole run": "36.170901000"
+ },
+ "spent": "3.01424175"
+}

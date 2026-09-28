@@ -247,12 +247,50 @@ Anthropic as above.
 
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
-**Still open, blocking any frozen-model call:**
+**Still open:** the cut, and Gemini's thinking; see "The pilot's calibration stage", below.
+
+**Previously open (now done: funded, pinned 2026-09-28T11:21Z, pilot-calibration run):**
 - Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
 - On the day: verify and pin each model string and list price in `owner.toml` (`listed`); settle Gemini's thinking
   setting (item 6 of "The pilot, built", above).
 - Then `--stage pilot-calibration`, which stops at the gate and the re-estimate. `pilot-test` and `stage2` each wait
   for the owner's go.
+
+### The pilot's calibration stage (2026-09-28): the gate fired; two rulings wanted
+
+`--stage pilot-calibration` ran at 11:3x–12:2xZ on the models pinned at 11:21Z: 50 questions, 448 calls, **$3.0142**
+(the call log and the wallet agree to the cent). No test question was drawn or played. Served models never changed;
+no reply was truncated; every equivalence reply parsed.
+
+**Measured, per question:** primary $0.0503 (5 calls, 304 reasoning tokens per call on average, max 1,468), second
+opinion $0.0062 (0 reasoning tokens), equivalence $0.0006, grades $0.0032 (1.96 per question). **Projected:** pilot
+test $3.01, stage 2 $30.14, whole run **$36.17**, against the $80 cap; the pilot, $6.03 against $15.
+
+**The gate fired (2.15 as ruled: cut 80, unread → low).** b0 holds 5 of 50 (10%), b1 45 (90%). The run stopped
+there, as ruled. gpt-5.5's stated confidences, with the grade of its read:
+
+| confidence | records | correct | incorrect | not attempted |
+|---|---|---|---|---|
+| 0–79 | 5 | 1 | 3 | 1 |
+| 80–89 | 13 | 5 | 8 | 0 |
+| 90–94 | 7 | 6 | 1 | 0 |
+| 95 | 16 | 12 | 4 | 0 |
+| 96–100 | 9 | 6 | 3 | 0 |
+
+No confidence was unread. Cuts that put a fifth or more in each bucket, on these 50:
+- **cut 90:** b0 18 (36%), 6 correct; b1 32 (64%), 24 correct.
+- **cut 95:** b0 25 (50%), 12 correct; b1 25 (50%), 18 correct.
+- cut 85: b0 10 (20%) exactly, 3 correct: on the edge, and stage 2's 300 can move it either way.
+
+**Ruling wanted (a): the cut.** The owner's, from these data (2.15). Nothing more is called until it is ruled; the
+pilot's records are kept, and the Counts are built from them under whichever cut is ruled.
+
+**Ruling wanted (b): Gemini's thinking.** `gemini-3.8-flash` accepted a thinking budget of 0 without error, but
+thought anyway on 54 of its 148 calls (up to 985 thinking tokens). The API did not refuse "off"; it did not honour it
+either. 2.9 as ruled says "reasoning off if the API allows, else fixed low and recorded". My reading: "off" is not
+available, so thinking level `low` from here. That leaves the pilot's 98 grades and 50 equivalence calls made under
+an unhonoured "off". Options: keep them, recorded as such; or re-grade and re-sort those 50 questions at `low`
+(about $0.20, the same answers, no new primary or Opus calls).
 
 ### The pilot, built (2026-09-28): the equivalence prompt, the re-estimate, and what the owner should confirm
 
