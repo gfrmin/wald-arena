@@ -59,7 +59,7 @@ effort = "low"                                          # recorded per call; the
 max_tokens = 16000
 truncation = "stop"
 usd_per_call = "measured"
-listed = ""                                             # verified against OpenAI's list on the day: date and time
+listed = "2026-09-28T11:21Z"            # OpenAI /v1/models, on the day
 
 [instruments.second]                                    # 2.12
 provider = "anthropic"
@@ -68,7 +68,7 @@ model = "claude-opus-5-5"
 max_tokens = 16000
 truncation = "stop"
 usd_per_call = "measured"
-listed = ""
+listed = "2026-09-28T11:21Z"            # Anthropic /v1/models, on the day
 
 [instruments.grader]                                    # 2.9: AA's grading prompt verbatim
 provider = "gemini"
@@ -78,7 +78,7 @@ thinking = "disabled"                                   # reasoning off if the A
 max_tokens = 1024
 truncation = "stop"
 usd_per_call = "measured"
-listed = ""
+listed = "2026-09-28T11:21Z"            # Gemini v1beta/models, on the day
 
 [instruments.equivalence]                               # 2.7: one call per question to the grader model
 provider = "gemini"
@@ -88,16 +88,16 @@ thinking = "disabled"
 max_tokens = 1024
 truncation = "stop"
 usd_per_call = "measured"
-listed = ""
+listed = "2026-09-28T11:21Z"            # Gemini v1beta/models, on the day
 
-[list_price_per_mtok."gpt-5.5-2026-04-23"]              # listed 2026-09-23; re-verified on the day
+[list_price_per_mtok."gpt-5.5-2026-04-23"]              # OpenAI pricing page, re-verified 2026-09-28T11:21Z
 input = "5"
 output = "30"
 
-[list_price_per_mtok."claude-opus-5-5"]                 # listed 2026-09-25
+[list_price_per_mtok."claude-opus-5-5"]                 # Anthropic pricing page, re-verified 2026-09-28T11:21Z
 input = "4"
 output = "20"
 
-[list_price_per_mtok."gemini-3.8-flash"]                # Google's pricing page, 2026-09-28; $1.50 / $7.50 from 2027
+[list_price_per_mtok."gemini-3.8-flash"]                # Google's pricing page, re-verified 2026-09-28T11:21Z; $1.50 / $7.50 from 2027
 input = "0.75"
 output = "3.75"

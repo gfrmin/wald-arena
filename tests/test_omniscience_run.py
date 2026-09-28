@@ -36,10 +36,10 @@ def dry(tmp_path, budget="1", fake=None, write_packs=False):
 
 def test_no_frozen_model_can_be_built_until_each_is_verified_on_the_day():
     owner = load(RUN.OWNER)
+    assert all(i["listed"] for i in owner["instruments"].values())       # pinned 2026-09-28
+    owner["instruments"]["primary"]["listed"] = ""
     with pytest.raises(RUN.NotListed, match=r"instruments\.primary\.listed"):
         RUN.instruments(owner, dry_run=False, transport=lambda m: pytest.fail("a transport was built"))
-    with pytest.raises(RUN.NotListed):
-        RUN.main(["--stage", "pilot-calibration", "--run-dir", "/nonexistent/never-written"])
 
 
 def real(tmp_path, go=(), cap="15"):
