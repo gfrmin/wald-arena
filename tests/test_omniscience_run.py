@@ -245,3 +245,35 @@ def test_the_ruled_kappa_is_read_from_the_owner_file_and_absent_when_unnamed():
     assert RUN.settings(owner).grids.corr == ()
     owner["globals"]["corr"] = ["0", "1/2", "9/10"]
     assert RUN.settings(owner).grids.corr == (Fraction(0), Fraction(1, 2), Fraction(9, 10))
+
+
+def test_a_call_paid_before_the_cap_stops_a_question_is_logged_at_once(tmp_path):
+    "Rule 5: the first call is paid, the second is refused by the $0.50 cap; the paid one is in calls.jsonl."
+    from arena.transports import Call
+    with pytest.raises(RUN.BudgetExceeded):
+        stage(tmp_path, real(tmp_path, cap="0.5"), "pilot-calibration", Scripted())
+    logged = RUN.spent(tmp_path / "run")
+    assert logged and all(isinstance(c, Call) for c in logged)
+    wallet = RUN.Budget(Decimal("80"), tmp_path / "run" / "reserved.jsonl")
+    assert sum(c.usd for c in logged) == wallet.spent             # every reservation settled, every call logged
+
+
+def test_the_reserve_is_the_worst_case_a_call_can_cost_and_the_caps_hold():
+    from arena.transports import Instrument
+    inst = Instrument("primary", "m", None, None, list_price=(Decimal(5), Decimal(30)), max_output=16000)
+    w = RUN.Budget(Decimal("1"))
+    assert w.bound(inst) == Decimal("0.5")                          # 4,000 in at $5 + 16,000 out at $30 per million
+    w.reserve(inst), w.reserve(inst)                                # unsettled, each counts at its worst case
+    with pytest.raises(RUN.BudgetExceeded):
+        w.reserve(inst)                                              # a third could take the spend past $1
+
+
+@pytest.mark.parametrize("value", [False, 0, "", "  "])
+def test_a_go_or_a_verification_is_a_date_not_a_boolean(tmp_path, value):
+    owner = real(tmp_path)
+    owner["go"]["pilot_test"] = value
+    with pytest.raises(RUN.NoGo):
+        stage(tmp_path, owner, "pilot-test", Scripted())
+    owner["instruments"]["primary"]["listed"] = value
+    with pytest.raises(RUN.NotListed):
+        RUN.instruments(owner, dry_run=False, transport=lambda m: pytest.fail("a transport was built"))

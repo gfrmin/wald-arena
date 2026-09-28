@@ -90,3 +90,15 @@ def test_the_gemini_transport_fails_loud_without_a_key(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     with pytest.raises(MissingKey):
         gemini_transport("gemini-2.5-flash")
+
+
+def test_the_sdk_clients_never_retry_on_their_own(monkeypatch):
+    "A retry after the provider has billed a reply would pay twice and log once."
+    import anthropic, openai
+    made = {}
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: made.setdefault("anthropic", kw))
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: made.setdefault("openai", kw))
+    monkeypatch.setenv("LLM_API_KEY", "x")
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    anthropic_transport("m"), openai_transport("m")
+    assert made["anthropic"]["max_retries"] == 0 and made["openai"]["max_retries"] == 0

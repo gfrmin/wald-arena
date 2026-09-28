@@ -96,11 +96,10 @@ class Budget:
         return self._spent()
 
     def bound(self, instrument: Instrument) -> Decimal:
+        "The most the next call can cost: list price for BOUND_INPUT tokens in and the whole output cap out."
         if instrument.usd_per_call is not None:
             return instrument.usd_per_call
-        seen = [Decimal(r["usd"]) for r in self.rows
-                if "settle" in r and self.rows[r["settle"]]["instrument"] == instrument.name]
-        return max(seen) if seen else instrument.list_usd(4000, 4000)
+        return instrument.list_usd(BOUND_INPUT, instrument.max_output or BOUND_OUTPUT)
 
     def _write(self, row: dict):
         self.rows.append(row)
@@ -124,6 +123,10 @@ class Budget:
         i = self.open.pop(instrument_name, None)
         if i is not None and Decimal(self.rows[i]["usd"]) != call.usd:
             self._write({"settle": i, "usd": str(call.usd)})
+
+
+BOUND_INPUT = 4000       # the longest prompt measured is 1,823 tokens (the grader's, in the dry runs)
+BOUND_OUTPUT = 16000     # an instrument with no max_tokens of its own: the transports' default cap
 
 
 class ModelChanged(RuntimeError):
@@ -204,7 +207,7 @@ def instruments(owner, dry_run: bool, transport=None) -> dict[str, Instrument]:
         model = need(owner, f"instruments.{role}.model")
         if dry_run and model not in DRY_RUN_MODELS:
             raise NotADryRunModel(f"instruments.{role}.model = {model!r}: a dry run may call only {DRY_RUN_MODELS}")
-        if not dry_run and not str(optional(owner, f"instruments.{role}.listed", "")).strip():
+        if not dry_run and not stated(optional(owner, f"instruments.{role}.listed", "")):
             raise NotListed(f"instruments.{role}.listed is empty: {model!r} is verified against its provider's list "
                             "on the day, and pinned with the date, before any call (ruled 2026-09-28)")
         out[role] = from_owner(owner, role, transport)
@@ -280,8 +283,16 @@ def estimate(rows, calls_by_q, spent: Decimal, n_pilot_test: int, n_stage2: int)
 
 
 def spent(run_dir: Path) -> list[Call]:
+    "Every call paid for, from the log written as each call returns; a run recorded before that log, from its rows."
+    if (run_dir / "calls.jsonl").exists():
+        return [Call.from_json(r) for r in read_rows(run_dir / "calls.jsonl")]
     return [Call.from_json(c) for r in read_rows(run_dir / "records.jsonl") for c in r["calls"]] + \
         grading_calls(run_dir / "grades.jsonl")
+
+
+def stated(value) -> bool:
+    "A date the owner wrote: a non-empty string. `false`, `0` or an empty string is not a go, nor a verification."
+    return isinstance(value, str) and bool(value.strip())
 
 
 def per_call_usd(inst, cal_rows, grade_calls) -> dict[str, Decimal]:
@@ -526,7 +537,7 @@ def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=N
         raise ValueError("confidence.gate = 'waived' is the Haiku dry run's alone; the gate stands for the real run")
     if not dry_run and stage not in STAGES:
         raise ValueError(f"the real run goes by stage: one of {', '.join(STAGES)}")
-    if stage in ("pilot-test", "stage2") and not str(optional(owner, f"go.{stage.replace('-', '_')}", "")).strip():
+    if stage in ("pilot-test", "stage2") and not stated(optional(owner, f"go.{stage.replace('-', '_')}", "")):
         raise NoGo(f"go.{stage.replace('-', '_')} is not set in owner.toml: the owner's go comes first (2.14)")
     inst = instruments(owner, dry_run, transport)
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -552,9 +563,15 @@ def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=N
         print(f"stage {stage}: {len(cal)} calibration, {len(test)} test questions; spent ${wallet.spent} of the "
               f"${wallet.limit} whole-run cap" + (f", ${wallet._spent('pilot')} of the pilot's ${wallet.stage_limit}"
                                                   if group == "pilot" else ""), flush=True)
+    if not (run_dir / "calls.jsonl").exists() and (run_dir / "records.jsonl").exists():
+        with open(run_dir / "calls.jsonl", "w") as f:           # a run recorded before the log: seed it from its rows
+            f.writelines(json.dumps(c.to_json()) + "\n" for c in spent(run_dir))
     served = ServedModels(spent(run_dir))
 
     def after(c: Call):
+        "Log the call the moment it returns (rule 5), whatever stops the run next; then settle it and check its model."
+        with open(run_dir / "calls.jsonl", "a") as f:
+            f.write(json.dumps(c.to_json()) + "\n")
         wallet.settle(c.instrument.split(".")[0], c)
         served(c)
 

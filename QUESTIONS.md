@@ -288,8 +288,10 @@ number. k is the number of samples in the read's class, and s is "same" if the s
      50 records, then all 300.
    - List prices sit in `owner.toml` and are re-verified on the day with the models.
 4. **The caps.**
-   - Before each call the wallet reserves the most a call of that instrument has cost so far. For the first call it
-     reserves list price for 4,000 tokens in and 4,000 out.
+   - Before each call the wallet reserves the most that call can cost: list price for 4,000 tokens in and the
+     instrument's whole max_tokens out ($0.50 for gpt-5.5, $0.34 for Opus 5.5, $0.007 for gemini-3.8-flash).
+     *Changed 2026-09-28 after review, from "the most a call has cost so far", which could let one long call pass a
+     cap; see `## Ruled`.*
    - It stops if that could take the stage's spend or the whole run's past its cap.
    - After each call it settles the reservation at the call's measured price. A call cut off counts at its
      reservation.
@@ -617,6 +619,14 @@ machine with wald 0.2.0.
   - **8:** the verdict covers the whole 300-question test split, pilot included, so the 60-grade audit is drawn from
     all 300 (10 per domain).
   - The code already did both (stage 2 reads the pilot's records from the same run directory); a test now pins it.
+- **2026-09-28, after review of PR #1, before any frozen call** (not the owner's ruling; recorded for the owner):
+  - **Item 4 tightened.** The confirmed rule reserved the most a call had cost so far, which a single long call
+    (up to max_tokens) could exceed, so a cap could be passed by up to one call's worst case. The wallet now reserves
+    the worst case, so 2.14's "stop if either cap would be exceeded" holds exactly. It stops up to $0.50 short of a cap.
+  - Every call is written to `calls.jsonl` the moment it returns, so a question cut off by a cap, a truncation or a
+    changed model still has its paid calls logged (rule 5).
+  - The Anthropic and OpenAI clients no longer retry on their own; a failure surfaces, and its reservation stands.
+  - A go or a `listed` must be a non-empty string: `false` or `0` is refused.
 
 - **2026-09-28, the rest of the pre-registration** (the later rulings of the day supersede the earlier 2.3 and 2.14):
   - **2.3:** the primary is `gpt-5.5-2026-04-23`, the dated snapshot, pinned by exact string after verifying it

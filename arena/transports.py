@@ -67,6 +67,7 @@ class Instrument:
     list_price: tuple[Decimal, Decimal] | None = None   # $ per million tokens, (input, output)
     stop_on_truncation: bool = False
     effort: str | None = None           # the reasoning effort asked for, for the board's wording
+    max_output: int | None = None       # the output cap sent to the provider, reasoning included; bounds a call's cost
 
     def list_usd(self, input_tokens: int, output_tokens: int) -> Decimal | None:
         if self.list_price is None:
@@ -116,7 +117,7 @@ def anthropic_transport(model: str, key_env: str = "LLM_API_KEY", max_tokens: in
         import anthropic
     except ImportError as e:
         raise ImportError("the Anthropic transport needs the SDK: `uv sync --extra llm`") from e
-    client = anthropic.Anthropic(api_key=key)
+    client = anthropic.Anthropic(api_key=key, max_retries=0)    # a silent retry could pay twice and log once
 
     def send(system: str, user: str) -> Reply:
         r = client.messages.create(model=model, max_tokens=max_tokens, messages=[{"role": "user", "content": user}],
@@ -148,7 +149,7 @@ def openai_transport(model: str, key_env: str = "OPENAI_API_KEY", max_tokens: in
         import openai
     except ImportError as e:
         raise ImportError("the OpenAI transport needs the SDK: `uv sync --extra llm`") from e
-    client = openai.OpenAI(api_key=key)
+    client = openai.OpenAI(api_key=key, max_retries=0)          # a silent retry could pay twice and log once
 
     def send(system: str, user: str) -> Reply:
         return openai_reply(client.responses.create(model=model, input=user, max_output_tokens=max_tokens,
@@ -216,4 +217,5 @@ def from_owner(owner, name: str, transport: Callable[[str], Transport] | None = 
                                     ("thinking", spec.thinking), ("effort", spec.effort)) if v is not None}
         transport = lambda m: factory(m, **kwargs)
     return Instrument(name=name, model=spec.model, usd_per_call=spec.usd_per_call, transport=transport(spec.model),
-                      list_price=spec.list_price, stop_on_truncation=spec.stop_on_truncation, effort=spec.effort)
+                      list_price=spec.list_price, stop_on_truncation=spec.stop_on_truncation, effort=spec.effort,
+                      max_output=spec.max_tokens)
