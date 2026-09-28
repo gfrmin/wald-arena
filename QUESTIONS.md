@@ -258,7 +258,7 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
 ### The pilot's calibration stage (2026-09-28): the gate fired; two rulings wanted
 
-`--stage pilot-calibration` ran at 11:3x–12:2xZ on the models pinned at 11:21Z: 50 questions, 448 calls, **$3.0142**
+`--stage pilot-calibration` ran on the models pinned at 11:21Z: 50 questions, 448 calls, **$3.0142**
 (the call log and the wallet agree to the cent). No test question was drawn or played. Served models never changed;
 no reply was truncated; every equivalence reply parsed.
 
@@ -274,19 +274,19 @@ there, as ruled. gpt-5.5's stated confidences, with the grade of its read:
 | 0–79 | 5 | 1 | 3 | 1 |
 | 80–89 | 13 | 5 | 8 | 0 |
 | 90–94 | 7 | 6 | 1 | 0 |
-| 95 | 16 | 12 | 4 | 0 |
-| 96–100 | 9 | 6 | 3 | 0 |
+| 95 | 17 | 13 | 4 | 0 |
+| 96–100 | 8 | 6 | 2 | 0 |
 
 No confidence was unread. Cuts that put a fifth or more in each bucket, on these 50:
-- **cut 90:** b0 18 (36%), 6 correct; b1 32 (64%), 24 correct.
-- **cut 95:** b0 25 (50%), 12 correct; b1 25 (50%), 18 correct.
-- cut 85: b0 10 (20%) exactly, 3 correct: on the edge, and stage 2's 300 can move it either way.
+- **cut 90:** b0 18 (36%), 6 correct (33%); b1 32 (64%), 25 correct (78%).
+- **cut 95:** b0 25 (50%), 12 correct (48%); b1 25 (50%), 19 correct (76%).
+- cut 85 fails the gate too: b0 6 (12%).
 
 **Ruling wanted (a): the cut.** The owner's, from these data (2.15). Nothing more is called until it is ruled; the
 pilot's records are kept, and the Counts are built from them under whichever cut is ruled.
 
 **Ruling wanted (b): Gemini's thinking.** `gemini-3.8-flash` accepted a thinking budget of 0 without error, but
-thought anyway on 54 of its 148 calls (up to 985 thinking tokens). The API did not refuse "off"; it did not honour it
+thought anyway on 104 of its 148 calls (up to 985 thinking tokens). The API did not refuse "off"; it did not honour it
 either. 2.9 as ruled says "reasoning off if the API allows, else fixed low and recorded". My reading: "off" is not
 available, so thinking level `low` from here. That leaves the pilot's 98 grades and 50 equivalence calls made under
 an unhonoured "off". Options: keep them, recorded as such; or re-grade and re-sort those 50 questions at `low`
