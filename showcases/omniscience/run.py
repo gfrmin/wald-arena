@@ -113,7 +113,8 @@ def settings(owner) -> Settings:
     if need(owner, "agreement.price") != "per_call":
         raise ValueError("agreement.price: only 'per_call' is built; a declared batch price needs its own cell")
     grids = W.Grids(fractions(need(owner, "globals.rho")), fractions(need(owner, "globals.agree")),
-                    fractions(need(owner, "globals.second")), fractions(need(owner, "globals.grader")))
+                    fractions(need(owner, "globals.second")), fractions(need(owner, "globals.grader")),
+                    fractions(optional(owner, "globals.corr", [])))   # absent: the World has no κ (the dry runs)
     return Settings(Fraction(need(owner, "lambda_usd")), fractions(need(owner, "penalties")), fractions(grid),
                     need(owner, "split_seed"), need(owner, "sampling_seed"), need(owner, "plate_seed"),
                     tuple(need(owner, "confidence.cuts")), need(owner, "confidence.unread"),

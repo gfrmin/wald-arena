@@ -260,9 +260,53 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 - 2.13: the claims.
 - 2.14: seeds and the budget ceiling.
 - The reading of 2.21, above.
-- 2.25: whether the agreement and the second opinion can be wrong together (proposed: κ ∈ {0, 1/2}).
-- Providers: the OpenAI account has no credit and `gemini-2.5-flash` is refused to this account (the second
-  dry run, below). 2.3's primary and 2.9's grader cannot be called until that changes.
+- Providers: the owner is funding the OpenAI account (ruled 2026-09-28). `gemini-2.5-flash` is refused to this
+  account, so 2.9 needs a grader that can be called: `gemini-3.8-flash` (needs Gemini credit) or another model.
+- The owner's go. Nothing frozen is called before it.
+
+### The ruled grid, timed, and the real run's dollars (2026-09-28)
+
+**One plate at the ruled grid.** The grid is 2.15 × 2.25's κ ∈ {0, 1/2, 9/10}: 384 Global values, 3,840 states.
+- The plate ran at p = 1, c = 1/10, replaying the mixed dry run's records, with no call. It shipped the 144
+  calibration records, then played 150 test questions with the Counts and again from the declared prior.
+- It took 1,835 s, or 12.2 s a question. The same plate without κ took 480 s in the mixed run, so κ makes it
+  3.8 times as slow.
+- S15 at declaration: "no class of inseparable Global values settles anything an act can feel".
+- Extrapolated, not measured: the real run's 21 plates (2.10's seven prices × three penalties) of 300 test
+  questions, shipping 300 calibration records, take about 60–80 minutes a plate, since episodes slow as Counts grow.
+  That is about 21–28 hours of CPU, or 7–10 hours on the three cores this machine's memory allows. No API spend.
+
+**Dollars for the real run.** 600 questions (2.1: 300 calibration, 300 test). Each question takes 7 primary calls
+(the answer, the confidence, 5 samples), 1 second opinion, and on average 1.93 grades, since grading is memoised
+per distinct (question, answer).
+- Tokens per call are the mixed dry run's measured means:
+  - answer: 130 in, 51 out;
+  - confidence: 150 in, 48 out;
+  - sample: 130 in, 51 out;
+  - second opinion: 171 in, 29 out;
+  - grade: 1,641 in, 4 out.
+- R is the reasoning tokens per primary and second-opinion call, which 2.3 and 2.12 set. `claude-opus-5-5` cannot
+  turn thinking off, so its R is above 0.
+- List prices per million tokens (input / output):
+  - `gpt-6-astra`: $10 / $50, and `gpt-5.5-2026-04-23`: $5 / $30, both as listed 2026-09-23 and to be re-verified
+    when the account is live;
+  - `claude-opus-5-5`: $4 / $20;
+  - `gemini-3.8-flash`: $0.75 / $3.75 through 2026-12-31, then $1.50 / $7.50 (Google's pricing page, 2026-09-28);
+  - `claude-sonnet-4-6`: $3 / $15.
+- These are list-price estimates from measured tokens. OpenAI's tokenizer counts differently, and the declared
+  prices the budget reserves are upper bounds above these.
+
+| primary | R | primary | second (`claude-opus-5-5`) | grader `gemini-3.8-flash`, no thinking | the same, 500 thinking tokens a grade | grader `claude-sonnet-4-6`, thinking off |
+|---|---|---|---|---|---|---|
+| `gpt-6-astra` | 0 | $16.20 | $0.75 | **$18.40** | **$20.57** | **$22.72** |
+| `gpt-6-astra` | 500 | $121.20 | $6.75 | **$129.40** | **$131.57** | **$133.72** |
+| `gpt-6-astra` | 2,000 | $436.20 | $24.75 | **$462.40** | **$464.57** | **$466.72** |
+| `gpt-5.5-2026-04-23` | 0 / 500 / 2,000 | $9.16 / $72.16 / $261.16 | as above | $11.36 / $80.36 / $287.36 | $13.53 / $82.53 / $289.53 | $15.68 / $84.68 / $291.68 |
+
+- The grader costs $1.44–$5.77 whichever is chosen. The primary's reasoning sets the bill.
+- The pre-registered primary is `gpt-6-astra`.
+- Whether `gemini-3.8-flash` can turn thinking off is not on its pricing page, and the Gemini account has no credit
+  to try it.
 
 ### The second dry run: a different model in each role (2026-09-27)
 
@@ -499,6 +543,15 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-28:**
+  - **2.25:** option A. κ ∈ {0, 1/2, 9/10}, uniform, `elicited` (`owner.toml` `globals.corr`), learned from the
+    calibration records. S15's disclosure and E7's lines are printed for the World that carries it.
+  - **Providers:** the owner funds the OpenAI account; the pre-registered primary stands. When the account is live,
+    every model string is verified against the providers' lists and pinned with the date. A Gemini grader, if
+    proposed instead, is named `gemini-3.8-flash` by exact string.
+  - **The waiver** of the bucket gate for both dry runs was right.
+  - **Nothing frozen is called until the owner says go.**
 
 - **2026-09-27, 2.19 revised:** `answer_second` is charged its consulting cost c in every state, so a blind switch
   is priced exactly. A switch after `second_opinion` is then overcharged by c; the scoreboard prints how often that

@@ -1,4 +1,5 @@
 import re
+from fractions import Fraction
 from decimal import Decimal
 from pathlib import Path
 
@@ -149,3 +150,10 @@ def test_calibration_counts_are_constructed_one_record_per_question_every_instru
     ends = {end for (draws, end, _) in C.counts if dict(draws)["second_opinion"] == "same"}
     assert ends <= {"answer_primary"}
     assert sum(C.shares.values()) == 1
+
+
+def test_the_ruled_kappa_is_read_from_the_owner_file_and_absent_when_unnamed():
+    owner = load(RUN.DRY_RUN)
+    assert RUN.settings(owner).grids.corr == ()
+    owner["globals"]["corr"] = ["0", "1/2", "9/10"]
+    assert RUN.settings(owner).grids.corr == (Fraction(0), Fraction(1, 2), Fraction(9, 10))

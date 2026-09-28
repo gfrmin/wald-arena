@@ -68,11 +68,14 @@ def header(o, dry_run: bool, run_dir) -> str:
               "(`gemini-2.5-flash-preview-09-2025`, no longer served; QUESTIONS.md 2.9). It is the After-act: it "
               "grades the answer each episode submitted, or the read on an abstention.",
               f"- Buckets {', '.join(s.buckets)} (cuts {list(s.cuts)}). Globals (2.15), uniform over "
-              f"{len(g.rho) ** len(s.buckets) * len(g.agree) * len(g.second) * len(g.grader)} values: ρ_b ∈ "
+              f"{len(g.rho) ** len(s.buckets) * len(g.agree) * len(g.second) * len(g.grader) * max(1, len(g.corr))}"
+              " values: ρ_b ∈ "
               f"{{{', '.join(W.num(x) for x in g.rho)}}} per bucket; (a⁺, a⁻) ∈ "
               f"{{{', '.join('(' + ', '.join(map(W.num, a)) + ')' for a in g.agree)}}}; (σ, α, β) ∈ "
               f"{{{', '.join('(' + ', '.join(map(W.num, a)) + ')' for a in g.second)}}}; γ ∈ "
-              f"{{{', '.join(W.num(x) for x in g.grader)}}}.",
+              f"{{{', '.join(W.num(x) for x in g.grader)}}}"
+              + (f"; κ ∈ {{{', '.join(W.num(x) for x in g.corr)}}}, the instruments tied (2.25)." if g.corr
+                 else "; no κ: agreement and the second opinion independent given which answer is right."),
               f"- Penalties p: {', '.join(map(str, s.penalties))}. Second-opinion prices c (utility, a right answer "
               f"= 1): {', '.join(map(str, s.grid))}. Agreement ({s.samples} samples) costs {s.samples} × the "
               f"primary's declared price × λ_usd = {s.lambda_usd}.",
@@ -214,6 +217,9 @@ def plates(o) -> str:
     seen_disclosures = {}
     for (p, c), po in sorted(o.plates.items()):
         seen_disclosures.setdefault(po.disclosure, []).append(f"p = {p}, c = {c}")
+    if o.settings.grids.corr:
+        out += ["", "The World carries κ (2.25): S15 below is disclosed for it, and κ acts on the `agreement` "
+                "lines, whose law after a history now depends on whether the second opinion matched the read."]
     out += ["", "**S15**, at declaration: " + " ".join(f"{'; '.join(k)}: *{d}*." for d, k in seen_disclosures.items())]
     for (p, c), po in sorted(o.plates.items()):
         rows = sorted((e7_line(x) for x in po.e7.splitlines()[1:]), key=lambda r: (-log_of(r[3]) if r[3] != "0"
