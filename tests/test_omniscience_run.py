@@ -1,4 +1,6 @@
+import json
 import re
+from collections import Counter
 from fractions import Fraction
 from decimal import Decimal
 from pathlib import Path
@@ -32,12 +34,93 @@ def dry(tmp_path, budget="1", fake=None, write_packs=False):
     return o, fake
 
 
-def test_no_frozen_model_can_be_built_until_the_owner_rules():
+def test_no_frozen_model_can_be_built_until_each_is_verified_on_the_day():
     owner = load(RUN.OWNER)
-    with pytest.raises(MissingOwnerNumber, match=r"instruments\.primary\.model"):
+    with pytest.raises(RUN.NotListed, match=r"instruments\.primary\.listed"):
         RUN.instruments(owner, dry_run=False, transport=lambda m: pytest.fail("a transport was built"))
-    with pytest.raises(MissingOwnerNumber):
-        RUN.main(["--budget-usd", "1"])
+    with pytest.raises(RUN.NotListed):
+        RUN.main(["--stage", "pilot-calibration", "--run-dir", "/nonexistent/never-written"])
+
+
+def real(tmp_path, go=(), cap="15"):
+    "owner.toml, verified and scaled to the fake board: 10 questions a domain, a pilot of 26 + 26."
+    owner = load(RUN.OWNER)
+    for i in owner["instruments"].values():
+        i["listed"] = "test"
+    owner["split"] = {"per_domain": 10, "calibration_per_domain": 5}
+    owner["stages"].update(pilot_calibration=26, pilot_test=26, pilot_cap_usd=cap)
+    owner["globals"] = {"rho": ["1/10", "7/10"], "agree": [["4/5", "1/5"]], "second": [["1/2", "4/5", "1/5"]],
+                        "grader": ["9/10", "1"], "corr": ["0", "1/2"]}
+    owner["penalties"], owner["second_price_grid"] = [1, 3], ["1/10", "1"]
+    owner["confidence"]["cuts"] = [50]
+    owner["audit"]["per_domain"] = 2
+    for k in go:
+        owner["go"][k] = "2026-09-28"
+    return owner
+
+
+def stage(tmp_path, owner, name, fake):
+    return RUN.run(owner, tmp_path / "run", None, False, transport=fake, questions=questions(10), write_packs=False,
+                   workers=1, stage=name)
+
+
+def test_the_real_run_goes_by_stage_each_later_one_waits_for_the_go_and_spend_is_measured(tmp_path):
+    fake = Scripted(served="served-1")
+    est = stage(tmp_path, real(tmp_path), "pilot-calibration", fake)
+    assert isinstance(est, RUN.Estimate) and est.n == 26
+    assert set(est.per_question) == {"primary", "second", "grader", "equivalence"}
+    recs = [json.loads(line) for line in open(tmp_path / "run" / "records.jsonl")]
+    assert len(recs) == 26 and {r["split"] for r in recs} == {"calibration"}
+    assert all(len(r["samples"]) == 3 and r["classes"] for r in recs)     # three samples, read by classes
+    assert Counter(r["domain"] for r in recs).most_common()[0][1] == 5 and len({r["domain"] for r in recs}) == 6
+    with pytest.raises(RUN.NoGo, match="go.pilot_test"):
+        stage(tmp_path, real(tmp_path), "pilot-test", fake)
+    before = fake.calls
+    o = stage(tmp_path, real(tmp_path, go=("pilot_test",)), "pilot-test", fake)
+    assert len(o.test_rows) == 26 and o.stage == "pilot-test"
+    assert fake.calls > before and all(c.usd > 0 for c in o.calls)       # measured: list price from the tokens
+    md = SB.render(o, dry_run=False, run_dir="runs/test")
+    assert "Re-scored with gemini-3.8-flash, not AA's grader" in md and "gpt-5.5 at low reasoning effort" in md
+    assert "— (pilot)" in md and "p = 10 is underpowered" in md
+    with pytest.raises(RUN.NoGo, match="go.stage2"):
+        stage(tmp_path, real(tmp_path), "stage2", fake)
+
+
+def test_stage2_writes_the_audit_sample_and_withholds_the_verdict_until_it_is_filled(tmp_path):
+    fake = Scripted()
+    owner = real(tmp_path, go=("pilot_test", "stage2"), cap="100")
+    o = stage(tmp_path, owner, "stage2", fake)
+    assert len(o.rows) == 60 and o.audit[:2] == (0, 12)
+    assert "withheld" in SB.claims(o, dry_run=False)
+    import csv
+    path = tmp_path / "run" / "audit.csv"
+    rows = list(csv.DictReader(open(path)))
+    letter = {"CORRECT": "A", "INCORRECT": "B"}
+    for r in rows:
+        r["owner_grade"] = letter[r["grader_grade"]]
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, RUN.AUDIT_FIELDS)
+        w.writeheader()
+        w.writerows(rows)
+    o = RUN.run(owner, tmp_path / "run", None, False, transport=RUN.replay_only, questions=questions(10),
+                write_packs=False, workers=1, stage="stage2")
+    assert o.audit == (12, 12, 12) and "agreed with the grader on 12" in SB.claims(o, dry_run=False)
+
+
+def test_the_pilot_cap_stops_the_run_before_the_call_that_could_pass_it(tmp_path):
+    with pytest.raises(RUN.BudgetExceeded, match="stage pilot"):
+        stage(tmp_path, real(tmp_path, cap="0.05"), "pilot-calibration", Scripted())
+    w = RUN.Budget(Decimal("80"), tmp_path / "run" / "reserved.jsonl", "pilot", Decimal("0.05"))
+    assert w.spent <= Decimal("0.05")
+
+
+def test_a_served_model_that_changes_stops_the_run():
+    from arena.transports import Call
+    guard = RUN.ServedModels()
+    c = lambda m, name="primary": Call(name, "gpt", "q", 0, 1, 1, Decimal(0), 0.0, "", served_model=m)
+    guard(c("snap-1")), guard(c("snap-1", "primary.sample")), guard(c("other", "grader"))
+    with pytest.raises(RUN.ModelChanged, match="primary"):
+        guard(c("snap-2", "primary.confidence"))
 
 
 def test_a_dry_run_refuses_any_model_but_haiku():
@@ -47,8 +130,9 @@ def test_a_dry_run_refuses_any_model_but_haiku():
         RUN.instruments(owner, dry_run=True, transport=lambda m: lambda s, u: pytest.fail("called"))
 
 
-def test_no_frozen_model_is_named_in_the_showcase_code_or_its_owner_files():
-    for path in [*SHOWCASE.glob("*.py"), *SHOWCASE.glob("*.toml")]:
+def test_no_frozen_model_is_named_in_the_showcase_code_or_its_dry_run_files():
+    "The pre-registration is ruled (2026-09-28), so owner.toml names the frozen models; nothing else may."
+    for path in [*SHOWCASE.glob("*.py"), *(p for p in SHOWCASE.glob("*.toml") if p.name != "owner.toml")]:
         text = "\n".join(line for line in path.read_text().splitlines() if not line.lstrip().startswith("#"))
         assert not FROZEN.search(text), path
 

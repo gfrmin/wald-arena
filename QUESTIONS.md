@@ -79,11 +79,14 @@ it.
 
 ## Pre-registration: brief 002 (rule before any call to gpt-6-astra, gpt-5.5 or claude-opus-5-5)
 
-**BLOCKING.** No call to `gpt-6-astra`, `gpt-5.5` or `claude-opus-5-5` (or `claude-opus-5`) may be made, by any script in any session,
-until every item below has a ruling under `## Ruled` naming this section. `showcases/omniscience/owner.toml`
-carries no `[instruments.*]` until then. That absence, not this sentence, is what makes the block real: no code can
-build an instrument the file does not name. The dry run's proposals live in `showcases/omniscience/dryrun.toml`
-and are not rulings. Facts below were measured on 2026-09-23 and are cited in `briefs/002-omniscience.md`.
+**Ruled, every item** (2026-09-25, 2026-09-27, 2026-09-28; see `## Ruled`). `owner.toml` now names the
+instruments. What keeps a frozen model uncalled is:
+- each instrument's `listed`, which stays empty until its model string is verified against the provider's list on
+  the day;
+- the stages (`--stage pilot-calibration`, then `pilot-test` and `stage2`);
+- the owner's `go.pilot_test` and `go.stage2`, which the runner requires before those stages.
+
+The items below are kept as they were proposed, and the rulings stand beside them.
 
 2.9 comes first, because the others are worth less if its answer is no.
 
@@ -245,24 +248,87 @@ Anthropic as above.
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
 **Still open, blocking any frozen-model call:**
-- 2.1: the split.
-- 2.2: the data revision.
-- 2.3: accept `gpt-6-astra` as an alias, recording each response's model field, or use `gpt-5.5-2026-04-23`;
-  reasoning effort; max output tokens.
-- 2.4: the answer prompt's placeholders.
-- 2.5: how confidence is elicited. The cut is ruled.
-- 2.6: agreement sampling.
-- 2.7: what "matches" means.
-- 2.8: penalties, and PARTIAL scoring 0.
-- 2.9: the grader.
-- 2.10: λ_usd and the second-opinion price grid.
-- 2.12: `claude-opus-5-5`'s reasoning effort and max tokens, and whether its key becomes `ANTHROPIC_API_KEY`.
-- 2.13: the claims.
-- 2.14: seeds and the budget ceiling.
-- The reading of 2.21, above.
-- Providers: the owner is funding the OpenAI account (ruled 2026-09-28). `gemini-2.5-flash` is refused to this
-  account, so 2.9 needs a grader that can be called: `gemini-3.8-flash` (needs Gemini credit) or another model.
-- The owner's go. Nothing frozen is called before it.
+- Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
+- On the day: verify and pin each model string and list price in `owner.toml` (`listed`); settle Gemini's thinking
+  setting (item 6 of "The pilot, built", above).
+- The owner's confirmation of "The pilot, built", items 1–8, above.
+- Then `--stage pilot-calibration`, which stops at the gate and the re-estimate. `pilot-test` and `stage2` each wait
+  for the owner's go.
+
+### The pilot, built (2026-09-28): the equivalence prompt, the re-estimate, and what the owner should confirm
+
+**Not yet funded.** At 2026-09-28T07:25Z the Gemini project's prepaid credit is used up, and the OpenAI account has
+no credit (`credit_balance_exhausted`). Nothing was called.
+
+**The equivalence prompt** (2.7 as ruled; `prompts/equivalence.txt`). It is sent to `gemini-3.8-flash` as the user
+turn, with no system prompt. The answers are numbered in a fixed order (the read, the three samples, the second
+opinion), so the model is not told which is the read. An empty reply is shown as "(no answer)".
+
+```
+You will be shown a question and several numbered answers to it. Sort the answers into classes: two answers belong to the same class if a grader would accept them as the same answer to the question, whatever their wording, spelling or level of detail. An answer that declines to answer (it says it does not know, cannot answer, or gives no answer at all) belongs to the class D, whatever its wording. Number the other classes 1, 2, 3 and so on.
+
+Question: {question}
+
+{answers}
+
+Reply with one line per answer, in the order given, each in the form "<answer number>: <class>", and nothing else.
+```
+
+A reply is read if it has exactly one line per answer, in order, each "<i>: <class>" with the class D or a whole
+number. k is the number of samples in the read's class, and s is "same" if the second opinion is in the read's class.
+
+**Proposed by the repository while building; confirm or rule otherwise:**
+1. **An unreadable equivalence reply.** k and s fall back to normalised exact match for that question, and the
+   scoreboard counts such questions. The alternative is to stop the run.
+2. **The agreement act's price.** It is three sample calls plus the equivalence call. The equivalence call is what
+   reads k. It also gives s, but the second opinion's price is 2.10's grid, which is hypothetical, so nothing more
+   is charged there.
+3. **Measured prices.**
+   - Every call is priced at list price from its tokens.
+   - The packs declare the mean per call on the calibration split (2.12, as for Millionaire), per stage: the pilot's
+     50 records, then all 300.
+   - List prices sit in `owner.toml` and are re-verified on the day with the models.
+4. **The caps.**
+   - Before each call the wallet reserves the most a call of that instrument has cost so far. For the first call it
+     reserves list price for 4,000 tokens in and 4,000 out.
+   - It stops if that could take the stage's spend or the whole run's past its cap.
+   - After each call it settles the reservation at the call's measured price. A call cut off counts at its
+     reservation.
+5. **Truncation and the served model.**
+   - Every frozen instrument has a large max_tokens: 16,000 for the primary and the second opinion, 1,024 for the
+     grader and the equivalence call.
+   - The run stops on a truncated reply, as the earlier 2.3 ruled.
+   - Each call records the model the provider says served it, and its reasoning tokens and effort. The run stops if
+     an instrument is served a different model mid-run. That was the earlier 2.3, kept as a guard with the snapshot.
+6. **Reasoning settings.**
+   - `claude-opus-5-5` runs at the provider's default effort, since 2.12 sets none.
+   - `gemini-3.8-flash` is sent a thinking budget of 0 ("disabled"). If the API refuses that, it is sent thinking
+     level "low", as 2.9 rules, and `owner.toml` records which.
+7. **The gate** applies at each stage to that stage's calibration split: the pilot's 50 records, then all 300.
+8. **The audit sample.** 10 graded answers per domain (the read's or the second opinion's) are drawn with the split
+   seed from stage 2's test split and written once to `audit.csv`, whose `owner_grade` column is for the owner to
+   fill. The verdict column reads "withheld" until all 60 are filled, and then the agreement is printed.
+
+**Re-estimate, with the ruled settings.** Each question takes 5 primary calls (the answer, the confidence, 3
+samples), 1 second opinion, 1 equivalence call, and 1.93 grades on average.
+- Tokens per call are the mixed dry run's measured means. The equivalence call's are estimated: 560 in, 30 out.
+- R, R2 and T are reasoning tokens per call for gpt-5.5 at low effort, for Opus 5.5, and for Gemini if its
+  thinking cannot be turned off. The pilot measures all three.
+- List prices: gpt-5.5 $5 / $30 (re-verify on the day), claude-opus-5-5 $4 / $20, gemini-3.8-flash $0.75 / $3.75.
+
+| R | R2 | T | per question | pilot, 100 (cap $15) | stage 2, 500 | whole, 600 (cap $80) |
+|---|---|---|---|---|---|---|
+| 200 | 200 | 0 | $0.049 | $4.91 | $24.56 | $29.47 |
+| 200 | 1,000 | 200 | $0.067 | $6.73 | $33.65 | $40.38 |
+| 500 | 200 | 0 | $0.094 | $9.41 | $47.06 | $56.47 |
+| 500 | 1,000 | 200 | $0.112 | $11.23 | $56.15 | $67.38 |
+| 1,000 | 200 | 0 | $0.169 | $16.91 | $84.56 | $101.47 |
+| 1,000 | 1,000 | 200 | $0.187 | $18.73 | $93.65 | $112.38 |
+
+- The pilot's cap is reached if gpt-5.5 at low effort reasons for more than about 760–880 tokens a call, and the
+  whole run's above about 650–770.
+- `pilot-calibration` prints the measured cost per question and the projection for the pilot's test half, stage 2
+  and the whole run, then the gate, and stops.
 
 ### The ruled grid, timed, and the real run's dollars (2026-09-28)
 
@@ -276,7 +342,8 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
   questions, shipping 300 calibration records, take about 60–80 minutes a plate, since episodes slow as Counts grow.
   That is about 21–28 hours of CPU, or 7–10 hours on the three cores this machine's memory allows. No API spend.
 
-**Dollars for the real run.** 600 questions (2.1: 300 calibration, 300 test). Each question takes 7 primary calls
+**Dollars for the real run** (superseded by the re-estimate in "The pilot, built", above, after 2.3 and 2.6 were
+ruled again). 600 questions (2.1: 300 calibration, 300 test). Each question takes 7 primary calls
 (the answer, the confidence, 5 samples), 1 second opinion, and on average 1.93 grades, since grading is memoised
 per distinct (question, answer).
 - Tokens per call are the mixed dry run's measured means:
@@ -543,6 +610,35 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-28, the rest of the pre-registration** (the later rulings of the day supersede the earlier 2.3 and 2.14):
+  - **2.3:** the primary is `gpt-5.5-2026-04-23`, the dated snapshot, pinned by exact string after verifying it
+    against OpenAI's list on the day. Low reasoning effort, recorded per call. The board says "gpt-5.5 at low
+    reasoning effort".
+  - **2.9:** the grader is `gemini-3.8-flash`, with AA's grading prompt verbatim. Reasoning is off if the API
+    allows it; otherwise it is fixed at low, and that is recorded. The board says "re-scored with gemini-3.8-flash,
+    not AA's grader". The owner hand-audits 60 grades, 10 per domain, before the verdict line is written.
+  - **2.7:** one equivalence call per question to the grader model. It sorts the read, the samples and the second
+    opinion into classes, with "decline" as its own class, and k and s read those classes. The prompt is fixed in
+    the pre-registration (below).
+  - **2.6:** three agreement samples. Agreement is "all three in the read's class, or not", and the World stays as
+    ruled in 2.16 and 2.25.
+  - **2.5:** a separate confidence call, as proposed. The buckets are as ruled in 2.15: cut at 80, unread → low.
+  - **2.11:** applies to the threshold baseline only.
+  - **2.12:** the second opinion is `claude-opus-5-5`, verified against the list on the day. Key
+    `ANTHROPIC_API_KEY`.
+  - **2.13:** the claims as written. The board states in advance that p = 10 is underpowered at 300 test questions.
+  - **2.14:** two stages.
+    - Stage 1 is a pilot of 100 questions (50 calibration, 50 test), capped at $15.
+    - Stage 2 is the remaining 500, only on the owner's go after the owner has seen the pilot.
+    - The whole run is capped at $80, and it stops if either cap would be exceeded.
+    - The pilot takes 8 or 9 per domain, the two extras chosen by the seed, drawn from 2.1's 300/300 split, so
+      stage 2 plays the other 500.
+    - Seeds as proposed.
+  - **2.1, 2.2, 2.4, 2.8, 2.10:** as proposed.
+  - **When the accounts are funded:** verify and pin every model string with the date; draw the calibration split;
+    print its confidence histogram and bucket shares (the gate); re-estimate the dollars with the equivalence
+    calls. Then stop for the owner's go.
 
 - **2026-09-28:**
   - **2.25:** option A. κ ∈ {0, 1/2, 9/10}, uniform, `elicited` (`owner.toml` `globals.corr`), learned from the

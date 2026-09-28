@@ -33,15 +33,29 @@ def response(text="Paris", parts=("output_text",), incomplete=None):
     ns = SimpleNamespace
     return ns(output_text=text, incomplete_details=ns(reason=incomplete) if incomplete else None,
               output=[ns(type="reasoning"), ns(type="message", content=[ns(type=t) for t in parts])],
-              usage=ns(input_tokens=30, output_tokens=4))
+              usage=ns(input_tokens=30, output_tokens=4, output_tokens_details=ns(reasoning_tokens=3)),
+              model="gpt-5.5-2026-04-23", reasoning=ns(effort="low"))
 
 
-@pytest.mark.parametrize("r,text", [(response(), "Paris"),
-                                    (response(parts=("refusal",)), ""),
-                                    (response(incomplete="content_filter"), ""),
-                                    (response(incomplete="max_output_tokens"), "Paris")])
-def test_openai_reply_is_empty_on_refusal_only(r, text):
-    assert openai_reply(r) == Reply(text, 30, 4)
+@pytest.mark.parametrize("r,text,truncated", [(response(), "Paris", False),
+                                              (response(parts=("refusal",)), "", False),
+                                              (response(incomplete="content_filter"), "", False),
+                                              (response(incomplete="max_output_tokens"), "Paris", True)])
+def test_openai_reply_is_empty_on_refusal_only_and_records_model_effort_and_truncation(r, text, truncated):
+    assert openai_reply(r) == Reply(text, 30, 4, model="gpt-5.5-2026-04-23", reasoning_tokens=3, truncated=truncated,
+                                    effort="low")
+
+
+def test_a_truncated_reply_stops_an_instrument_ruled_never_to_truncate_and_carries_its_paid_call():
+    from arena.transports import Truncated, call
+    cut = lambda s, u: Reply("Par", 10, 16000, model="m", truncated=True)
+    free = Instrument("primary", "m", None, cut, list_price=(Decimal(5), Decimal(30)))
+    text, c = call(free, "q1", 0, "", "Q")
+    assert c.truncated and c.usd == Decimal("0.48005")          # measured: 10 × $5 + 16,000 × $30 per million
+    with pytest.raises(Truncated) as e:
+        call(Instrument("primary", "m", None, cut, list_price=(Decimal(5), Decimal(30)), stop_on_truncation=True),
+             "q1", 0, "", "Q")
+    assert e.value.call.usd == Decimal("0.48005") and e.value.call.served_model == "m"
 
 
 def test_from_owner_picks_the_provider_and_its_key(monkeypatch):

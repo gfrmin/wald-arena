@@ -1,5 +1,6 @@
 """AA-Omniscience's scoreboard (brief 002, Scoreboard), rendered from a run. Reported as measured (rule 7)."""
 import math
+import re
 from collections import Counter
 from decimal import Decimal
 from fractions import Fraction
@@ -50,6 +51,18 @@ def dec(r: str) -> str:
     return "0.0000" if r.partition("/")[0] == "0" else f"{math.exp(log_of(r)):.4f}"
 
 
+def family(model: str) -> str:
+    "A model's name without its date suffix, e.g. model-1-2026-01-31 -> model-1."
+    return re.sub(r"-\d{4}-?\d{2}-?\d{2}$", "", model)
+
+
+def instrument_line(o, role, inst) -> str:
+    per = o.per_call.get({"primary": "sample"}.get(role, role)) if inst.usd_per_call is None else inst.usd_per_call
+    how = "declared" if inst.usd_per_call is not None else "measured on calibration, list price"
+    return f"{role} `{inst.model}`" + (f" ({inst.effort} effort)" if inst.effort else "") + (
+        f" at ${per:.5f} per call, {how}" if per is not None else "")
+
+
 def header(o, dry_run: bool, run_dir) -> str:
     s = o.settings
     cal = sum(r["split"] == "calibration" for r in o.rows)
@@ -62,11 +75,15 @@ def header(o, dry_run: bool, run_dir) -> str:
     lines += [f"- Run: `{run_dir}`. Questions: {len(o.rows)} ({cal} calibration, {len(o.rows) - cal} test), "
               f"{o.per_domain[0]} per domain, drawn with seed {s.sampling_seed}, split with seed {s.split_seed}; "
               f"each plate takes the test questions in the order of seed {s.plate_seed}.",
-              f"- Instruments: " + "; ".join(f"{k} `{i.model}` at ${i.usd_per_call} declared per call"
-                                               for k, i in o.instruments.items()) + ".",
-              f"- Grader: `{o.instruments['grader'].model}` with AA's published prompt — **not AA's grader** "
-              "(`gemini-2.5-flash-preview-09-2025`, no longer served; QUESTIONS.md 2.9). It is the After-act: it "
-              "grades the answer each episode submitted, or the read on an abstention.",
+              f"- Instruments: " + "; ".join(instrument_line(o, k, i) for k, i in o.instruments.items()) + ".",
+              *([f"- The primary is **{family(o.instruments['primary'].model)} at "
+                 f"{o.instruments['primary'].effort} reasoning effort** (2.3)."] if o.instruments['primary'].effort
+                else []),
+              f"- **Re-scored with {family(o.instruments['grader'].model)}, not AA's grader** "
+              "(`gemini-2.5-flash-preview-09-2025`, no longer served; QUESTIONS.md 2.9), with AA's grading prompt "
+              "verbatim. It is the After-act: it grades the answer each episode submitted, or the read on an "
+              "abstention." + (" Whether two answers match is read from one equivalence call per question to the "
+                               "same model (2.7)." if "equivalence" in o.instruments else ""),
               f"- Buckets {', '.join(s.buckets)} (cuts {list(s.cuts)}). Globals (2.15), uniform over "
               f"{len(g.rho) ** len(s.buckets) * len(g.agree) * len(g.second) * len(g.grader) * max(1, len(g.corr))}"
               " values: ρ_b ∈ "
@@ -77,8 +94,9 @@ def header(o, dry_run: bool, run_dir) -> str:
               + (f"; κ ∈ {{{', '.join(W.num(x) for x in g.corr)}}}, the instruments tied (2.25)." if g.corr
                  else "; no κ: agreement and the second opinion independent given which answer is right."),
               f"- Penalties p: {', '.join(map(str, s.penalties))}. Second-opinion prices c (utility, a right answer "
-              f"= 1): {', '.join(map(str, s.grid))}. Agreement ({s.samples} samples) costs {s.samples} × the "
-              f"primary's declared price × λ_usd = {s.lambda_usd}.",
+              f"= 1): {', '.join(map(str, s.grid))}. Agreement (all {s.samples} samples in the read's class, or not) costs "
+              f"{s.samples} × the primary's declared price per call"
+              + (" and the equivalence call's" if "equivalence" in o.instruments else "") + f", × λ_usd = {s.lambda_usd}.",
               "- *score*: mean utility of the answers (+1 right, −p wrong, 0 partial or abstained); ×100 at p = 1 "
               "is the Omniscience Index. *net*: score less what the contestant bought (grading, which every "
               "contestant gets, left out). Δ: paired per-question difference in net, ± 2 standard errors. "
@@ -149,9 +167,24 @@ def claims(o, dry_run: bool) -> str:
     worst = min(((p, c, *delta(p, c, "raw model")) for p in s.penalties for c in s.grid), key=lambda x: x[2] - x[3])
     rows.append([f"(iv) beats the raw model throughout (weakest: p = {worst[0]}, c = {worst[1]})",
                  f"{worst[2]:+.3f} ± {worst[3]:.3f}", "held" if worst[2] > worst[3] else "missed"])
-    note = ("A dry run tests none of these: the verdicts show the test runs, on the wrong instruments.\n\n"
-            if dry_run else "")
-    return "## The pre-registered claims (QUESTIONS.md 2.13)\n\n" + note + table(["claim", "Δ (± 2 SE)", "verdict"], rows)
+    power = ("Stated in advance (2.13 as ruled): at 300 test questions p = 10 is underpowered. The bound on a paired "
+             "difference's standard error there is 0.635 (2.1), so claim (ii) at p = 10 can separate only large "
+             "differences.\n\n")
+    if dry_run:
+        note = "A dry run tests none of these: the verdicts show the test runs, on the wrong instruments.\n\n"
+    elif o.stage != "stage2":
+        note, rows = "The pilot writes no verdict: it is 50 test questions, played to be seen before stage 2.\n\n", \
+            [r[:2] + ["— (pilot)"] for r in rows]
+    elif not o.audit or o.audit[0] < o.audit[1]:
+        done = f"{o.audit[0]} of {o.audit[1]}" if o.audit else "none"
+        note, rows = (f"**The verdicts are withheld until the owner's hand audit of the grader** (2.9: 10 grades per "
+                      f"domain, in the run directory's `audit.csv`; {done} audited).\n\n"), \
+            [r[:2] + ["withheld"] for r in rows]
+    else:
+        note = (f"The owner audited {o.audit[1]} grades by hand and agreed with the grader on {o.audit[2]} "
+                f"(2.9).\n\n")
+    return ("## The pre-registered claims (QUESTIONS.md 2.13)\n\n" + power + note
+            + table(["claim", "Δ (± 2 SE)", "verdict"], rows))
 
 
 def calibration(o) -> str:
@@ -248,11 +281,28 @@ def spend(o) -> str:
         at_list = (tokens[(role, "in")] * lp[0] + tokens[(role, "out")] * lp[1]) / Decimal(10**6) if lp else None
         body.append([role, n[role], tokens[(role, "in")], tokens[(role, "out")], f"${by[role]:.4f}",
                      f"${at_list:.4f}" if at_list is not None else "—"])
+    served = {}
+    for c in o.calls:
+        role = c.instrument.split(".")[0]
+        served.setdefault(role, Counter())[(c.served_model or "—", c.effort or "—")] += 1
+    reasoning = Counter()
+    for c in o.calls:
+        reasoning[c.instrument] += c.reasoning_tokens
+    body = [row + [f"{reasoning[row[0]] / row[1]:.0f}"] for row in body]
+    models = [[role, "; ".join(f"`{m}` × {n}" + (f" ({e})" if e != "—" else "") for (m, e), n in cnt.items())]
+              for role, cnt in sorted(served.items())]
+    truncated = sum(c.truncated for c in o.calls)
+    unparsed = sum(r.get("classes", 0) is None for r in o.rows)
     total = sum(by.values(), Decimal(0))
     ungraded = sum(r["grade1"] == "UNGRADED" for r in o.rows) + sum(r["grade2"] == "UNGRADED" for r in o.rows)
     unread = sum(r["confidence"] is None for r in o.rows)
     return ("## Spend (rule 5)\n\n" + table(["instrument", "calls", "input tokens", "output tokens",
-                                             "declared $", "list-price $ from tokens"], body)
+                                             "declared $", "list-price $ from tokens", "reasoning tokens per call"],
+                                            body)
+            + "\n\nServed, as each provider reported it (2.3), with the reasoning effort it reported:\n\n"
+            + table(["instrument", "model served × calls"], models)
+            + f"\n\nTruncated replies: {truncated}. Equivalence replies that could not be read, where k and s fell back "
+              f"to normalised exact match: {unparsed}."
             + f"\n\nDeclared total **${total:.4f}** of a ${o.budget} budget. Grading is one call per distinct "
               f"(question, answer), shared by all four contestants. Unparseable grades: {ungraded} (scored wrong); "
               f"unparseable confidences: {unread} (bucket `{o.settings.unread}`).")

@@ -38,17 +38,30 @@ def optional(owner: Mapping[str, Any], key: str, default: Any) -> Any:
 class InstrumentSpec:
     name: str
     model: str
-    usd_per_call: Decimal
+    usd_per_call: Decimal | None   # None: "measured", each call priced at list price from its tokens
     provider: str = "anthropic"
     key_env: str | None = None  # the environment variable holding the key; None: the transport's own default
     max_tokens: int | None = None  # None: the transport's own default
-    thinking: str | None = None    # Anthropic only: "disabled" or "adaptive"; None sends nothing
+    thinking: str | None = None    # "disabled", "adaptive" (Anthropic); "disabled", "minimal", "low" (Gemini)
+    effort: str | None = None      # reasoning effort (OpenAI; Anthropic's output_config); None: the provider's default
+    list_price: tuple[Decimal, Decimal] | None = None   # from list_price_per_mtok.<model>, $ per million (in, out)
+    stop_on_truncation: bool = False                    # truncation = "stop"
 
 
 def instrument(owner, name: str) -> InstrumentSpec:
-    return InstrumentSpec(name, need(owner, f"instruments.{name}.model"),
-                          Decimal(need(owner, f"instruments.{name}.usd_per_call")),
+    model = need(owner, f"instruments.{name}.model")
+    price = need(owner, f"instruments.{name}.usd_per_call")
+    lp = owner.get("list_price_per_mtok", {}).get(model)      # model names hold dots, so not a dotted key
+    list_price = (Decimal(lp["input"]), Decimal(lp["output"])) if lp else None
+    if price == "measured" and list_price is None:
+        raise MissingOwnerNumber(f"list_price_per_mtok.{model}")
+    truncation = optional(owner, f"instruments.{name}.truncation", "record")
+    if truncation not in ("record", "stop"):
+        raise ValueError(f"instruments.{name}.truncation = {truncation!r}: 'record' or 'stop'")
+    return InstrumentSpec(name, model, None if price == "measured" else Decimal(price),
                           optional(owner, f"instruments.{name}.provider", "anthropic"),
                           optional(owner, f"instruments.{name}.key_env", None),
                           optional(owner, f"instruments.{name}.max_tokens", None),
-                          optional(owner, f"instruments.{name}.thinking", None))
+                          optional(owner, f"instruments.{name}.thinking", None),
+                          optional(owner, f"instruments.{name}.effort", None),
+                          list_price, truncation == "stop")

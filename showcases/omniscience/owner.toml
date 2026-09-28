@@ -1,37 +1,103 @@
-# AA-Omniscience: the owner's numbers. Rule 6: nothing here is chosen by the repository.
-# Empty until the pre-registration in QUESTIONS.md ("Pre-registration: brief 002") is ruled. A key that is absent is
-# TBD, and code that needs it fails loud naming it. With no [instruments.*] here, no code can build an instrument:
-# that absence is what keeps every frozen model uncalled until the ruling.
+# AA-Omniscience: the owner's numbers. Rule 6: nothing here is chosen by the repository. Every item of QUESTIONS.md's
+# pre-registration ("Pre-registration: brief 002") is ruled (2026-09-25, 2026-09-27, 2026-09-28); each line names
+# its item. A key that is absent is TBD, and code that needs it fails loud naming it.
 #
-# Shapes, once ruled (see QUESTIONS.md 2.1-2.14; the dry run's proposals are in dryrun.toml, and are not rulings):
-#
-# lambda_usd = "..."                                    2.10
-# penalties = [...]                                     2.8
-# second_price_grid = ["...", ...]                      2.10 and 2.22, in utility
-# split_seed = ..., sampling_seed = ..., plate_seed = ... 2.14, 2.20
-# budget_usd = "..."                                    2.14
-# [split]       calibration_per_domain = ...            2.1
-# [confidence]  cuts = [...]                            2.5
-# [agreement]   samples = 5, price = "per_call" | "..." 2.6
-# [globals]     rho = [...], agree = [[a+, a-], ...], second = [[sigma, alpha, beta], ...], grader = [...]   2.15
-# [instruments.primary]  provider = "openai",    model = "...", usd_per_call = "...", max_tokens = ...   2.3
-# [instruments.second]   provider = "anthropic", model = "...", usd_per_call = "...", max_tokens = ...   2.12
-# [instruments.grader]   provider = "...",       model = "...", usd_per_call = "...", max_tokens = ...   2.9
+# Nothing frozen is called before the owner's go. The runner goes by stage (2.14 as ruled 2026-09-28):
+#   pilot-calibration  the pilot's 50 calibration questions; prints the gate and the re-estimate, and stops
+#   pilot-test         the pilot's 50 test questions; needs go.pilot_test
+#   stage2             the other 500; needs go.stage2
+# and refuses any stage while an instrument's `listed` is empty: each model string is verified against its
+# provider's list on the day, and pinned here with the date (ruled 2026-09-28).
 
-# ---- Ruled (QUESTIONS.md, "Ruled", 2026-09-25) ----
-# Models, verified against each provider's list on 2026-09-25T14:39Z. They become [instruments.*] only when every
-# pre-registration item is ruled, so they stay comments here: primary gpt-6-astra (an alias, no dated snapshot listed;
-# 2.3 open), fallback gpt-5.5-2026-04-23, second opinion claude-opus-5-5 (listed, created 2026-09-21).
-plate_seed = 20260925                   # 2.20
+lambda_usd = "1"                                        # 2.10
+penalties = [1, 3, 10]                                  # 2.8; PARTIAL scores 0 at every p
+second_price_grid = ["0", "1/20", "1/10", "1/4", "1/2", "1", "2"]   # 2.10 less "none" (2.22); claim (i) at c = 2
+split_seed = 20260923                                   # 2.14
+sampling_seed = 1                                       # 2.14
+plate_seed = 20260925                                   # 2.20
 
-[confidence]
-cuts = [80]                             # 2.15: two buckets, b0 = 0-79, b1 = 80-100
-unread = "b0"                           # 2.15: an unreadable confidence joins b0
-gate = "stands"                         # 2026-09-27: a bucket under a fifth of the calibration records stops the run
+[split]                                                 # 2.1: 300 calibration / 300 test, 50/50 within each domain
+per_domain = 100
+calibration_per_domain = 50
 
-[globals]                               # 2.15; P(Global) uniform over the product, elicited
+[stages]                                                # 2.14, ruled 2026-09-28
+pilot_calibration = 50                                  # 8 or 9 per domain, the extras chosen by split_seed
+pilot_test = 50
+pilot_cap_usd = "15"
+whole_cap_usd = "80"                                    # stop if either cap would be exceeded
+
+[go]                                                    # the owner's go, with the date; empty means no
+pilot_test = ""
+stage2 = ""
+
+[audit]                                                 # 2.9: hand-audited before the verdict line is written
+per_domain = 10
+
+[confidence]                                            # 2.5: a separate confidence call
+cuts = [80]                                             # 2.15: two buckets, b0 = 0-79, b1 = 80-100
+unread = "b0"                                           # 2.15: an unreadable confidence joins b0
+gate = "stands"                                         # a bucket under a fifth of the calibration records stops
+
+[globals]                                               # 2.15; P(Global) uniform over the product, elicited
 rho = ["7/20", "13/20", "17/20", "19/20"]
 agree = [["4/5", "1/5"], ["1/2", "1/2"]]
 second = [["1/2", "4/5", "1/5"], ["1/10", "4/5", "1/2"]]
 grader = ["9/10", "1"]
-corr = ["0", "1/2", "9/10"]             # 2.25, ruled 2026-09-28: κ, the instruments tied; uniform, elicited
+corr = ["0", "1/2", "9/10"]                             # 2.25: κ, the instruments tied
+
+[agreement]                                             # 2.6, ruled 2026-09-28: three samples; "all three or not"
+samples = 3
+price = "per_call"
+
+# Prices: "measured" is list price from each call's tokens; the packs declare the mean per call on the calibration
+# split (2.12). List prices are verified on the day with the models, and pinned beside them.
+[instruments.primary]                                   # 2.3, ruled 2026-09-28
+provider = "openai"
+key_env = "OPENAI_API_KEY"
+model = "gpt-5.5-2026-04-23"
+effort = "low"                                          # recorded per call; the board says "gpt-5.5 at low reasoning effort"
+max_tokens = 16000
+truncation = "stop"
+usd_per_call = "measured"
+listed = ""                                             # verified against OpenAI's list on the day: date and time
+
+[instruments.second]                                    # 2.12
+provider = "anthropic"
+key_env = "ANTHROPIC_API_KEY"
+model = "claude-opus-5-5"
+max_tokens = 16000
+truncation = "stop"
+usd_per_call = "measured"
+listed = ""
+
+[instruments.grader]                                    # 2.9: AA's grading prompt verbatim
+provider = "gemini"
+key_env = "GEMINI_API_KEY"
+model = "gemini-3.8-flash"
+thinking = "disabled"                                   # reasoning off if the API allows; else "low", recorded
+max_tokens = 1024
+truncation = "stop"
+usd_per_call = "measured"
+listed = ""
+
+[instruments.equivalence]                               # 2.7: one call per question to the grader model
+provider = "gemini"
+key_env = "GEMINI_API_KEY"
+model = "gemini-3.8-flash"
+thinking = "disabled"
+max_tokens = 1024
+truncation = "stop"
+usd_per_call = "measured"
+listed = ""
+
+[list_price_per_mtok."gpt-5.5-2026-04-23"]              # listed 2026-09-23; re-verified on the day
+input = "5"
+output = "30"
+
+[list_price_per_mtok."claude-opus-5-5"]                 # listed 2026-09-25
+input = "4"
+output = "20"
+
+[list_price_per_mtok."gemini-3.8-flash"]                # Google's pricing page, 2026-09-28; $1.50 / $7.50 from 2027
+input = "0.75"
+output = "3.75"

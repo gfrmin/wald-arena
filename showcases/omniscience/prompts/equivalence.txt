@@ -1,0 +1,7 @@
+You will be shown a question and several numbered answers to it. Sort the answers into classes: two answers belong to the same class if a grader would accept them as the same answer to the question, whatever their wording, spelling or level of detail. An answer that declines to answer (it says it does not know, cannot answer, or gives no answer at all) belongs to the class D, whatever its wording. Number the other classes 1, 2, 3 and so on.
+
+Question: {question}
+
+{answers}
+
+Reply with one line per answer, in the order given, each in the form "<answer number>: <class>", and nothing else.
