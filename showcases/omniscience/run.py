@@ -488,8 +488,9 @@ AUDIT_FIELDS = ("question_id", "domain", "question", "gold_answer", "answer", "g
 
 
 def audit(run_dir: Path, test_rows, by_id, per_domain: int, seed: int) -> tuple[int, int, int]:
-    """2.9 as ruled: the owner hand-audits `per_domain` grades per domain, drawn with the seed from the test split's
-    graded answers (the read's and the second opinion's), before the verdict line is written. The sample is written
+    """2.9 as ruled: the owner hand-audits `per_domain` grades per domain, drawn with the seed from the whole test
+    split's graded answers (the read's and the second opinion's; all 300, the pilot's included, as ruled 2026-09-28),
+    before the verdict line is written. The sample is written
     once, to `audit.csv`, with an empty `owner_grade` column for the owner to fill (A, B, C or D, as the grader).
     Returns (filled, drawn, agreeing)."""
     import csv

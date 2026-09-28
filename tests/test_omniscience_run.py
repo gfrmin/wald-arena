@@ -89,8 +89,12 @@ def test_the_real_run_goes_by_stage_each_later_one_waits_for_the_go_and_spend_is
 def test_stage2_writes_the_audit_sample_and_withholds_the_verdict_until_it_is_filled(tmp_path):
     fake = Scripted()
     owner = real(tmp_path, go=("pilot_test", "stage2"), cap="100")
+    pilot = stage(tmp_path, owner, "pilot-test", fake)
     o = stage(tmp_path, owner, "stage2", fake)
     assert len(o.rows) == 60 and o.audit[:2] == (0, 12)
+    # 7 and 8 as ruled 2026-09-28: stage 2's Counts, its gate and its verdict cover the whole split, pilot included
+    assert sum(o.calibration.counts.values()) == 30 and len(o.test_rows) == 30
+    assert {r["question_id"] for r in pilot.test_rows} < {r["question_id"] for r in o.test_rows}
     assert "withheld" in SB.claims(o, dry_run=False)
     import csv
     path = tmp_path / "run" / "audit.csv"

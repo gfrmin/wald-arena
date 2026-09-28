@@ -251,7 +251,6 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 - Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
 - On the day: verify and pin each model string and list price in `owner.toml` (`listed`); settle Gemini's thinking
   setting (item 6 of "The pilot, built", above).
-- The owner's confirmation of "The pilot, built", items 1–8, above.
 - Then `--stage pilot-calibration`, which stops at the gate and the re-estimate. `pilot-test` and `stage2` each wait
   for the owner's go.
 
@@ -304,9 +303,10 @@ number. k is the number of samples in the read's class, and s is "same" if the s
    - `claude-opus-5-5` runs at the provider's default effort, since 2.12 sets none.
    - `gemini-3.8-flash` is sent a thinking budget of 0 ("disabled"). If the API refuses that, it is sent thinking
      level "low", as 2.9 rules, and `owner.toml` records which.
-7. **The gate** applies at each stage to that stage's calibration split: the pilot's 50 records, then all 300.
+7. **The gate** applies at each stage to that stage's calibration split: the pilot's 50 records, then all 300 (the
+   pilot's 50 and stage 2's 250, shipped as one set of Counts; confirmed 2026-09-28).
 8. **The audit sample.** 10 graded answers per domain (the read's or the second opinion's) are drawn with the split
-   seed from stage 2's test split and written once to `audit.csv`, whose `owner_grade` column is for the owner to
+   seed from the whole 300-question test split, the pilot's 50 included (confirmed 2026-09-28), and written once to `audit.csv`, whose `owner_grade` column is for the owner to
    fill. The verdict column reads "withheld" until all 60 are filled, and then the agreement is printed.
 
 **Re-estimate, with the ruled settings.** Each question takes 5 primary calls (the answer, the confidence, 3
@@ -610,6 +610,13 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-28, "The pilot, built", items 1–8:** confirmed as proposed, with two clarifications.
+  - **7:** stage 2's calibration is all 300 records, the pilot's 50 and stage 2's 250, shipped as one set of Counts;
+    the stage-2 gate reads all 300.
+  - **8:** the verdict covers the whole 300-question test split, pilot included, so the 60-grade audit is drawn from
+    all 300 (10 per domain).
+  - The code already did both (stage 2 reads the pilot's records from the same run directory); a test now pins it.
 
 - **2026-09-28, the rest of the pre-registration** (the later rulings of the day supersede the earlier 2.3 and 2.14):
   - **2.3:** the primary is `gpt-5.5-2026-04-23`, the dated snapshot, pinned by exact string after verifying it
