@@ -166,6 +166,7 @@ class Settings:
     grids: W.Grids
     gate: str = "stands"             # "waived" only for the Haiku dry run (owner, 2026-09-27); never for the real run
     list_prices: dict = field(default_factory=dict)   # model -> (input, output) $ per million tokens, for the audit
+    changes: tuple = ()              # the owner's changes to the pre-registration, each stated on the board
 
     @property
     def buckets(self):
@@ -191,7 +192,8 @@ def settings(owner) -> Settings:
                     tuple(need(owner, "confidence.cuts")), need(owner, "confidence.unread"),
                     need(owner, "agreement.samples"), grids, gate_ruling(optional(owner, "confidence.gate", "stands")),
                     {m: (Decimal(v["input"]), Decimal(v["output"]))
-                     for m, v in optional(owner, "list_price_per_mtok", {}).items()})
+                     for m, v in optional(owner, "list_price_per_mtok", {}).items()},
+                    tuple(optional(owner, "board.changes", [])))
 
 
 def gate_ruling(value: str) -> str:
@@ -443,8 +445,10 @@ def posterior(s: Settings, per_call, calib: Calibration) -> tuple[dict, dict]:
     for key, q in joint.items():
         for part in key:
             name, value = part.split(" ", 1)
-            marg.setdefault(name, {}).setdefault(value, Fraction(0))
-            marg[name][value] += q
+            pairs = zip((f"rho {b}" for b in s.buckets), value.split()) if name == "rho" else [(name, value)]
+            for n, v in pairs:                      # ρ is one Global value per bucket: a marginal for each
+                marg.setdefault(n, {}).setdefault(v, Fraction(0))
+                marg[n][v] += q
     return marg, joint
 
 
@@ -541,6 +545,7 @@ class Outcome:
     per_call: dict = field(default_factory=dict)      # each instrument's declared $ per call, as the packs price it
     stage: str | None = None
     audit: tuple | None = None       # (grades the owner has audited, of how many, agreeing with the grader); stage 2
+    marginals: dict | None = None    # P(Global | Counts) per component, summed from wald.report: a display (S1)
 
 
 AUDIT_FIELDS = ("question_id", "domain", "question", "gold_answer", "answer", "grader_grade", "owner_grade")
@@ -739,6 +744,13 @@ def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=N
     print(f"calibration Counts: {sum(calib.counts.values())} records, {len(calib.counts)} distinct, "
           f"Score and digest by wald in {time.time() - t0:.0f}s", flush=True)
     write_counts(run_dir, calib)
+    marg = None
+    if not dry_run:
+        marg, joint = posterior(s, per_call, calib)
+        (run_dir / "posterior.json").write_text(json.dumps(
+            {"counts_sha256": calib.digest, "note": POSTERIOR_NOTE,
+             "marginals": {n: {v: str(q) for v, q in vals.items()} for n, vals in marg.items()},
+             "posterior": {" | ".join(k): str(q) for k, q in joint.items()}}, indent=1) + "\n")
 
     base = prices(per_call, s, Fraction(1), Fraction(0))
     jobs = [(s, base, p, c, test_rows, calib.counts, packs) for p in s.penalties for c in s.grid]
@@ -758,7 +770,7 @@ def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=N
         lines[(p, c)] = {name: B.line(name, test_rows, plays[name], p, base.agreement, c) for name in B.CONTESTANTS}
     audited = audit(run_dir, test_rows, by_id, need(owner, "audit.per_domain"), s.split_seed) if stage == "stage2" else None
     return Outcome(s, rows, test_rows, calib, plates, lines, spent(run_dir), inst, budget, (per_domain, cal_per_domain),
-                   per_call, stage, audited)
+                   per_call, stage, audited, marg)
 
 
 def main(argv=None):

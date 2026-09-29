@@ -54,6 +54,7 @@ def real(tmp_path, go=(), cap="15"):
     owner["penalties"], owner["second_price_grid"] = [1, 3], ["1/10", "1"]
     owner["confidence"]["cuts"] = [50]
     owner["audit"]["per_domain"] = 2
+    owner["go"] = {"pilot_test": "", "stage2": ""}              # the owner's real gates are not the test's
     for k in go:
         owner["go"][k] = "2026-09-28"
     return owner
@@ -305,3 +306,11 @@ def test_grading_under_another_configuration_is_superseded_kept_and_redone(tmp_p
     assert grades and all(g.effort == "low" for g in grades) and est.n == 26
     wallet = RUN.Budget(Decimal("80"), run_dir / "reserved.jsonl")
     assert wallet.spent == sum(c.usd for c in RUN.spent(run_dir))
+
+
+def test_a_change_to_the_pre_registration_is_printed_on_the_board(tmp_path):
+    owner = real(tmp_path, go=("pilot_test",))
+    owner["board"] = {"changes": ["α widened, ruled after the pilot."]}
+    stage(tmp_path, owner, "pilot-calibration", Scripted())
+    o = stage(tmp_path, owner, "pilot-test", Scripted())
+    assert "- **Changed after the pilot:** α widened, ruled after the pilot." in SB.header(o, False, "runs/test")

@@ -101,7 +101,8 @@ def header(o, dry_run: bool, run_dir) -> str:
               "is the Omniscience Index. *net*: score less what the contestant bought (grading, which every "
               "contestant gets, left out). Δ: paired per-question difference in net, ± 2 standard errors. "
               "*realised*: wald's mean utility less every price its episodes paid, the After-act's included, and c for "
-              "each blind switch (E7)."]
+              "each blind switch (E7).",
+              *(f"- **Changed after the pilot:** {c}" for c in getattr(s, "changes", ()))]
     return "\n".join(lines)
 
 
@@ -220,8 +221,14 @@ def calibration(o) -> str:
         f"{len(num)}/{len(den)} digits (numerator/denominator), log "
         f"{log_of(C.score):.2f}, or {log_of(C.score) / n:.4f} per record. The records, digest and exact Score are in "
         "the run directory's `calibration_counts.json`.", "",
-        "**What the Counts moved.** wald hands a host no P(Global | Counts), so it is not printed here. What the "
-        "Counts moved shows in what wald does: E7 below, and the acts. "
+        *(["**P(Global | Counts)**, wald's (`wald.counts.posterior_global`, rendered by `wald.report`; exact over every "
+           "Global value in the run directory's `posterior.json`). Each marginal is that text's rationals summed, for "
+           "the reader; no contestant reads it. The prior is uniform.", "",
+           table(["Global", "posterior"], [[n, "; ".join(f"{v}: {float(q):.1%}" for v, q in vals.items()
+                                                       if q >= Fraction(1, 1000))]
+                                           for n, vals in o.marginals.items()]), ""]
+          if getattr(o, "marginals", None) else []),
+        "**What the Counts moved.** What the Counts moved also shows in what wald does: E7 below, and the acts. "
         f"On the first test question, wald played `{' → '.join(first[0])}` with the calibration Counts and "
         f"`{' → '.join(first[1])}` from the declared prior. The number of test questions it played differently, per "
         "plate, is the last column of the tables above."])
