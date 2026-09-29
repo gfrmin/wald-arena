@@ -17,8 +17,8 @@ def questions(per_domain: int = 6) -> tuple[Question, ...]:
 class Scripted:
     """Answers right on two thirds of the questions (by a hash of the id), states 90 when right and 30 when not,
     grades by exact match. Counts its calls."""
-    def __init__(self, served: str = ""):
-        self.calls, self.served = 0, served
+    def __init__(self, served: str = "", thinking: str = ""):
+        self.calls, self.served, self.thinking = 0, served, thinking
 
     def __call__(self, model):
         return self.send
@@ -36,7 +36,8 @@ class Scripted:
             answers = re.findall(r"^Answer \d+: (.*)$", user, re.M)
             names = {}
             classes = ["D" if a.startswith("no idea") else str(names.setdefault(a, len(names) + 1)) for a in answers]
-            return Reply("\n".join(f"{i}: {c}" for i, c in enumerate(classes, 1)), 400, 12, model=self.served)
+            return Reply("\n".join(f"{i}: {c}" for i, c in enumerate(classes, 1)), 400, 12, model=self.served,
+                         effort=self.thinking)
         gold = re.search(r"Gold target: (.*)", user.split("Here is a new example")[-1]).group(1).strip()
         pred = re.search(r"Predicted answer: (.*)", user.split("Here is a new example")[-1]).group(1).strip()
-        return Reply("A" if gold == pred else "B", 1500, 1)
+        return Reply("A" if gold == pred else "B", 1500, 1, effort=self.thinking)

@@ -72,6 +72,11 @@ def test_the_real_run_goes_by_stage_each_later_one_waits_for_the_go_and_spend_is
     recs = [json.loads(line) for line in open(tmp_path / "run" / "records.jsonl")]
     assert len(recs) == 26 and {r["split"] for r in recs} == {"calibration"}
     assert all(len(r["samples"]) == 3 and r["classes"] for r in recs)     # three samples, read by classes
+    post = json.loads((tmp_path / "run" / "posterior.json").read_text())
+    assert sum(Fraction(q) for q in post["posterior"].values()) == 1
+    assert all(sum(Fraction(q) for q in m.values()) == 1 for m in post["marginals"].values())
+    assert len((tmp_path / "run" / "disclosure.txt").read_text().splitlines()) == 4          # every (p, c)
+    assert json.loads((tmp_path / "run" / "calibration_counts.json").read_text())["sha256"] == post["counts_sha256"]
     assert Counter(r["domain"] for r in recs).most_common()[0][1] == 5 and len({r["domain"] for r in recs}) == 6
     with pytest.raises(RUN.NoGo, match="go.pilot_test"):
         stage(tmp_path, real(tmp_path), "pilot-test", fake)
@@ -277,3 +282,26 @@ def test_a_go_or_a_verification_is_a_date_not_a_boolean(tmp_path, value):
     owner["instruments"]["primary"]["listed"] = value
     with pytest.raises(RUN.NotListed):
         RUN.instruments(owner, dry_run=False, transport=lambda m: pytest.fail("a transport was built"))
+
+
+def test_grading_under_another_configuration_is_superseded_kept_and_redone(tmp_path):
+    "2.9 (b), ruled 2026-09-28: the old sorts and grades stay logged, marked; the sorts and grades are redone."
+    owner = real(tmp_path)
+    stage(tmp_path, owner, "pilot-calibration", Scripted(thinking=""))
+    run_dir = tmp_path / "run"
+    before = RUN.spent(run_dir)
+    fake = Scripted(thinking="low")
+    assert RUN.supersede_grading(owner, run_dir, "thinking off not honoured", fake, questions(10)) == 26
+    assert fake.calls == 26                                               # one equivalence call a record, nothing else
+    after = RUN.spent(run_dir)
+    old = [c for c in after if c.superseded]
+    assert len(old) == sum(c.instrument in RUN.GRADING for c in before) and len(after) == len(before) + 26
+    recs = [json.loads(line) for line in open(run_dir / "records.jsonl")]
+    assert all(r["superseded"]["calls"] and r["classes"] for r in recs)
+    assert not (run_dir / "grades.jsonl").exists() and (run_dir / "grades.superseded.jsonl").exists()
+    assert RUN.supersede_grading(owner, run_dir, "again", fake, questions(10)) == 0          # idempotent
+    est = stage(tmp_path, owner, "pilot-calibration", fake)                                  # re-grades, nothing else
+    grades = RUN.grading_calls(run_dir / "grades.jsonl")
+    assert grades and all(g.effort == "low" for g in grades) and est.n == 26
+    wallet = RUN.Budget(Decimal("80"), run_dir / "reserved.jsonl")
+    assert wallet.spent == sum(c.usd for c in RUN.spent(run_dir))

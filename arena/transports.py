@@ -49,6 +49,7 @@ class Call:
     reasoning_tokens: int = 0
     effort: str = ""
     truncated: bool = False
+    superseded: str = ""    # why a later call replaced this one's result; the call stays paid and logged
 
     def to_json(self) -> dict:
         return asdict(self) | {"usd": str(self.usd)}
@@ -194,7 +195,9 @@ def gemini_transport(model: str, key_env: str = "GEMINI_API_KEY", max_tokens: in
                                      headers={"Content-Type": "application/json", "x-goog-api-key": key})
         try:
             with urllib.request.urlopen(req, timeout=120) as resp:
-                return gemini_reply(json.load(resp))
+                r = gemini_reply(json.load(resp))
+                return Reply(r.text, r.input_tokens, r.output_tokens, r.model, r.reasoning_tokens, r.truncated,
+                             thinking or "")          # Gemini reports no level: record the one asked for
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"gemini {model}: HTTP {e.code}: {e.read().decode(errors='replace')[:500]}") from e
 

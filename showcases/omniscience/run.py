@@ -415,6 +415,54 @@ def calibrate(s: Settings, per_call, cal_rows, shares, thin=None) -> Calibration
                        Counter(end for _, end, _ in counts.elements()), shares, thin or {}, histogram(cal_rows))
 
 
+def write_counts(run_dir: Path, calib: Calibration):
+    (run_dir / "calibration_counts.json").write_text(json.dumps(
+        {"records": [[[list(d) for d in draws], end, after, n] for (draws, end, after), n in
+                     sorted(calib.counts.items(), key=repr)],
+         "sha256": calib.digest, "score": calib.score}, indent=1) + "\n")
+
+
+POSTERIOR_NOTE = ("P(Global | Counts) is wald's (wald.counts.posterior_global, rendered by wald.report); the marginals "
+                  "are that text's exact rationals summed per component, for the owner to read. No contestant reads either.")
+
+
+def posterior(s: Settings, per_call, calib: Calibration) -> tuple[dict, dict]:
+    """wald's P(Global | Counts), as the exact rationals wald.report renders, and each Global component's marginal
+    summed from them: a display for the owner (S1), never read by a contestant. The Counts' likelihood does not
+    depend on the prices, so one declaration serves every plate."""
+    import re
+    import wald.counts
+    _, world = W.declare(W.text(s.buckets, s.grids, prices(per_call, s, Fraction(1), Fraction(0)), "omniscience",
+                                calib.counts))
+    text = str(wald.report(wald.counts.posterior_global(world, calib.counts)))
+    joint = {tuple(x.strip("' ") for x in m.group(1).split("', '")): Fraction(int(m.group(2)), int(m.group(3) or 1))
+             for m in re.finditer(r"\(('[^)]*')\) (\d+)(?:/(\d+))?", text)}
+    if sum(joint.values()) != 1:
+        raise ValueError("wald.report's posterior did not parse to a distribution; its format has changed")
+    marg = {}
+    for key, q in joint.items():
+        for part in key:
+            name, value = part.split(" ", 1)
+            marg.setdefault(name, {}).setdefault(value, Fraction(0))
+            marg[name][value] += q
+    return marg, joint
+
+
+def _disclosure(args):
+    s, per_call, counts, p, c = args
+    _, world = W.declare(W.text(s.buckets, s.grids, prices(per_call, s, p, c), "omniscience", counts))
+    return str(wald.plate(world).disclosure())
+
+
+def disclosures(s: Settings, per_call, calib: Calibration, workers: int | None) -> dict:
+    "S15's disclosure (Plate.disclosure) for the declaration at each (p, c), with the Counts shipped."
+    jobs = [(s, per_call, calib.counts, p, c) for p in s.penalties for c in s.grid]
+    if workers == 1:
+        return {(j[3], j[4]): _disclosure(j) for j in jobs}
+    with ProcessPoolExecutor(max_workers=workers or 3) as ex:
+        return {(j[3], j[4]): d for j, d in zip(jobs, ex.map(_disclosure, jobs))}
+
+
 @dataclass
 class PlateOut:
     p: Fraction
@@ -528,6 +576,57 @@ def audit(run_dir: Path, test_rows, by_id, per_domain: int, seed: int) -> tuple[
                                       for r in filled)
 
 
+GRADING = ("grader", "equivalence")
+
+
+def supersede_grading(owner, run_dir: Path, note: str, transport=None, questions=None) -> int:
+    """The pilot's grades and equivalence sorts, redone under the grader configuration now in `owner.toml` (2.9 (b),
+    ruled 2026-09-28): the calls already made stay in the log, marked `superseded` with `note`; the grade memo moves to
+    `grades.superseded.jsonl`, so the next run grades afresh; each record keeps its old classes and equivalence call
+    beside the new ones. Only the equivalence calls are made here, reserved and settled against the pilot's caps.
+    Idempotent: a record already sorted under the current configuration is left alone. Returns the calls made."""
+    inst = instruments(owner, dry_run=False, transport=transport)
+    want = inst["equivalence"].effort or optional(owner, "instruments.equivalence.thinking", "")
+    log = run_dir / "calls.jsonl"
+    marked = [c | ({"superseded": note} if c["instrument"].split(".")[0] in GRADING and c.get("effort", "") != want
+                   and not c.get("superseded") else {}) for c in read_rows(log)]
+    log.write_text("".join(json.dumps(c) + "\n" for c in marked))
+    if (run_dir / "grades.jsonl").exists() and not (run_dir / "grades.superseded.jsonl").exists():
+        (run_dir / "grades.jsonl").rename(run_dir / "grades.superseded.jsonl")
+    wallet = Budget(Decimal(need(owner, "stages.whole_cap_usd")), run_dir / "reserved.jsonl", "pilot",
+                    Decimal(need(owner, "stages.pilot_cap_usd")))
+    served = ServedModels(spent(run_dir))
+    by_id = {q.id: q for q in (questions if questions is not None else QS.load())}
+    doms = QS.domains(list(by_id.values()))
+    rows, made = read_rows(run_dir / "records.jsonl"), 0
+    out = []
+    for r in rows:
+        eq = [c for c in r["calls"] if c["instrument"] == "equivalence"]
+        if eq and all(c.get("effort", "") == want for c in eq):
+            out.append(r)
+            continue
+        q = by_id[r["question_id"]]
+        wallet.reserve(inst["equivalence"])
+        classes, c = OBS.equivalence(inst["equivalence"], q, OBS.domain_index(q, doms),
+                                     (r["read"], *r["samples"], r["second"]))
+        with open(log, "a") as f:
+            f.write(json.dumps(c.to_json()) + "\n")
+        wallet.settle("equivalence", c)
+        served(c)
+        made += 1
+        seen = OBS.Seen(r["read"], r["confidence"], tuple(r["samples"]), r["second"],
+                        tuple(Call.from_json(x) for x in r["calls"] if x["instrument"] != "equivalence") + (c,),
+                        classes)
+        out.append(r | {"k": seen.k, "s": seen.s, "classes": list(classes) if classes else None,
+                        "calls": [x.to_json() for x in seen.calls],
+                        "superseded": {"note": note, "classes": r.get("classes"), "k": r["k"], "s": r["s"],
+                                       "calls": [x | {"superseded": note} for x in eq]}})
+    tmp = run_dir / "records.jsonl.tmp"
+    tmp.write_text("".join(json.dumps(r) + "\n" for r in out))
+    tmp.replace(run_dir / "records.jsonl")
+    return made
+
+
 def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=None, questions=None,
         write_packs: bool = True, workers: int | None = None, stage: str | None = None):
     """A dry run (`dry_run`, sized by `budget`), or a stage of the real run (`stage`, sized and capped by the owner's
@@ -610,7 +709,24 @@ def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=N
             f"{k} {v:.5f}" for k, v in est.per_question.items()) + "; reasoning tokens per call " + ", ".join(
             f"{k} {v:.0f}" for k, v in est.reasoning.items()), flush=True)
         print("projected: " + ", ".join(f"{k} ${v:.2f}" for k, v in est.projected.items()), flush=True)
-        bucket_gate(rows, s, dry_run)
+        shares, thin = bucket_gate(rows, s, dry_run)
+        per_call = per_call_usd(inst, rows, grading_calls(run_dir / "grades.jsonl"))
+        calib = calibrate(s, per_call, rows, shares, thin)
+        write_counts(run_dir, calib)
+        marg, joint = posterior(s, per_call, calib)
+        (run_dir / "posterior.json").write_text(json.dumps(
+            {"counts_sha256": calib.digest, "note": POSTERIOR_NOTE,
+             "marginals": {n: {v: str(q) for v, q in vals.items()} for n, vals in marg.items()},
+             "posterior": {" | ".join(k): str(q) for k, q in joint.items()}}, indent=1) + "\n")
+        disc = disclosures(s, per_call, calib, workers)
+        (run_dir / "disclosure.txt").write_text(
+            "".join(f"p={W.num(p)} c={W.num(c)}: {d}\n" for (p, c), d in disc.items()))
+        print(f"calibration Counts: {sum(calib.counts.values())} records, {len(calib.counts)} distinct, sha256 "
+              f"{calib.digest}", flush=True)
+        print("P(Global | Counts), summed from wald.report for display: " + "; ".join(
+            f"{n}: " + ", ".join(f"{v} {float(q):.1%}" for v, q in vals.items() if q >= Fraction(1, 1000))
+            for n, vals in marg.items()), flush=True)
+        print("S15: " + "; ".join(sorted(set(disc.values()))), flush=True)
         return est
 
     cal_rows = [r for r in rows if r["split"] == "calibration"]
@@ -622,10 +738,7 @@ def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=N
     calib = calibrate(s, per_call, cal_rows, shares, thin)
     print(f"calibration Counts: {sum(calib.counts.values())} records, {len(calib.counts)} distinct, "
           f"Score and digest by wald in {time.time() - t0:.0f}s", flush=True)
-    (run_dir / "calibration_counts.json").write_text(json.dumps(
-        {"records": [[[list(d) for d in draws], end, after, n] for (draws, end, after), n in
-                     sorted(calib.counts.items(), key=repr)],
-         "sha256": calib.digest, "score": calib.score}, indent=1) + "\n")
+    write_counts(run_dir, calib)
 
     base = prices(per_call, s, Fraction(1), Fraction(0))
     jobs = [(s, base, p, c, test_rows, calib.counts, packs) for p in s.penalties for c in s.grid]
@@ -660,6 +773,9 @@ def main(argv=None):
     p.add_argument("--run-dir", type=Path)
     p.add_argument("--replay", action="store_true",
                    help="play from the answers and grades already recorded in the run directory; refuse any call")
+    p.add_argument("--supersede-grading", metavar="NOTE",
+                   help="mark the grades and equivalence sorts made under another grader configuration superseded, "
+                        "and redo the sorts under owner.toml's; the next --stage run re-grades")
     p.add_argument("--workers", type=int, help="test plates played in parallel (default: one per plate, up to the CPUs)")
     a = p.parse_args(argv)
     if a.dry_run == bool(a.stage):
@@ -668,6 +784,11 @@ def main(argv=None):
         p.error("a dry run needs --budget-usd")
     owner = load(a.dry_run_file if a.dry_run else OWNER)
     run_dir = a.run_dir or HERE / "runs" / ("dry-run" if a.dry_run else "run")
+    if a.supersede_grading:
+        if a.dry_run or a.stage != "pilot-calibration":
+            p.error("--supersede-grading goes with --stage pilot-calibration")
+        print(f"re-sorted {supersede_grading(owner, run_dir, a.supersede_grading)} records under the current grader")
+        return
     from showcases.omniscience import scoreboard
     out = run(owner, run_dir, a.budget_usd, a.dry_run, transport=replay_only if a.replay else None,
               workers=a.workers, stage=a.stage)
