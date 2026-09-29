@@ -117,6 +117,9 @@ def aa_metrics(o) -> str:
 
 def by_penalty(o) -> str:
     out = ["## Net utility per question, by penalty and second-opinion price"]
+    if getattr(o, "pilot_test_ids", None):
+        out.append(f"On all {len(o.test_rows)} test questions, the pilot's {len(o.pilot_test_ids)} included; the verdict "
+                   "below reads only the ones the pilot did not see.")
     for p in o.settings.penalties:
         body = []
         for c in o.settings.grid:
@@ -143,34 +146,51 @@ def by_penalty(o) -> str:
 
 
 def claims(o, dry_run: bool) -> str:
-    "The four pre-registered claims, tested as QUESTIONS.md 2.13 proposes, with 2.22's c for 'no second opinion'."
-    def delta(p, c, other):
-        d, se = paired(o.lines[(p, c)]["wald"], o.lines[(p, c)][other])
+    """The four pre-registered claims, tested as QUESTIONS.md 2.13 proposes, with 2.22's c for 'no second opinion'.
+    Stage 2's verdict is on the test questions not seen before α was widened (the owner's ruling of 2026-09-29); the
+    same Δ on every test question stands beside it."""
+    unseen = [r["question_id"] not in o.pilot_test_ids for r in o.test_rows] \
+        if getattr(o, "pilot_test_ids", None) else None
+
+    def delta(p, c, other, keep=unseen):
+        d, se = paired(o.lines[(p, c)]["wald"], o.lines[(p, c)][other], keep)
         return d, 2 * se
 
-    s, rows = o.settings, []
+    def beside(p, c, other):
+        d, e = delta(p, c, other, None)
+        return f"{d:+.3f} ± {e:.3f}"
+
+    s, rows, alls = o.settings, [], []
+    n = sum(unseen) if unseen else len(o.test_rows)
     top = max(s.grid)
     near = [c for c in s.grid if Fraction(1, 2) <= c <= 2]
     if Fraction(1) in s.penalties:
         d, e = delta(Fraction(1), top, "calibrated threshold")
         rows.append([f"(i) ties the threshold at p = 1 (c = {top}, 2.22)", f"{d:+.3f} ± {e:.3f}",
                      "held" if abs(d) <= e else "missed"])
+        alls.append(beside(Fraction(1), top, "calibrated threshold"))
     for p in (p for p in s.penalties if p >= 3):
         d, e = delta(p, top, "calibrated threshold")
         rows.append([f"(ii) separates from the threshold at p = {p} (c = {top})", f"{d:+.3f} ± {e:.3f}",
                      "held" if d > e else "missed"])
+        alls.append(beside(p, top, "calibrated threshold"))
     for p in s.penalties:
         best = max(((c, *delta(p, c, "calibrated threshold")) for c in near), key=lambda x: x[1] - x[2], default=None)
         if best:
             c, d, e = best
             rows.append([f"(iii) separates near the stake at p = {p} (best c = {c})", f"{d:+.3f} ± {e:.3f}",
                          "held" if d > e else "missed"])
+            alls.append(beside(p, c, "calibrated threshold"))
     worst = min(((p, c, *delta(p, c, "raw model")) for p in s.penalties for c in s.grid), key=lambda x: x[2] - x[3])
     rows.append([f"(iv) beats the raw model throughout (weakest: p = {worst[0]}, c = {worst[1]})",
                  f"{worst[2]:+.3f} ± {worst[3]:.3f}", "held" if worst[2] > worst[3] else "missed"])
-    power = ("Stated in advance (2.13 as ruled): at 300 test questions p = 10 is underpowered. The bound on a paired "
-             "difference's standard error there is 0.635 (2.1), so claim (ii) at p = 10 can separate only large "
-             "differences.\n\n")
+    alls.append(beside(worst[0], worst[1], "raw model"))
+    power = (f"Stated in advance (2.13 as ruled): p = 10 is underpowered. The bound on a paired difference's standard "
+             f"error is 0.635 at 300 test questions (2.1), {0.635 * math.sqrt(300 / n):.3f} at the {n} the verdict "
+             "reads, so claim (ii) at p = 10 can separate only large differences.\n\n")
+    scope = (f"The verdict reads the {n} test questions not seen before α's grid was widened (the owner's ruling of "
+             f"2026-09-29); the pilot's {len(o.test_rows) - n} were seen first. Δ on all {len(o.test_rows)} stands "
+             "beside it.\n\n") if unseen else ""
     if dry_run:
         note = "A dry run tests none of these: the verdicts show the test runs, on the wrong instruments.\n\n"
     elif o.stage != "stage2":
@@ -184,6 +204,10 @@ def claims(o, dry_run: bool) -> str:
     else:
         note = (f"The owner audited {o.audit[1]} grades by hand and agreed with the grader on {o.audit[2]} "
                 f"(2.9).\n\n")
+    if unseen:
+        return ("## The pre-registered claims (QUESTIONS.md 2.13)\n\n" + power + scope + note
+                + table(["claim", f"Δ, {n} unseen (± 2 SE)", "verdict", f"Δ, all {len(o.test_rows)}"],
+                        [r + [a] for r, a in zip(rows, alls)]))
     return ("## The pre-registered claims (QUESTIONS.md 2.13)\n\n" + power + note
             + table(["claim", "Δ (± 2 SE)", "verdict"], rows))
 

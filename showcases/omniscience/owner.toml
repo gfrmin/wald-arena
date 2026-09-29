@@ -28,10 +28,15 @@ whole_cap_usd = "80"                                    # stop if either cap wou
 
 [go]                                                    # the owner's go, with the date; empty means no
 pilot_test = "2026-09-29"                               # the owner, after seeing the pilot's calibration Counts
-stage2 = ""
+stage2 = ""                                             # stage2-calibration: the 250 new calibration questions
+stage2_test = ""                                        # stage2: the 250 test questions, after the cut is seen on 300
+
+[calls]                                                 # ruled 2026-09-29: stage 2's calls run a few questions at once
+workers = 4                                             # the wallet keeps the caps exact; lower it on a provider 429
 
 [board]                                                 # the owner's changes to the pre-registration, printed on the board
-changes = ["α's grid widened from {4/5} to {4/5, 9/10, 19/20} for each registered (σ, β), ruled 2026-09-29 after the pilot: on its calibration records Opus matched a right gpt-5.5 28 times in 31; its test half, seen before the ruling, showed 30 in 30."]
+changes = ["α's grid widened from {4/5} to {4/5, 9/10, 19/20} for each registered (σ, β), ruled 2026-09-29 after the pilot: on its calibration records Opus matched a right gpt-5.5 28 times in 31; its test half, seen before the ruling, showed 30 in 30.",
+           "The verdict reads stage 2's 250 test questions only, not the pilot's 50, which were seen before α's grid was widened; Δ on all 300 is printed beside it, and the hand audit still draws from all 300 (ruled 2026-09-29)."]
 
 [audit]                                                 # 2.9: hand-audited before the verdict line is written
 per_domain = 10

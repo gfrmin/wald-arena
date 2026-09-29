@@ -153,9 +153,9 @@ def line(name: str, rows: Sequence, plays: Sequence[Played], p, agreement, c) ->
                 sum(pl.overcharged for pl in plays), nets)
 
 
-def paired(a: Line, b: Line) -> tuple[float, float]:
-    "Mean of a - b per question, and its standard error."
-    d = [x - y for x, y in zip(a.nets, b.nets)]
+def paired(a: Line, b: Line, keep=None) -> tuple[float, float]:
+    "Mean of a - b per question, and its standard error; with `keep`, only the questions it marks."
+    d = [x - y for i, (x, y) in enumerate(zip(a.nets, b.nets)) if keep is None or keep[i]]
     return statistics.mean(d), (statistics.stdev(d) / math.sqrt(len(d)) if len(d) > 1 else math.nan)
 
 

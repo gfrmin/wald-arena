@@ -54,15 +54,15 @@ def real(tmp_path, go=(), cap="15"):
     owner["penalties"], owner["second_price_grid"] = [1, 3], ["1/10", "1"]
     owner["confidence"]["cuts"] = [50]
     owner["audit"]["per_domain"] = 2
-    owner["go"] = {"pilot_test": "", "stage2": ""}              # the owner's real gates are not the test's
+    owner["go"] = {"pilot_test": "", "stage2": "", "stage2_test": ""}   # the owner's real gates are not the test's
     for k in go:
         owner["go"][k] = "2026-09-28"
     return owner
 
 
-def stage(tmp_path, owner, name, fake):
+def stage(tmp_path, owner, name, fake, call_workers=1):
     return RUN.run(owner, tmp_path / "run", None, False, transport=fake, questions=questions(10), write_packs=False,
-                   workers=1, stage=name)
+                   workers=1, stage=name, call_workers=call_workers)
 
 
 def test_the_real_run_goes_by_stage_each_later_one_waits_for_the_go_and_spend_is_measured(tmp_path):
@@ -94,10 +94,25 @@ def test_the_real_run_goes_by_stage_each_later_one_waits_for_the_go_and_spend_is
 
 def test_stage2_writes_the_audit_sample_and_withholds_the_verdict_until_it_is_filled(tmp_path):
     fake = Scripted()
-    owner = real(tmp_path, go=("pilot_test", "stage2"), cap="100")
+    owner = real(tmp_path, go=("pilot_test", "stage2", "stage2_test"), cap="100")
     pilot = stage(tmp_path, owner, "pilot-test", fake)
+    with pytest.raises(RUN.NoGo, match="stage2-calibration first"):          # the cut is seen before any test
+        stage(tmp_path, owner, "stage2", fake)
+    est = stage(tmp_path, owner, "stage2-calibration", fake)
+    assert isinstance(est, RUN.Estimate) and est.n == 30 and set(est.projected) == {"stage 2 test", "whole run"}
+    recs = [json.loads(line) for line in open(tmp_path / "run" / "records.jsonl")]
+    assert sum(r["split"] == "test" for r in recs) == 26                      # no stage-2 test question observed
+    cuts = (tmp_path / "run" / "cuts.txt").read_text()
+    assert "on 30 calibration records" in cuts and "cut 50 (ruled)" in cuts and "cut 90:" in cuts
+    no_go = real(tmp_path, go=("pilot_test", "stage2"), cap="100")
+    with pytest.raises(RUN.NoGo, match="go.stage2_test"):
+        stage(tmp_path, no_go, "stage2", fake)
     o = stage(tmp_path, owner, "stage2", fake)
     assert len(o.rows) == 60 and o.audit[:2] == (0, 12)
+    # the verdict reads the 4 test questions the pilot did not see; all 30 beside it (ruled 2026-09-29)
+    assert o.pilot_test_ids == {r["question_id"] for r in pilot.test_rows}
+    claims = SB.claims(o, dry_run=False)
+    assert "Δ, 4 unseen (± 2 SE)" in claims and "Δ, all 30" in claims and "the pilot's 26 were seen first" in claims
     # 7 and 8 as ruled 2026-09-28: stage 2's Counts, its gate and its verdict cover the whole split, pilot included
     assert sum(o.calibration.counts.values()) == 30 and len(o.test_rows) == 30
     assert {r["question_id"] for r in pilot.test_rows} < {r["question_id"] for r in o.test_rows}
@@ -314,3 +329,51 @@ def test_a_change_to_the_pre_registration_is_printed_on_the_board(tmp_path):
     stage(tmp_path, owner, "pilot-calibration", Scripted())
     o = stage(tmp_path, owner, "pilot-test", Scripted())
     assert "- **Changed after the pilot:** α widened, ruled after the pilot." in SB.header(o, False, "runs/test")
+
+
+def test_calls_made_at_once_keep_the_caps_exact_and_stop_together(tmp_path):
+    "Four questions at a time: the first refusal stops every worker; every paid call is logged and settled."
+    with pytest.raises(RUN.BudgetExceeded):
+        stage(tmp_path, real(tmp_path, cap="1.2"), "pilot-calibration", Scripted(), call_workers=4)
+    run_dir = tmp_path / "run"
+    logged = RUN.spent(run_dir)
+    wallet = RUN.Budget(Decimal("80"), run_dir / "reserved.jsonl", "pilot", Decimal("1.2"))
+    assert logged and wallet.spent == sum(c.usd for c in logged)          # every reservation settled at its call
+    running = Decimal(0)
+    for r in wallet.rows:                                                  # at every reserve, open bounds included
+        if "settle" not in r:
+            running += Decimal(r["usd"])
+        else:
+            running += Decimal(r["usd"]) - Decimal(wallet.rows[r["settle"]]["usd"])
+        assert running <= Decimal("1.2")
+
+
+def test_a_later_reservation_after_a_stop_is_refused():
+    from arena.transports import Instrument
+    w = RUN.Budget(Decimal("10"))
+    inst = Instrument("grader", "m", Decimal("0.01"), None)
+    w.reserve(inst)
+    w.stop()
+    with pytest.raises(RUN.Stopped):
+        w.reserve(inst)
+
+
+def test_the_counts_do_not_depend_on_the_order_the_records_were_written(tmp_path):
+    owner = real(tmp_path)
+    stage(tmp_path, owner, "pilot-calibration", Scripted())
+    first = json.loads((tmp_path / "run" / "calibration_counts.json").read_text())["sha256"]
+    path = tmp_path / "run" / "records.jsonl"
+    lines = path.read_text().splitlines()
+    path.write_text("\n".join(lines[::-1]) + "\n")                        # as if the calls had finished backwards
+    stage(tmp_path, owner, "pilot-calibration", Scripted())
+    assert json.loads((tmp_path / "run" / "calibration_counts.json").read_text())["sha256"] == first
+
+
+def test_four_workers_build_the_same_counts_as_one(tmp_path):
+    one, four = tmp_path / "one", tmp_path / "four"
+    one.mkdir(), four.mkdir()
+    stage(one, real(one), "pilot-calibration", Scripted())
+    stage(four, real(four), "pilot-calibration", Scripted(), call_workers=4)
+    digest = lambda d: json.loads((d / "run" / "calibration_counts.json").read_text())["sha256"]
+    assert digest(one) == digest(four)
+    assert len(RUN.spent(one / "run")) == len(RUN.spent(four / "run"))

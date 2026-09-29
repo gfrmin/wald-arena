@@ -247,7 +247,29 @@ Anthropic as above.
 
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
-**Still open:** the verdict's scope (250 or 300; see "α's grid widened", below), and the owner's go on stage 2 (`go.stage2`).
+**Still open:** the owner's go on stage 2's calibration half (`go.stage2`), then, after the cut table on all 300
+calibration records, the go on its test half (`go.stage2_test`). See "Stage 2, built", below.
+
+### Stage 2, built (2026-09-29, on steel): two halves, calls at once, the verdict on the 250
+
+- **Two halves.** `--stage stage2-calibration` (needs `go.stage2`) observes and grades the 250 new calibration
+  questions only, then on all 300: the gate, a cut table (cuts 70, 80, 85, 90, 95 and the ruled one: each bucket's
+  records and reads right), the Counts, P(Global | Counts) and S15, and stops. The owner looks at the cut
+  (the ruling of 2026-09-28: stop and ask if another separates clearly better); the Counts are committed; then
+  `--stage stage2` (needs `go.stage2_test`, and refuses to start until every stage-2 calibration record exists) plays
+  the 250 test questions and the 21 plates.
+- **Calls at once** (ruled 2026-09-29): `calls.workers = 4` questions observed, and answers graded, at once. The
+  wallet counts every open reservation at its worst case, so calls in flight together never pass a cap; near a cap
+  the run stops up to four worst cases early (about $2 at gpt-5.5's $0.50). The first failure in any worker stops
+  the wallet, so no new call starts; calls already in flight finish and are logged. Records land in the order they
+  finish, and every stage reads them back in the split's order, so the Counts do not depend on it (the pilot's
+  digest is unchanged, `0aba0eb7…d5db194`; a test builds the same Counts with 4 workers as with 1).
+- **The verdict on the 250** (ruled 2026-09-29): claims (i)–(iv) are judged on stage 2's 250 test questions; Δ on
+  all 300 is printed beside each; the by-penalty tables stay on all 300 and say so; the hand audit draws its 60 from
+  all 300. The p = 10 power bound is restated at 250 (0.696). `[board] changes` states it on the board.
+- **Measured on steel**, at 1,152 Global values: 5.3 s an episode (thinkpad 9.9), 146 s to declare a plate
+  (226), 1.4 GB a worker. Stage 2's plates: about an hour each, 21 of them at 6 workers about 4 hours. The calls:
+  250 questions a half at 4 at once, about 1–1.5 hours each. Dollars unchanged: whole run projected about $37.
 
 **Previously open (now done: funded, pinned 2026-09-28T11:21Z, pilot-calibration run):**
 - Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
@@ -735,6 +757,10 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-29, stage 2:** the verdict reads stage 2's 250 unseen test questions, with all 300 reported beside it; the
+  60-grade audit still draws from all 300. Stage 2's frozen-model calls run a few questions at once. Development of
+  the three wald repos moved to steel.
 
 - **2026-09-29, α's grid:** widen it. The second opinion's (σ, α, β) grid keeps the two registered (σ, β) pairs and
   crosses each with α ∈ {4/5, 9/10, 19/20}: six values, and 1,152 Global values in all. It is a change made after
