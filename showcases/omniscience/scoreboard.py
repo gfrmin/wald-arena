@@ -101,7 +101,8 @@ def header(o, dry_run: bool, run_dir) -> str:
               "is the Omniscience Index. *net*: score less what the contestant bought (grading, which every "
               "contestant gets, left out). Δ: paired per-question difference in net, ± 2 standard errors. "
               "*realised*: wald's mean utility less every price its episodes paid, the After-act's included, and c for "
-              "each blind switch (E7)."]
+              "each blind switch (E7).",
+              *(f"- **Changed after the pilot:** {c}" for c in getattr(s, "changes", ()))]
     return "\n".join(lines)
 
 

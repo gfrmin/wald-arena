@@ -247,7 +247,7 @@ Anthropic as above.
 
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
-**Still open:** α's grid (see "The pilot's test half", below), and the owner's go on stage 2 (`go.stage2`).
+**Still open:** the verdict's scope (250 or 300; see "α's grid widened", below), and the owner's go on stage 2 (`go.stage2`).
 
 **Previously open (now done: funded, pinned 2026-09-28T11:21Z, pilot-calibration run):**
 - Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
@@ -255,6 +255,32 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
   setting (item 6 of "The pilot, built", above).
 - Then `--stage pilot-calibration`, which stops at the gate and the re-estimate. `pilot-test` and `stage2` each wait
   for the owner's go.
+
+### α's grid widened (ruled 2026-09-29): the pilot's posterior under it, and stage 2's time
+
+The World now has 1,152 Global values (was 384). `owner.toml` `[board] changes` states the change, and the
+scoreboard prints it under the header.
+
+**The pilot's 50 calibration records under the new grid** (P(Global | Counts), wald's; marginals summed for display):
+
+| Global | posterior |
+|---|---|
+| α (Opus same \| gpt-5.5 right) | 4/5: 7.5%; **9/10: 41.9%**; **19/20: 50.6%** |
+| (σ, α, β) | (1/2, 19/20, 1/5): 50.4%; (1/2, 9/10, 1/5): 41.7%; (1/2, 4/5, 1/5): 7.4%; σ = 1/10: 0.4% |
+| ρ_b0 | 7/20: 97.9%; 13/20: 2.1% |
+| ρ_b1 | 13/20: 31.4%; 17/20: 67.1%; 19/20: 1.5% |
+| agree | (4/5, 1/5): 98.9% |
+| γ | 9/10: 39.3%; 1: 60.7% |
+| κ | 0: 28.0%; 1/2: 72.0% |
+
+**Stage 2's time, measured on the new World:** declaring a plate 226 s (was about 40 s); an episode 9.9 s (was
+about 6 s); 1.4 GB per worker. Each plate plays its 300 test questions twice (with the Counts and from the declared
+prior), so about 1.7 hours a plate, and the 21 plates at 3 workers about 12 hours. The calls themselves, 500 questions
+one call at a time at about 6 s, take about 7.5 hours before that. No change to the dollars (projected whole run
+about $37).
+
+**Still to rule:** whether the verdict covers stage 2's 250 unseen test questions only, with all 300 reported beside
+it, since the pilot's 50 were seen before α was widened (the ruling of 2026-09-28 says all 300).
 
 ### The pilot's test half (2026-09-29): played; stopped for the owner's go on stage 2
 
@@ -709,6 +735,11 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-29, α's grid:** widen it. The second opinion's (σ, α, β) grid keeps the two registered (σ, β) pairs and
+  crosses each with α ∈ {4/5, 9/10, 19/20}: six values, and 1,152 Global values in all. It is a change made after
+  the pilot, stated on the board, and justified by the pilot's calibration records (Opus matched a right gpt-5.5 28
+  times in 31); the pilot's test half showed the same (30 of 30), and the board says so.
 
 - **2026-09-28, the pilot's calibration stage:**
   - **(a) The cut is 90:** b0 = 0–89 or unread, b1 = 90–100. On the pilot's 50 records both buckets pass the gate and

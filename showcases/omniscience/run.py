@@ -166,6 +166,7 @@ class Settings:
     grids: W.Grids
     gate: str = "stands"             # "waived" only for the Haiku dry run (owner, 2026-09-27); never for the real run
     list_prices: dict = field(default_factory=dict)   # model -> (input, output) $ per million tokens, for the audit
+    changes: tuple = ()              # the owner's changes to the pre-registration, each stated on the board
 
     @property
     def buckets(self):
@@ -191,7 +192,8 @@ def settings(owner) -> Settings:
                     tuple(need(owner, "confidence.cuts")), need(owner, "confidence.unread"),
                     need(owner, "agreement.samples"), grids, gate_ruling(optional(owner, "confidence.gate", "stands")),
                     {m: (Decimal(v["input"]), Decimal(v["output"]))
-                     for m, v in optional(owner, "list_price_per_mtok", {}).items()})
+                     for m, v in optional(owner, "list_price_per_mtok", {}).items()},
+                    tuple(optional(owner, "board.changes", [])))
 
 
 def gate_ruling(value: str) -> str:

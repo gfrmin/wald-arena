@@ -30,6 +30,9 @@ whole_cap_usd = "80"                                    # stop if either cap wou
 pilot_test = "2026-09-29"                               # the owner, after seeing the pilot's calibration Counts
 stage2 = ""
 
+[board]                                                 # the owner's changes to the pre-registration, printed on the board
+changes = ["α's grid widened from {4/5} to {4/5, 9/10, 19/20} for each registered (σ, β), ruled 2026-09-29 after the pilot: on its calibration records Opus matched a right gpt-5.5 28 times in 31; its test half, seen before the ruling, showed 30 in 30."]
+
 [audit]                                                 # 2.9: hand-audited before the verdict line is written
 per_domain = 10
 
@@ -41,7 +44,8 @@ gate = "stands"                                         # a bucket under a fifth
 [globals]                                               # 2.15; P(Global) uniform over the product, elicited
 rho = ["7/20", "13/20", "17/20", "19/20"]
 agree = [["4/5", "1/5"], ["1/2", "1/2"]]
-second = [["1/2", "4/5", "1/5"], ["1/10", "4/5", "1/2"]]
+second = [["1/2", "4/5", "1/5"], ["1/2", "9/10", "1/5"], ["1/2", "19/20", "1/5"],
+          ["1/10", "4/5", "1/2"], ["1/10", "9/10", "1/2"], ["1/10", "19/20", "1/2"]]   # (σ, α, β); α widened after the pilot, ruled 2026-09-29
 grader = ["9/10", "1"]
 corr = ["0", "1/2", "9/10"]                             # 2.25: κ, the instruments tied
 
