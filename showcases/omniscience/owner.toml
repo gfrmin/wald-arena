@@ -27,7 +27,7 @@ pilot_cap_usd = "15"
 whole_cap_usd = "80"                                    # stop if either cap would be exceeded
 
 [go]                                                    # the owner's go, with the date; empty means no
-pilot_test = ""
+pilot_test = "2026-09-29"                               # the owner, after seeing the pilot's calibration Counts
 stage2 = ""
 
 [audit]                                                 # 2.9: hand-audited before the verdict line is written
