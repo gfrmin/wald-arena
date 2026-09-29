@@ -143,14 +143,17 @@ def openai_reply(r) -> Reply:
                  effort=getattr(getattr(r, "reasoning", None), "effort", None) or "")
 
 
+OPENAI_TIMEOUT_S = 120     # the slowest of the pilot's first 500 gpt-5.5 calls took 28.5 s; the SDK's default is 600
+
+
 def openai_transport(model: str, key_env: str = "OPENAI_API_KEY", max_tokens: int = 16000,
-                     effort: str | None = None) -> Transport:
+                     effort: str | None = None, timeout_s: float = OPENAI_TIMEOUT_S) -> Transport:
     key = require_env(key_env)
     try:
         import openai
     except ImportError as e:
         raise ImportError("the OpenAI transport needs the SDK: `uv sync --extra llm`") from e
-    client = openai.OpenAI(api_key=key, max_retries=0)          # a silent retry could pay twice and log once
+    client = openai.OpenAI(api_key=key, max_retries=0, timeout=timeout_s)          # a silent retry could pay twice and log once
 
     def send(system: str, user: str) -> Reply:
         return openai_reply(client.responses.create(model=model, input=user, max_output_tokens=max_tokens,

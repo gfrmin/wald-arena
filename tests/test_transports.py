@@ -102,3 +102,4 @@ def test_the_sdk_clients_never_retry_on_their_own(monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "x")
     anthropic_transport("m"), openai_transport("m")
     assert made["anthropic"]["max_retries"] == 0 and made["openai"]["max_retries"] == 0
+    assert made["openai"]["timeout"] == 120                     # not the SDK's 600 s: a hung call stops the run sooner
