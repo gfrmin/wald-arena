@@ -247,7 +247,7 @@ Anthropic as above.
 
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
-**Still open:** the owner's go on the pilot's test half (`go.pilot_test`).
+**Still open:** α's grid (see "The pilot's test half", below), and the owner's go on stage 2 (`go.stage2`).
 
 **Previously open (now done: funded, pinned 2026-09-28T11:21Z, pilot-calibration run):**
 - Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
@@ -255,6 +255,32 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
   setting (item 6 of "The pilot, built", above).
 - Then `--stage pilot-calibration`, which stops at the gate and the re-estimate. `pilot-test` and `stage2` each wait
   for the owner's go.
+
+### The pilot's test half (2026-09-29): played; stopped for the owner's go on stage 2
+
+`--stage pilot-test` on the owner's go of 2026-09-29: 50 test questions, 21 plates (3 penalties × 7 prices), the
+scoreboard in `runs/run/SCOREBOARD-pilot-test.md`. A replay of every plate reproduced it exactly.
+
+- **Spend:** the pilot, $6.61 of its $15 (1,044 calls; $6.11 logged, and $0.50 for one gpt-5.5 call that hung and
+  timed out after the SDK's 600 s, counted at its worst case since it may have been billed). Whole run projected about
+  $37. No truncation; every call served the pinned model. The OpenAI timeout is now 120 s (the slowest of 500 calls
+  took 28.5 s).
+- **Omniscience Index (p = 1):** raw gpt-5.5 +24, calibrated threshold +40, wald +48 (70% coverage, 23.8%
+  hallucination rate), better single model (Opus 5.5 alone) +68.
+- **wald against the threshold**, net per question, c = 2 (± 2 SE): p = 1 +0.056 ± 0.096; p = 3 +0.377 ± 0.302;
+  p = 10 +0.317 ± 0.444. Against the raw model it is ahead at every (p, c). No verdict: the pilot writes none.
+- **Opus alone beats wald at p = 1 when the second opinion is free or cheap** (net +0.680 vs +0.534 at c = 0; +0.630
+  vs +0.496 at c = 1/20), roughly ties it at p = 3, c = 0 (+0.520 vs +0.514), and loses at p = 10 and wherever c is
+  large. wald almost never answers with the second opinion: one switch in all 21 plates.
+
+**A question for the owner before stage 2: α's grid.** The World's (σ, α, β) grid (2.15) offers α = P(the second
+opinion gives the same answer | the primary is right) = 4/5 only. On the calibration split, when gpt-5.5 was right
+(31), Opus gave the same answer 28 times (0.90); on the test half, 30 of 30. So when the two differ the World thinks
+gpt-5.5 is still often right, and wald keeps its answer or abstains. On the calibration split they differed 18 times:
+gpt-5.5 right 3, Opus right 9. On the test half they differed 16 times: gpt-5.5 right 0, Opus 8. The grid is
+pre-registered and the owner's; widening it after the pilot is a change to the pre-registration, and this note does
+not make it. Options: keep the grid for stage 2 as registered (and report this); or add α values (e.g. 9/10, 19/20)
+before stage 2, stated on the board as a post-pilot change. Stage 2's 250 new calibration records would then fit α.
 
 ### The pilot's calibration Counts, under the rulings of 2026-09-28 (the cut at 90; Gemini at `low`)
 

@@ -54,6 +54,7 @@ def real(tmp_path, go=(), cap="15"):
     owner["penalties"], owner["second_price_grid"] = [1, 3], ["1/10", "1"]
     owner["confidence"]["cuts"] = [50]
     owner["audit"]["per_domain"] = 2
+    owner["go"] = {"pilot_test": "", "stage2": ""}              # the owner's real gates are not the test's
     for k in go:
         owner["go"][k] = "2026-09-28"
     return owner
