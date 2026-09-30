@@ -5,7 +5,9 @@ graded reads and compares, which only a baseline may do. wald's acts come from `
 behind `RecordedDoor`, which serves what was observed and never chooses.
 """
 import math
+import resource
 import statistics
+import time
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Callable, Mapping, Sequence
@@ -98,16 +100,21 @@ def played(result) -> Played:
                   "agreement" in acts, looked or blind, blind, end == "answer_second" and looked)
 
 
-def play_plate(world, rows: Sequence, samples: int, fresh: bool = False):
+def play_plate(world, rows: Sequence, samples: int, fresh: bool = False, label: str = "", every: int = 25):
     """Every row as one episode of one plate, in the given order: (Played, Result) per row. With `fresh`, each
-    episode is played from the declared prior on a plate of its own: the Counts never conditioned on (E7)."""
+    episode is played from the declared prior on a plate of its own: the Counts never conditioned on (E7).
+    With a `label`, a progress line every `every` episodes: seconds so far and the process's peak memory."""
     plate = wald.plate(world)
     out = []
-    for r in rows:
+    t0 = time.time()
+    for i, r in enumerate(rows, 1):
         res = (wald.plate(world) if fresh else plate).run(RecordedDoor(r, samples))
         if res.status not in ("TERMINAL",):
             raise RuntimeError(f"question {r['question_id']} ended {res.status}")
         out.append((played(res), res))
+        if label and (i % every == 0 or i == len(rows)):
+            print(f"progress {label}{' fresh' if fresh else ''}: {i}/{len(rows)} in {time.time() - t0:.0f}s, "
+                  f"peak {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576:.1f} GB", flush=True)
     return plate, out
 
 

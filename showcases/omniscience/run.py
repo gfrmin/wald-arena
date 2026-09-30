@@ -561,8 +561,8 @@ def test_plate(args) -> PlateOut:
     if out:
         out.mkdir(parents=True, exist_ok=True)
         (out / f"{name}.py").write_text(pack)
-    plate, played = B.play_plate(world, test_rows, s.samples)
-    _, fresh = B.play_plate(bare, test_rows, s.samples, fresh=True)
+    plate, played = B.play_plate(world, test_rows, s.samples, label=name)
+    _, fresh = B.play_plate(bare, test_rows, s.samples, fresh=True, label=name)
     plays, results = [x[0] for x in played], [x[1] for x in played]
     fplays, fresults = [x[0] for x in fresh], [x[1] for x in fresh]
     first = wald.plate(bare).run(B.RecordedDoor(test_rows[0], s.samples)).acts
