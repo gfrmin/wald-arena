@@ -250,6 +250,43 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 **Still open:** the owner's go on stage 2's calibration half (`go.stage2`), then, after the cut table on all 300
 calibration records, the go on its test half (`go.stage2_test`). See "Stage 2, built", below.
 
+### Stage 2's calibration half (2026-09-30): run; stopped for the owner's cut and `go.stage2_test`
+
+Run on steel, 08:55–10:18 (calls to 09:40, then the Counts, the posterior and S15), Gemini over IPv6. 250 new
+calibration questions observed and graded; no test question called. Checked: every call's served model is its pinned
+one; none truncated; every live grader and equivalence call at thinking `low` (681 and 350).
+
+**Dollars.** Log $21.747 for the whole run so far (stage 2's calibration half about $15.5); the wallet $22.254, the
+$0.507 above the log being the pilot's timed-out call reserved at its worst case (the OpenAI timeout, ruled earlier).
+Measured on 300: per question primary $0.0515, second $0.0066, equivalence $0.0006, grader $0.0030. Projected:
+stage 2's test half $15.41, whole run $37.67, under the $80 cap.
+
+**The gate** passes at the ruled cut 90: b0 98 of 300 (32.7%), b1 202 (67.3%).
+
+**The cut table** (all 300 calibration records; unread → b0; none unread):
+
+| cut | b0 records | b0 read right | b1 records | b1 read right | gap |
+|---|---|---|---|---|---|
+| 70 | 18 (6%) | 1 (6%) | 282 (94%) | 194 (69%) | 63 pts; fails the gate |
+| 80 | 40 (13%) | 4 (10%) | 260 (87%) | 191 (73%) | 63 pts; fails the gate |
+| 85 | 51 (17%) | 7 (14%) | 249 (83%) | 188 (76%) | 62 pts; fails the gate |
+| **90 (ruled)** | 98 (33%) | 32 (33%) | 202 (67%) | 163 (81%) | 48 pts |
+| 95 | 147 (49%) | 63 (43%) | 153 (51%) | 132 (86%) | 43 pts |
+
+Of the cuts that pass the gate (a fifth in each bucket), 90 separates the buckets most. The cuts below 90 separate
+more but leave b0 under a fifth. Whether another cut is "clearly better" is the owner's ruling (2026-09-28).
+
+**The Counts**: 300 records, 24 distinct, sha256 `6b5180da20cecb5795a7135a5aa761732cfad0d5c406ca6ea489ffd7ab668b9b`,
+committed with this section.
+
+**P(Global | Counts)** (marginals summed from `wald.report`, for display): ρ b0 = 7/20 and ρ b1 = 17/20 (each
+100.0%); agree (4/5, 1/5) 100.0%; second (σ 1/2, β 1/5) with α 9/10 65.2% and α 4/5 34.7% (19/20 ≈ 0); grader
+γ 9/10 100.0%; corr 0 100.0%. **S15**: at every (p, c), no class of inseparable Global values settles anything an act
+can feel.
+
+**Wanted from the owner:** the cut (keep 90, or another), then `go.stage2_test` for `--stage stage2` (the 250 test
+questions, about $15.41, then the 21 plates on all 300, about 4 hours at 6 workers).
+
 ### Stage 2, built (2026-09-29, on steel): two halves, calls at once, the verdict on the 250
 
 - **Two halves.** `--stage stage2-calibration` (needs `go.stage2`) observes and grades the 250 new calibration
