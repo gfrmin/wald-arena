@@ -281,6 +281,14 @@ the same value; a test plays a plate both ways and gets the same acts, prices an
 attribute of the pinned wald, and it stays only until wald rules on it (the finding below). Restarted 17:56. The droplet is deleted once the plates'
 results are back on steel (the owner, 2026-09-30).
 
+**The owner's hand audit (2.9), 2026-09-30.** 60 grades, 10 per domain from all 300, graded blind: the page showed
+the question, the gold target and the answer, never the grader's grade. First pass: 53 of 60 agree with
+gemini-3.8-flash. I then showed the owner the seven disagreements, and that AA's rubric (its example 4) grades a
+hedged guess ("I'm not certain … my best recollection is X") NOT_ATTEMPTED. The owner regraded those three
+(questions 98, 172, 149) from partial to not attempted, "according to rubric". Final: 56 of 60. Four remain:
+question 104 (owner partial, grader correct), 390 (partial, incorrect), 495 (partial, incorrect) and 455
+(incorrect, correct). The second pass was not blind for those three.
+
 **The time.** An episode of stage 2's first plate episodes took 22–30 s, on steel and on the droplet alike (an EPYC
 9555P, per core about steel's Ryzen 5600X). The 5.3 s measured on steel on 2026-09-29 was on the pilot's 50
 calibration records; stage 2's plates start from 300 and grow to 600. See the finding "wald's episode cost grows
