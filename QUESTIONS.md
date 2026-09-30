@@ -250,6 +250,37 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 **Still open:** the owner's go on stage 2's calibration half (`go.stage2`), then, after the cut table on all 300
 calibration records, the go on its test half (`go.stage2_test`). See "Stage 2, built", below.
 
+### Stage 2's test half (2026-09-30): calls done; the plates on a droplet
+
+The owner kept the cut at 90 and gave `go.stage2_test` (ruled 2026-09-30, below).
+
+**The calls** (10:26–11:40, steel, Gemini over IPv6). All 300 test questions answered and graded: the pilot's 50
+and stage 2's 250, 600 records in all. Two stops, each resumed without loss.
+- 10:59, Gemini `HTTP 503` ("high demand"): temporary, not billed.
+- 11:08, OpenAI `429 credit_balance_exhausted`: the owner topped up.
+
+Dollars by the log: $38.40 for the whole run (gpt-5.5 $31.97, Opus $4.12, Gemini $2.31). The test half cost $16.65
+against $15.41 projected; the difference is the questions in flight at each stop, asked again. The wallet is about
+$2 above the log: calls cut off at a stop are held at their worst case, as the pilot's timed-out call was.
+
+**The plates.** No paid call; they replay the records. Three attempts on steel (31 GB) failed on memory.
+- 12:10: Claude Code's low-memory reaper killed the run, with another session's evaluation beside it.
+- 14:48: at 6 workers the machine went into swap, so I stopped it myself.
+- 15:25: at 3 workers the reaper killed it again.
+
+A plate's memory grew with every episode, by about 0.1–0.25 GB each. The owner approved a DigitalOcean droplet:
+`wald-plates`, g5-32vcpu-256gb, $1.94/h, on the tailnet as `tag:do`, public SSH closed, no API key on it, the
+plates run with `--replay`. The first droplet run reached 96 GB in 21 minutes and was stopped. The cause was the
+harness: `play_plate` kept every episode's wald `Result`, whose `final` belief is exact rationals over all 1,152
+Globals and grows with the Counts, although the board reads only `acts`, `paid` and `status`. It now keeps those
+three (`board.Ended`); what wald decides is untouched. Restarted 17:20. The droplet is deleted once the plates'
+results are back on steel (the owner, 2026-09-30).
+
+**The time.** An episode of stage 2's first plate episodes took 22–30 s, on steel and on the droplet alike (an EPYC
+9555P, per core about steel's Ryzen 5600X). The 5.3 s measured on steel on 2026-09-29 was on the pilot's 50
+calibration records; stage 2's plates start from 300 and grow to 600. See the finding "wald's episode cost grows
+with the Counts", below.
+
 ### Stage 2's calibration half (2026-09-30): run; stopped for the owner's cut and `go.stage2_test`
 
 Run on steel, 08:55–10:18 (calls to 09:40, then the Counts, the posterior and S15), Gemini over IPv6. 250 new
@@ -803,6 +834,10 @@ machine with wald 0.2.0.
 
 ## Ruled
 
+- **2026-09-30, stage 2's plates:** play them on a DigitalOcean droplet (the owner's "go"), and delete it when
+  they are finished. Gemini's calls route over IPv6 around the tailnet's Mullvad exit ("keep mullvad, but route
+  gemini calls around it somehow").
+
 - **2026-09-30, stage 2's cut and go:** the cut stays at 90, seen on all 300 calibration records; go on stage 2's
   test half (`go.stage2_test`).
 
@@ -920,6 +955,30 @@ machine with wald 0.2.0.
   scoreboard.
 
 ## Findings
+
+### wald's episode cost grows with the Counts (stage 2, 2026-09-30)
+
+wald v0.2.1 computes exactly. An episode's prior is P(Global | Counts) P(local | Global), with P(Global | Counts)
+proportional to the prior times each Global's likelihood of every record in the Counts: products of rationals
+raised to the records' multiplicities. Numerators and denominators lengthen roughly in proportion to the number of
+records. Big-integer multiplication costs more than linearly in length, so an episode costs more as a plate's
+Counts grow.
+
+Measured, 1,152 Global values:
+
+| Counts at the episode | seconds an episode | where |
+|---|---|---|
+| 50–100 records (the pilot) | 5.3 | steel, alone |
+| about 300 records (stage 2's first 25) | 22–30 | droplet, 21 at once; steel, 3 at once |
+
+The end of stage 2's plates (about 600 records) is measured in the progress lines of the run and added here when it
+finishes.
+
+A belief held after its episode is as large as its rationals. The board kept 300 of them per plate, and that
+outgrew 250 GB (fixed in the harness, above). Nothing here bends a rule. Every act still comes from `Plate.run`,
+exactly. It bears on wald's scale: boards far past 600 records at this many Globals will want something from
+wald, for example a sufficient-statistic form of the Counts' likelihood or a bound on its size. That is wald's to
+decide, and this board only reports it.
 
 ### Why the per-question World is an approximation: lifelines are not additive
 
