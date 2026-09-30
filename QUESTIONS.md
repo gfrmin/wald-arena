@@ -270,10 +270,15 @@ $2 above the log: calls cut off at a stop are held at their worst case, as the p
 
 A plate's memory grew with every episode, by about 0.1–0.25 GB each. The owner approved a DigitalOcean droplet:
 `wald-plates`, g5-32vcpu-256gb, $1.94/h, on the tailnet as `tag:do`, public SSH closed, no API key on it, the
-plates run with `--replay`. The first droplet run reached 96 GB in 21 minutes and was stopped. The cause was the
-harness: `play_plate` kept every episode's wald `Result`, whose `final` belief is exact rationals over all 1,152
-Globals and grows with the Counts, although the board reads only `acts`, `paid` and `status`. It now keeps those
-three (`board.Ended`); what wald decides is untouched. Restarted 17:20. The droplet is deleted once the plates'
+plates run with `--replay`. The first droplet run reached 96 GB in 21 minutes and was stopped. My first fix was to keep
+only `acts`, `paid` and `status` of each episode's `Result` (`board.Ended`), not its `final` belief. It was right
+to do but was not the cause: the rerun from 17:20 grew as fast (101 GB at 17:46). The cause is wald's lookahead
+memo, `World.work()`. It holds the values found, keyed by the belief they were found at (exact rationals over every
+state), for the World's whole life. On a plate that learns, no episode's prior recurs, because the Counts grow, so
+the memo only grows, by about 0.25 GB an episode. The harness now drops it after each episode of a learning plate
+(`board.forget_lookahead`); fresh episodes keep it, since their prior recurs. A dropped value is found again,
+the same value; a test plays a plate both ways and gets the same acts, prices and Counts. It reaches into a private
+attribute of the pinned wald, and it stays only until wald rules on it (the finding below). Restarted 17:56. The droplet is deleted once the plates'
 results are back on steel (the owner, 2026-09-30).
 
 **The time.** An episode of stage 2's first plate episodes took 22–30 s, on steel and on the droplet alike (an EPYC
@@ -974,8 +979,10 @@ Measured, 1,152 Global values:
 The end of stage 2's plates (about 600 records) is measured in the progress lines of the run and added here when it
 finishes.
 
-A belief held after its episode is as large as its rationals. The board kept 300 of them per plate, and that
-outgrew 250 GB (fixed in the harness, above). Nothing here bends a rule. Every act still comes from `Plate.run`,
+Memory goes the same way. The lookahead memo (`World.work()`) is kept for a World's life, keyed by exact beliefs.
+On a plate that learns, no key recurs, and it grew about 0.25 GB an episode, past 250 GB for 21 plates. The harness
+drops it between episodes, which is not a wald API. **For wald:** should a plate own the memo, or clear it when its
+Counts change, since then no earlier key can recur? Nothing here bends a rule. Every act still comes from `Plate.run`,
 exactly. It bears on wald's scale: boards far past 600 records at this many Globals will want something from
 wald, for example a sufficient-statistic form of the Counts' likelihood or a bound on its size. That is wald's to
 decide, and this board only reports it.
