@@ -267,6 +267,14 @@ calibration records, the go on its test half (`go.stage2_test`). See "Stage 2, b
 - **The verdict on the 250** (ruled 2026-09-29): claims (i)–(iv) are judged on stage 2's 250 test questions; Δ on
   all 300 is printed beside each; the by-penalty tables stay on all 300 and say so; the hand audit draws its 60 from
   all 300. The p = 10 power bound is restated at 250 (0.696). `[board] changes` states it on the board.
+- **Gemini over IPv6** (2026-09-30, the owner: "keep mullvad, but route gemini calls around it"). The first
+  stage-2 run stopped at its first equivalence call on `HTTP 403`: Google's HTML "unusual traffic" page, served by
+  its front door on IP reputation before the key or the billing is read. steel's IPv4 leaves through the tailnet's
+  exit node (Mullvad, CH, AS51852), which Google now refuses; its IPv6 goes direct and is served. `GEMINI_IP_FAMILY=6`
+  in the environment makes the Gemini transport connect over IPv6 only (never falling back to IPv4); nothing else
+  about the call changes (model, thinking level, prompts, price). Checked on steel: the model's metadata endpoint
+  through the transport's path, 403 without it, 200 with it. The stop cost 22 logged calls ($0.15), kept; the four
+  questions in flight are asked again on resume (about $0.15).
 - **Measured on steel**, at 1,152 Global values: 5.3 s an episode (thinkpad 9.9), 146 s to declare a plate
   (226), 1.4 GB a worker. Stage 2's plates: about an hour each, 21 of them at 6 workers about 4 hours. The calls:
   250 questions a half at 4 at once, about 1–1.5 hours each. Dollars unchanged: whole run projected about $37.

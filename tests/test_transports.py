@@ -92,6 +92,31 @@ def test_the_gemini_transport_fails_loud_without_a_key(monkeypatch):
         gemini_transport("gemini-2.5-flash")
 
 
+def test_gemini_over_ipv6_resolves_ipv6_only_and_never_falls_back(monkeypatch):
+    "GEMINI_IP_FAMILY=6: the connection is made to an IPv6 address; the hostname still goes to TLS as the request's."
+    import socket
+    import pytest
+    from arena import transports
+    asked, reached = [], []
+    monkeypatch.setattr(socket, "getaddrinfo", lambda host, port, family, kind: asked.append((host, family)) or
+                        [(socket.AF_INET6, kind, 6, "", ("2001:db8::1", port, 0, 0))])
+    monkeypatch.setattr(socket, "create_connection", lambda addr, *a, **kw: reached.append(addr) or
+                        (_ for _ in ()).throw(OSError("stop here")))
+    monkeypatch.setenv("GEMINI_IP_FAMILY", "6")
+    with pytest.raises(Exception, match="stop here"):
+        transports.ip_family_opener().open("https://generativelanguage.googleapis.com/v1beta/models", timeout=5)
+    assert asked == [("generativelanguage.googleapis.com", socket.AF_INET6)]
+    assert reached == [("2001:db8::1", 443)]
+
+
+def test_an_unknown_ip_family_fails_loud(monkeypatch):
+    import pytest
+    from arena.transports import ip_family_opener
+    monkeypatch.setenv("GEMINI_IP_FAMILY", "4")
+    with pytest.raises(ValueError, match="GEMINI_IP_FAMILY"):
+        ip_family_opener()
+
+
 def test_the_sdk_clients_never_retry_on_their_own(monkeypatch):
     "A retry after the provider has billed a reply would pay twice and log once."
     import anthropic, openai

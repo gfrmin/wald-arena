@@ -178,14 +178,50 @@ def gemini_reply(r: dict) -> Reply:
                  truncated=bool(cands) and cands[0].get("finishReason") == "MAX_TOKENS")
 
 
+def ipv6_opener():
+    """A urllib opener that reaches HTTPS hosts over IPv6 only, the name still sent for TLS. For a machine whose IPv4
+    leaves through a VPN exit that Google's front door refuses (an HTML 403 before the key is read) while its IPv6
+    goes direct: set GEMINI_IP_FAMILY=6. No IPv6 address or route fails loud; it never falls back to IPv4."""
+    import http.client
+    import socket
+    import urllib.request
+
+    def connect_v6(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None, **kw):
+        host, port = address
+        infos = socket.getaddrinfo(host, port, socket.AF_INET6, socket.SOCK_STREAM)
+        return socket.create_connection(infos[0][4][:2], timeout, source_address, **kw)
+
+    class V6Connection(http.client.HTTPSConnection):
+        def __init__(self, *a, **kw):
+            super().__init__(*a, **kw)
+            self._create_connection = connect_v6
+
+    class V6Handler(urllib.request.HTTPSHandler):
+        def https_open(self, req):
+            return self.do_open(V6Connection, req, context=self._context)
+
+    return urllib.request.build_opener(V6Handler())
+
+
+def ip_family_opener(env: str = "GEMINI_IP_FAMILY"):
+    "The opener the environment names: unset, the system's choice; 6, IPv6 only. Anything else fails loud."
+    import urllib.request
+    family = os.environ.get(env, "")
+    if family not in ("", "6"):
+        raise ValueError(f"{env}={family!r}; known: unset, 6")
+    return ipv6_opener() if family == "6" else urllib.request.build_opener()
+
+
 def gemini_transport(model: str, key_env: str = "GEMINI_API_KEY", max_tokens: int = 16000,
                      thinking: str | None = None) -> Transport:
     """Google's Gemini API over HTTPS with the standard library. `thinking = "disabled"` sets a thinking budget of
-    0; "minimal", "low" or "high" set the thinking level, for models that take a level instead (the Gemini 3 family)."""
+    0; "minimal", "low" or "high" set the thinking level, for models that take a level instead (the Gemini 3 family).
+    GEMINI_IP_FAMILY=6 in the environment sends it over IPv6 only (`ip_family_opener`)."""
     key = require_env(key_env)
     import json
     import urllib.error
     import urllib.request
+    opener = ip_family_opener()
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
     def send(system: str, user: str) -> Reply:
@@ -197,7 +233,7 @@ def gemini_transport(model: str, key_env: str = "GEMINI_API_KEY", max_tokens: in
         req = urllib.request.Request(url, json.dumps(body).encode(), method="POST",
                                      headers={"Content-Type": "application/json", "x-goog-api-key": key})
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
+            with opener.open(req, timeout=120) as resp:
                 r = gemini_reply(json.load(resp))
                 return Reply(r.text, r.input_tokens, r.output_tokens, r.model, r.reasoning_tokens, r.truncated,
                              thinking or "")          # Gemini reports no level: record the one asked for
