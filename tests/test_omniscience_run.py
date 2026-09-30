@@ -92,7 +92,7 @@ def test_the_real_run_goes_by_stage_each_later_one_waits_for_the_go_and_spend_is
         stage(tmp_path, real(tmp_path), "stage2", fake)
 
 
-def test_stage2_writes_the_audit_sample_and_withholds_the_verdict_until_it_is_filled(tmp_path):
+def test_stage2_writes_the_audit_sample_and_withholds_the_verdict_until_it_is_filled(tmp_path, monkeypatch):
     fake = Scripted()
     owner = real(tmp_path, go=("pilot_test", "stage2", "stage2_test"), cap="100")
     pilot = stage(tmp_path, owner, "pilot-test", fake)
@@ -127,9 +127,13 @@ def test_stage2_writes_the_audit_sample_and_withholds_the_verdict_until_it_is_fi
         w = csv.DictWriter(f, RUN.AUDIT_FIELDS)
         w.writeheader()
         w.writerows(rows)
+    played = o.plates
+    # the audit re-renders the board from the plates' saved results: no plate is played again
+    monkeypatch.setattr(RUN, "test_plate", lambda job: (_ for _ in ()).throw(AssertionError("a plate was played")))
     o = RUN.run(owner, tmp_path / "run", None, False, transport=RUN.replay_only, questions=questions(10),
                 write_packs=False, workers=1, stage="stage2")
     assert o.audit == (12, 12, 12) and "agreed with the grader on 12" in SB.claims(o, dry_run=False)
+    assert o.plates == played
 
 
 def test_the_pilot_cap_stops_the_run_before_the_call_that_could_pass_it(tmp_path):

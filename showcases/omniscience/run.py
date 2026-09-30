@@ -15,8 +15,10 @@ Records are appended one question at a time, so an interrupted run resumes; the 
 are made again, and the wallet remembers what they cost.
 """
 import argparse
+import hashlib
 import json
 import os
+import pickle
 import random
 import threading
 import time
@@ -574,6 +576,35 @@ def test_plate(args) -> PlateOut:
                     time.time() - t0)
 
 
+PLATES = "plates.pkl"
+
+
+def plates_key(jobs, digest: str) -> str:
+    """What a plate's result depends on: the Counts (by digest), the test questions in plate order with everything
+    the door serves, the settings and prices of every (p, c). Plates are replayed when any of it changes."""
+    s, base, _, _, test_rows, _, _ = jobs[0]
+    return hashlib.sha256(repr((digest, repr(s), repr(base), [(p, c) for _, _, p, c, *_ in jobs],
+                                [sorted(r.items()) for r in test_rows])).encode()).hexdigest()
+
+
+def saved_plates(run_dir: Path, jobs, digest: str):
+    """The plates' results as a run saved them, if their key still holds; else None and the plates are played.
+    Playing stage 2's 21 plates takes hours; the owner's audit then re-renders the board from these."""
+    path = run_dir / PLATES
+    if not path.exists():
+        return None
+    saved = pickle.loads(path.read_bytes())
+    if saved["key"] != plates_key(jobs, digest):
+        print(f"{PLATES}: saved for other Counts, questions or prices; playing the plates again", flush=True)
+        return None
+    print(f"{PLATES}: the plates' results as saved ({len(saved['plates'])} plates); not played again", flush=True)
+    return saved["plates"]
+
+
+def save_plates(run_dir: Path, jobs, digest: str, outs) -> None:
+    (run_dir / PLATES).write_bytes(pickle.dumps({"key": plates_key(jobs, digest), "plates": outs}))
+
+
 @dataclass
 class Outcome:
     settings: Settings
@@ -827,11 +858,14 @@ def run(owner, run_dir: Path, budget: Decimal | None, dry_run: bool, transport=N
 
     base = prices(per_call, s, Fraction(1), Fraction(0))
     jobs = [(s, base, p, c, test_rows, calib.counts, packs) for p in s.penalties for c in s.grid]
-    if workers == 1 or len(jobs) == 1:
-        outs = [test_plate(j) for j in jobs]
-    else:
-        with ProcessPoolExecutor(max_workers=workers or min(len(jobs), os.cpu_count() or 1)) as ex:
-            outs = list(ex.map(test_plate, jobs))
+    outs = saved_plates(run_dir, jobs, calib.digest)
+    if outs is None:
+        if workers == 1 or len(jobs) == 1:
+            outs = [test_plate(j) for j in jobs]
+        else:
+            with ProcessPoolExecutor(max_workers=workers or min(len(jobs), os.cpu_count() or 1)) as ex:
+                outs = list(ex.map(test_plate, jobs))
+        save_plates(run_dir, jobs, calib.digest, outs)
     plates = {(o.p, o.c): o for o in outs}
     for o in outs:
         print(f"plate p={o.p} c={o.c}: {o.seconds:.0f}s", flush=True)
