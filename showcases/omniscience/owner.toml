@@ -29,7 +29,7 @@ whole_cap_usd = "80"                                    # stop if either cap wou
 [go]                                                    # the owner's go, with the date; empty means no
 pilot_test = "2026-09-29"                               # the owner, after seeing the pilot's calibration Counts
 stage2 = "2026-09-29"                                   # stage2-calibration: the 250 new calibration questions
-stage2_test = ""                                        # stage2: the 250 test questions, after the cut is seen on 300
+stage2_test = "2026-09-30"                              # stage2: the 250 test questions, after the cut is seen on 300
 
 [calls]                                                 # ruled 2026-09-29: stage 2's calls run a few questions at once
 workers = 4                                             # the wallet keeps the caps exact; lower it on a provider 429

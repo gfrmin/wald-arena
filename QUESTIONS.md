@@ -284,8 +284,8 @@ committed with this section.
 γ 9/10 100.0%; corr 0 100.0%. **S15**: at every (p, c), no class of inseparable Global values settles anything an act
 can feel.
 
-**Wanted from the owner:** the cut (keep 90, or another), then `go.stage2_test` for `--stage stage2` (the 250 test
-questions, about $15.41, then the 21 plates on all 300, about 4 hours at 6 workers).
+**Ruled 2026-09-30:** keep 90, and go. (Was wanted: the cut, then `go.stage2_test` for `--stage stage2` (the 250 test
+questions, about $15.41, then the 21 plates on all 300, about 4 hours at 6 workers).)
 
 ### Stage 2, built (2026-09-29, on steel): two halves, calls at once, the verdict on the 250
 
@@ -802,6 +802,9 @@ machine with wald 0.2.0.
   opinion alone clears p/(1 + p).
 
 ## Ruled
+
+- **2026-09-30, stage 2's cut and go:** the cut stays at 90, seen on all 300 calibration records; go on stage 2's
+  test half (`go.stage2_test`).
 
 - **2026-09-29, stage 2:** the verdict reads stage 2's 250 unseen test questions, with all 300 reported beside it; the
   60-grade audit still draws from all 300. Stage 2's frozen-model calls run a few questions at once. Development of
