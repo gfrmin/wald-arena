@@ -100,8 +100,17 @@ def played(result) -> Played:
                   "agreement" in acts, looked or blind, blind, end == "answer_second" and looked)
 
 
+@dataclass(frozen=True)
+class Ended:
+    """What the board reads of an episode's Result: the acts, what it paid, how it ended. The belief it ended holding
+    is not kept: exact rationals over every Global, it grows with the Counts, and 300 of them outgrew the memory."""
+    acts: tuple
+    paid: Fraction
+    status: str
+
+
 def play_plate(world, rows: Sequence, samples: int, fresh: bool = False, label: str = "", every: int = 25):
-    """Every row as one episode of one plate, in the given order: (Played, Result) per row. With `fresh`, each
+    """Every row as one episode of one plate, in the given order: (Played, Ended) per row. With `fresh`, each
     episode is played from the declared prior on a plate of its own: the Counts never conditioned on (E7).
     With a `label`, a progress line every `every` episodes: seconds so far and the process's peak memory."""
     plate = wald.plate(world)
@@ -111,7 +120,7 @@ def play_plate(world, rows: Sequence, samples: int, fresh: bool = False, label: 
         res = (wald.plate(world) if fresh else plate).run(RecordedDoor(r, samples))
         if res.status not in ("TERMINAL",):
             raise RuntimeError(f"question {r['question_id']} ended {res.status}")
-        out.append((played(res), res))
+        out.append((played(res), Ended(res.acts, res.paid, res.status)))
         if label and (i % every == 0 or i == len(rows)):
             print(f"progress {label}{' fresh' if fresh else ''}: {i}/{len(rows)} in {time.time() - t0:.0f}s, "
                   f"peak {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576:.1f} GB", flush=True)
