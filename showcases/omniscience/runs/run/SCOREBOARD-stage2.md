@@ -68,17 +68,17 @@ Stated in advance (2.13 as ruled): p = 10 is underpowered. The bound on a paired
 
 The verdict reads the 250 test questions not seen before α's grid was widened (the owner's ruling of 2026-09-29); the pilot's 50 were seen first. Δ on all 300 stands beside it.
 
-**The verdicts are withheld until the owner's hand audit of the grader** (2.9: 10 grades per domain, in the run directory's `audit.csv`; 0 of 60 audited).
+The owner audited 60 grades by hand and agreed with the grader on 56 (2.9).
 
 | claim | Δ, 250 unseen (± 2 SE) | verdict | Δ, all 300 |
 |---|---|---|---|
-| (i) ties the threshold at p = 1 (c = 2, 2.22) | -0.020 ± 0.041 | withheld | -0.018 ± 0.035 |
-| (ii) separates from the threshold at p = 3 (c = 2) | +0.168 ± 0.108 | withheld | +0.203 ± 0.104 |
-| (ii) separates from the threshold at p = 10 (c = 2) | -0.028 ± 0.279 | withheld | +0.029 ± 0.244 |
-| (iii) separates near the stake at p = 1 (best c = 1/2) | -0.020 ± 0.041 | withheld | -0.018 ± 0.035 |
-| (iii) separates near the stake at p = 3 (best c = 1/2) | +0.168 ± 0.108 | withheld | +0.203 ± 0.104 |
-| (iii) separates near the stake at p = 10 (best c = 1/2) | -0.028 ± 0.279 | withheld | +0.029 ± 0.244 |
-| (iv) beats the raw model throughout (weakest: p = 1, c = 1/4) | +0.148 ± 0.061 | withheld | +0.148 ± 0.054 |
+| (i) ties the threshold at p = 1 (c = 2, 2.22) | -0.020 ± 0.041 | held | -0.018 ± 0.035 |
+| (ii) separates from the threshold at p = 3 (c = 2) | +0.168 ± 0.108 | held | +0.203 ± 0.104 |
+| (ii) separates from the threshold at p = 10 (c = 2) | -0.028 ± 0.279 | missed | +0.029 ± 0.244 |
+| (iii) separates near the stake at p = 1 (best c = 1/2) | -0.020 ± 0.041 | missed | -0.018 ± 0.035 |
+| (iii) separates near the stake at p = 3 (best c = 1/2) | +0.168 ± 0.108 | held | +0.203 ± 0.104 |
+| (iii) separates near the stake at p = 10 (best c = 1/2) | -0.028 ± 0.279 | missed | +0.029 ± 0.244 |
+| (iv) beats the raw model throughout (weakest: p = 1, c = 1/4) | +0.148 ± 0.061 | held | +0.148 ± 0.054 |
 
 ## Calibration: the constructed Counts (brief 002, revision 2; QUESTIONS.md 2.21 as ruled)
 

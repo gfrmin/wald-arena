@@ -250,7 +250,7 @@ Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 **Still open:** the owner's go on stage 2's calibration half (`go.stage2`), then, after the cut table on all 300
 calibration records, the go on its test half (`go.stage2_test`). See "Stage 2, built", below.
 
-### Stage 2's test half (2026-09-30): calls done; the plates on a droplet
+### Stage 2's test half (2026-09-30 – 10-01): played, audited, the verdicts printed
 
 The owner kept the cut at 90 and gave `go.stage2_test` (ruled 2026-09-30, below).
 
@@ -280,6 +280,33 @@ the memo only grows, by about 0.25 GB an episode. The harness now drops it after
 the same value; a test plays a plate both ways and gets the same acts, prices and Counts. It reaches into a private
 attribute of the pinned wald, and it stays only until wald rules on it (the finding below). Restarted 17:56. The droplet is deleted once the plates'
 results are back on steel (the owner, 2026-09-30).
+
+**Played.** The 21 plates ran on the droplet from 17:56 to 22:04, 2.6–4.2 hours each, at 1.4 GB a plate once the
+lookahead memo was dropped between episodes. The run replayed the records and changed none of them: records, calls,
+grades, the wallet's log, Counts, posterior, disclosure, cuts and estimate all came back identical to steel's
+copies. A second replay on the same droplet (21:33–01:00, the owner's go), from a fresh clone at the commit that
+saves the plates' results, gave a byte-identical scoreboard, `e7.txt`, audit sample, Counts and posterior. So the
+plates are deterministic, with the memo dropped and 21 played at once. Its `plates.pkl` re-rendered the board after
+the audit without playing a plate again (kept in the run directory, not in git: it is a pickle, and this repository
+is public). The droplet was deleted 2026-10-01 05:40, and its tailnet device removed. It ran about 13.3 hours, about
+$26 at $1.94/h, against $8–15 estimated. The difference is the two stopped runs (memory), the second replay, and
+about 4.5 idle hours overnight between the replay's end and its deletion. A 32-vCPU, 64 GB droplet (about $1.00/h)
+would have been enough once memory was fixed.
+
+**The verdicts** (on the 250 unseen; all 300 beside):
+
+| claim | Δ, 250 unseen (± 2 SE) | verdict | Δ, all 300 |
+|---|---|---|---|
+| (i) ties the threshold at p = 1 | −0.020 ± 0.041 | held | −0.018 ± 0.035 |
+| (ii) separates from the threshold at p = 3 | +0.168 ± 0.108 | held | +0.203 ± 0.104 |
+| (ii) separates from the threshold at p = 10 | −0.028 ± 0.279 | missed | +0.029 ± 0.244 |
+| (iii) separates near the stake at p = 1 (best c = 1/2) | −0.020 ± 0.041 | missed | −0.018 ± 0.035 |
+| (iii) separates near the stake at p = 3 | +0.168 ± 0.108 | held | +0.203 ± 0.104 |
+| (iii) separates near the stake at p = 10 | −0.028 ± 0.279 | missed | +0.029 ± 0.244 |
+| (iv) beats the raw model throughout (weakest p = 1, c = 1/4) | +0.148 ± 0.061 | held | +0.148 ± 0.054 |
+
+p = 10 was stated in advance to be underpowered. On the board's own metrics at p = 1, c = 2, the better-single-model
+baseline beats wald (Omniscience Index +56.7 against +36.0), as the scoreboard prints.
 
 **The owner's hand audit (2.9), 2026-09-30.** 60 grades, 10 per domain from all 300, graded blind: the page showed
 the question, the gold target and the answer, never the grader's grade. First pass: 53 of 60 agree with
@@ -983,9 +1010,10 @@ Measured, 1,152 Global values:
 |---|---|---|
 | 50–100 records (the pilot) | 5.3 | steel, alone |
 | about 300 records (stage 2's first 25) | 22–30 | droplet, 21 at once; steel, 3 at once |
+| about 575–600 records (stage 2's last 25) | about 41 | droplet, 21 at once |
 
-The end of stage 2's plates (about 600 records) is measured in the progress lines of the run and added here when it
-finishes.
+A whole learning plate of 300 episodes took 2.5–4.2 hours. Episodes from the declared prior with no Counts took
+under a tenth of a second each (300 in 15–40 s).
 
 Memory goes the same way. The lookahead memo (`World.work()`) is kept for a World's life, keyed by exact beliefs.
 On a plate that learns, no key recurs, and it grew about 0.25 GB an episode, past 250 GB for 21 plates. The harness
