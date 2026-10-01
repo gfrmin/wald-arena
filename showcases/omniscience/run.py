@@ -935,4 +935,7 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
-    main()
+    # Run as the imported module, not as __main__, so what a run pickles (plates.pkl, the plates' worker jobs) names
+    # showcases.omniscience.run and loads from any entry point.
+    from showcases.omniscience.run import main as run_main
+    run_main()
