@@ -9,8 +9,8 @@ ruled, and a missing key fails loud where it is needed. Each open question block
    stood here is in git history.
 2. **The lookahead memo** (AA-Omniscience): `board.forget_lookahead` drops wald's `World.work()` memo between a
    learning plate's episodes by reaching into a private attribute of the pinned wald. It stays until wald rules on
-   the memo (wald-charter's `HANDOFF.md` §6, brief 010, which needs the owner's go); then the pin is bumped and the
-   call deleted. See the Finding "wald's episode cost grows with the Counts".
+   the memo: wald's brief 010 ("the plate owns the lookahead's memo", written 2026-10-01, `gfrmin/wald` `3a0b104`).
+   When the builder's PR is merged and a signed release names it, the pin is bumped and the call deleted. See the Finding "wald's episode cost grows with the Counts".
 
 ## Status: brief 002, as of 2026-09-25 (wald 0.1.0)
 
