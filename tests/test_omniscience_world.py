@@ -29,6 +29,21 @@ def calibrated(n=12):
     return plate.counts()
 
 
+def test_forgetting_the_lookahead_memo_between_episodes_changes_no_act():
+    "The memo is a cache of values wald finds again: a plate that drops it after every episode plays the same acts."
+    rows = [row("b1", 5, "same", "CORRECT", "CORRECT", f"r{i}") for i in range(6)] + \
+           [row("b0", 1, "different", "INCORRECT", "CORRECT", f"w{i}") for i in range(6)] + \
+           [row("b1", 3, "different", "CORRECT", "INCORRECT", f"m{i}") for i in range(4)]
+    plays = {}
+    for forget in (False, True):
+        _, world = W.declare(W.text(BUCKETS, GRIDS, PR, f"memo-{forget}"))
+        plate, out = B.play_plate(world, rows, 5, forget=forget)
+        plays[forget] = ([res.acts for _, res in out], [res.paid for _, res in out], plate.counts())
+        if forget:
+            assert world.world._work is None
+    assert plays[False] == plays[True]
+
+
 def test_the_pack_is_lawful_and_says_what_is_learned():
     spec, world = W.declare(W.text(BUCKETS, GRIDS, PR, "t"))
     assert [name for name, _ in spec["globals"]] == list(W.GLOBALS)

@@ -247,7 +247,145 @@ Anthropic as above.
 
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
-**Still open:** the verdict's scope (250 or 300; see "α's grid widened", below), and the owner's go on stage 2 (`go.stage2`).
+**Still open:** the owner's go on stage 2's calibration half (`go.stage2`), then, after the cut table on all 300
+calibration records, the go on its test half (`go.stage2_test`). See "Stage 2, built", below.
+
+### Stage 2's test half (2026-09-30 – 10-01): played, audited, the verdicts printed
+
+The owner kept the cut at 90 and gave `go.stage2_test` (ruled 2026-09-30, below).
+
+**The calls** (10:26–11:40, steel, Gemini over IPv6). All 300 test questions answered and graded: the pilot's 50
+and stage 2's 250, 600 records in all. Two stops, each resumed without loss.
+- 10:59, Gemini `HTTP 503` ("high demand"): temporary, not billed.
+- 11:08, OpenAI `429 credit_balance_exhausted`: the owner topped up.
+
+Dollars by the log: $38.40 for the whole run (gpt-5.5 $31.97, Opus $4.12, Gemini $2.31). The test half cost $16.65
+against $15.41 projected; the difference is the questions in flight at each stop, asked again. The wallet is about
+$2 above the log: calls cut off at a stop are held at their worst case, as the pilot's timed-out call was.
+
+**The plates.** No paid call; they replay the records. Three attempts on steel (31 GB) failed on memory.
+- 12:10: Claude Code's low-memory reaper killed the run, with another session's evaluation beside it.
+- 14:48: at 6 workers the machine went into swap, so I stopped it myself.
+- 15:25: at 3 workers the reaper killed it again.
+
+A plate's memory grew with every episode, by about 0.1–0.25 GB each. The owner approved a DigitalOcean droplet:
+`wald-plates`, g5-32vcpu-256gb, $1.94/h, on the tailnet as `tag:do`, public SSH closed, no API key on it, the
+plates run with `--replay`. The first droplet run reached 96 GB in 21 minutes and was stopped. My first fix was to keep
+only `acts`, `paid` and `status` of each episode's `Result` (`board.Ended`), not its `final` belief. It was right
+to do but was not the cause: the rerun from 17:20 grew as fast (101 GB at 17:46). The cause is wald's lookahead
+memo, `World.work()`. It holds the values found, keyed by the belief they were found at (exact rationals over every
+state), for the World's whole life. On a plate that learns, no episode's prior recurs, because the Counts grow, so
+the memo only grows, by about 0.25 GB an episode. The harness now drops it after each episode of a learning plate
+(`board.forget_lookahead`); fresh episodes keep it, since their prior recurs. A dropped value is found again,
+the same value; a test plays a plate both ways and gets the same acts, prices and Counts. It reaches into a private
+attribute of the pinned wald, and it stays only until wald rules on it (the finding below). Restarted 17:56. The droplet is deleted once the plates'
+results are back on steel (the owner, 2026-09-30).
+
+**Played.** The 21 plates ran on the droplet from 17:56 to 22:04, 2.6–4.2 hours each, at 1.4 GB a plate once the
+lookahead memo was dropped between episodes. The run replayed the records and changed none of them: records, calls,
+grades, the wallet's log, Counts, posterior, disclosure, cuts and estimate all came back identical to steel's
+copies. A second replay on the same droplet (21:33–01:00, the owner's go), from a fresh clone at the commit that
+saves the plates' results, gave a byte-identical scoreboard, `e7.txt`, audit sample, Counts and posterior. So the
+plates are deterministic, with the memo dropped and 21 played at once. Its `plates.pkl` re-rendered the board after
+the audit without playing a plate again (kept in the run directory, not in git: it is a pickle, and this repository
+is public). The droplet was deleted 2026-10-01 05:40, and its tailnet device removed. It ran about 13.3 hours, about
+$26 at $1.94/h, against $8–15 estimated. The difference is the two stopped runs (memory), the second replay, and
+about 4.5 idle hours overnight between the replay's end and its deletion. A 32-vCPU, 64 GB droplet (about $1.00/h)
+would have been enough once memory was fixed.
+
+**The verdicts** (on the 250 unseen; all 300 beside):
+
+| claim | Δ, 250 unseen (± 2 SE) | verdict | Δ, all 300 |
+|---|---|---|---|
+| (i) ties the threshold at p = 1 | −0.020 ± 0.041 | held | −0.018 ± 0.035 |
+| (ii) separates from the threshold at p = 3 | +0.168 ± 0.108 | held | +0.203 ± 0.104 |
+| (ii) separates from the threshold at p = 10 | −0.028 ± 0.279 | missed | +0.029 ± 0.244 |
+| (iii) separates near the stake at p = 1 (best c = 1/2) | −0.020 ± 0.041 | missed | −0.018 ± 0.035 |
+| (iii) separates near the stake at p = 3 | +0.168 ± 0.108 | held | +0.203 ± 0.104 |
+| (iii) separates near the stake at p = 10 | −0.028 ± 0.279 | missed | +0.029 ± 0.244 |
+| (iv) beats the raw model throughout (weakest p = 1, c = 1/4) | +0.148 ± 0.061 | held | +0.148 ± 0.054 |
+
+p = 10 was stated in advance to be underpowered. On the board's own metrics at p = 1, c = 2, the better-single-model
+baseline beats wald (Omniscience Index +56.7 against +36.0), as the scoreboard prints.
+
+**The owner's hand audit (2.9), 2026-09-30.** 60 grades, 10 per domain from all 300, graded blind: the page showed
+the question, the gold target and the answer, never the grader's grade. First pass: 53 of 60 agree with
+gemini-3.8-flash. I then showed the owner the seven disagreements, and that AA's rubric (its example 4) grades a
+hedged guess ("I'm not certain … my best recollection is X") NOT_ATTEMPTED. The owner regraded those three
+(questions 98, 172, 149) from partial to not attempted, "according to rubric". Final: 56 of 60. Four remain:
+question 104 (owner partial, grader correct), 390 (partial, incorrect), 495 (partial, incorrect) and 455
+(incorrect, correct). The second pass was not blind for those three.
+
+**The time.** An episode of stage 2's first plate episodes took 22–30 s, on steel and on the droplet alike (an EPYC
+9555P, per core about steel's Ryzen 5600X). The 5.3 s measured on steel on 2026-09-29 was on the pilot's 50
+calibration records; stage 2's plates start from 300 and grow to 600. See the finding "wald's episode cost grows
+with the Counts", below.
+
+### Stage 2's calibration half (2026-09-30): run; stopped for the owner's cut and `go.stage2_test`
+
+Run on steel, 08:55–10:18 (calls to 09:40, then the Counts, the posterior and S15), Gemini over IPv6. 250 new
+calibration questions observed and graded; no test question called. Checked: every call's served model is its pinned
+one; none truncated; every live grader and equivalence call at thinking `low` (681 and 350).
+
+**Dollars.** Log $21.747 for the whole run so far (stage 2's calibration half about $15.5); the wallet $22.254, the
+$0.507 above the log being the pilot's timed-out call reserved at its worst case (the OpenAI timeout, ruled earlier).
+Measured on 300: per question primary $0.0515, second $0.0066, equivalence $0.0006, grader $0.0030. Projected:
+stage 2's test half $15.41, whole run $37.67, under the $80 cap.
+
+**The gate** passes at the ruled cut 90: b0 98 of 300 (32.7%), b1 202 (67.3%).
+
+**The cut table** (all 300 calibration records; unread → b0; none unread):
+
+| cut | b0 records | b0 read right | b1 records | b1 read right | gap |
+|---|---|---|---|---|---|
+| 70 | 18 (6%) | 1 (6%) | 282 (94%) | 194 (69%) | 63 pts; fails the gate |
+| 80 | 40 (13%) | 4 (10%) | 260 (87%) | 191 (73%) | 63 pts; fails the gate |
+| 85 | 51 (17%) | 7 (14%) | 249 (83%) | 188 (76%) | 62 pts; fails the gate |
+| **90 (ruled)** | 98 (33%) | 32 (33%) | 202 (67%) | 163 (81%) | 48 pts |
+| 95 | 147 (49%) | 63 (43%) | 153 (51%) | 132 (86%) | 43 pts |
+
+Of the cuts that pass the gate (a fifth in each bucket), 90 separates the buckets most. The cuts below 90 separate
+more but leave b0 under a fifth. Whether another cut is "clearly better" is the owner's ruling (2026-09-28).
+
+**The Counts**: 300 records, 24 distinct, sha256 `6b5180da20cecb5795a7135a5aa761732cfad0d5c406ca6ea489ffd7ab668b9b`,
+committed with this section.
+
+**P(Global | Counts)** (marginals summed from `wald.report`, for display): ρ b0 = 7/20 and ρ b1 = 17/20 (each
+100.0%); agree (4/5, 1/5) 100.0%; second (σ 1/2, β 1/5) with α 9/10 65.2% and α 4/5 34.7% (19/20 ≈ 0); grader
+γ 9/10 100.0%; corr 0 100.0%. **S15**: at every (p, c), no class of inseparable Global values settles anything an act
+can feel.
+
+**Ruled 2026-09-30:** keep 90, and go. (Was wanted: the cut, then `go.stage2_test` for `--stage stage2` (the 250 test
+questions, about $15.41, then the 21 plates on all 300, about 4 hours at 6 workers).)
+
+### Stage 2, built (2026-09-29, on steel): two halves, calls at once, the verdict on the 250
+
+- **Two halves.** `--stage stage2-calibration` (needs `go.stage2`) observes and grades the 250 new calibration
+  questions only, then on all 300: the gate, a cut table (cuts 70, 80, 85, 90, 95 and the ruled one: each bucket's
+  records and reads right), the Counts, P(Global | Counts) and S15, and stops. The owner looks at the cut
+  (the ruling of 2026-09-28: stop and ask if another separates clearly better); the Counts are committed; then
+  `--stage stage2` (needs `go.stage2_test`, and refuses to start until every stage-2 calibration record exists) plays
+  the 250 test questions and the 21 plates.
+- **Calls at once** (ruled 2026-09-29): `calls.workers = 4` questions observed, and answers graded, at once. The
+  wallet counts every open reservation at its worst case, so calls in flight together never pass a cap; near a cap
+  the run stops up to four worst cases early (about $2 at gpt-5.5's $0.50). The first failure in any worker stops
+  the wallet, so no new call starts; calls already in flight finish and are logged. Records land in the order they
+  finish, and every stage reads them back in the split's order, so the Counts do not depend on it (the pilot's
+  digest is unchanged, `0aba0eb7…d5db194`; a test builds the same Counts with 4 workers as with 1).
+- **The verdict on the 250** (ruled 2026-09-29): claims (i)–(iv) are judged on stage 2's 250 test questions; Δ on
+  all 300 is printed beside each; the by-penalty tables stay on all 300 and say so; the hand audit draws its 60 from
+  all 300. The p = 10 power bound is restated at 250 (0.696). `[board] changes` states it on the board.
+- **Gemini over IPv6** (2026-09-30, the owner: "keep mullvad, but route gemini calls around it"). The first
+  stage-2 run stopped at its first equivalence call on `HTTP 403`: Google's HTML "unusual traffic" page, served by
+  its front door on IP reputation before the key or the billing is read. steel's IPv4 leaves through the tailnet's
+  exit node (Mullvad, CH, AS51852), which Google now refuses; its IPv6 goes direct and is served. `GEMINI_IP_FAMILY=6`
+  in the environment makes the Gemini transport connect over IPv6 only (never falling back to IPv4); nothing else
+  about the call changes (model, thinking level, prompts, price). Checked on steel: the model's metadata endpoint
+  through the transport's path, 403 without it, 200 with it. The stop cost 22 logged calls ($0.15), kept; the four
+  questions in flight are asked again on resume (about $0.15).
+- **Measured on steel**, at 1,152 Global values: 5.3 s an episode (thinkpad 9.9), 146 s to declare a plate
+  (226), 1.4 GB a worker. Stage 2's plates: about an hour each, 21 of them at 6 workers about 4 hours. The calls:
+  250 questions a half at 4 at once, about 1–1.5 hours each. Dollars unchanged: whole run projected about $37.
 
 **Previously open (now done: funded, pinned 2026-09-28T11:21Z, pilot-calibration run):**
 - Funding: the OpenAI account and the Gemini project (2026-09-28T07:25Z: no credit on either).
@@ -736,6 +874,17 @@ machine with wald 0.2.0.
 
 ## Ruled
 
+- **2026-09-30, stage 2's plates:** play them on a DigitalOcean droplet (the owner's "go"), and delete it when
+  they are finished. Gemini's calls route over IPv6 around the tailnet's Mullvad exit ("keep mullvad, but route
+  gemini calls around it somehow").
+
+- **2026-09-30, stage 2's cut and go:** the cut stays at 90, seen on all 300 calibration records; go on stage 2's
+  test half (`go.stage2_test`).
+
+- **2026-09-29, stage 2:** the verdict reads stage 2's 250 unseen test questions, with all 300 reported beside it; the
+  60-grade audit still draws from all 300. Stage 2's frozen-model calls run a few questions at once. Development of
+  the three wald repos moved to steel.
+
 - **2026-09-29, α's grid:** widen it. The second opinion's (σ, α, β) grid keeps the two registered (σ, β) pairs and
   crosses each with α ∈ {4/5, 9/10, 19/20}: six values, and 1,152 Global values in all. It is a change made after
   the pilot, stated on the board, and justified by the pilot's calibration records (Opus matched a right gpt-5.5 28
@@ -846,6 +995,33 @@ machine with wald 0.2.0.
   scoreboard.
 
 ## Findings
+
+### wald's episode cost grows with the Counts (stage 2, 2026-09-30)
+
+wald v0.2.1 computes exactly. An episode's prior is P(Global | Counts) P(local | Global), with P(Global | Counts)
+proportional to the prior times each Global's likelihood of every record in the Counts: products of rationals
+raised to the records' multiplicities. Numerators and denominators lengthen roughly in proportion to the number of
+records. Big-integer multiplication costs more than linearly in length, so an episode costs more as a plate's
+Counts grow.
+
+Measured, 1,152 Global values:
+
+| Counts at the episode | seconds an episode | where |
+|---|---|---|
+| 50–100 records (the pilot) | 5.3 | steel, alone |
+| about 300 records (stage 2's first 25) | 22–30 | droplet, 21 at once; steel, 3 at once |
+| about 575–600 records (stage 2's last 25) | about 41 | droplet, 21 at once |
+
+A whole learning plate of 300 episodes took 2.5–4.2 hours. Episodes from the declared prior with no Counts took
+under a tenth of a second each (300 in 15–40 s).
+
+Memory goes the same way. The lookahead memo (`World.work()`) is kept for a World's life, keyed by exact beliefs.
+On a plate that learns, no key recurs, and it grew about 0.25 GB an episode, past 250 GB for 21 plates. The harness
+drops it between episodes, which is not a wald API. **For wald:** should a plate own the memo, or clear it when its
+Counts change, since then no earlier key can recur? Nothing here bends a rule. Every act still comes from `Plate.run`,
+exactly. It bears on wald's scale: boards far past 600 records at this many Globals will want something from
+wald, for example a sufficient-statistic form of the Counts' likelihood or a bound on its size. That is wald's to
+decide, and this board only reports it.
 
 ### Why the per-question World is an approximation: lifelines are not additive
 

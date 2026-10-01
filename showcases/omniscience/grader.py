@@ -5,9 +5,10 @@ second request for an answer already graded is served from the file and costs no
 """
 import json
 import re
+import threading
 from pathlib import Path
 
-from arena.spend import read_rows
+from arena.spend import each, read_rows
 from arena.transports import Call, Instrument, Truncated, call
 from showcases.omniscience.questions import Question
 
@@ -31,6 +32,13 @@ class Grader:
         self.instrument, self.memo, self.tier_of, self.before = instrument, memo, tier_of, before_each_call
         self.after = after_each_call
         self.graded = {(r["question_id"], r["answer"]): r["grade"] for r in read_rows(memo)}
+        self.lock = threading.Lock()
+
+    def grade_all(self, pairs, workers: int = 1, quiet: tuple = (), guard=lambda f: f) -> None:
+        """Grade every distinct (question, answer) not yet graded, up to `workers` at once; each memoised as it lands.
+        `guard` wraps each grading (the runner's stops the wallet on a failure)."""
+        todo = {(q.id, a): (q, a) for q, a in pairs if (q.id, a) not in self.graded}
+        each(todo.values(), guard(lambda qa: self(*qa)), workers, quiet=quiet)
 
     def __call__(self, q: Question, answer: str) -> str:
         key = (q.id, answer)
@@ -42,10 +50,11 @@ class Grader:
                 self.after(e.call)
                 raise
             self.after(c)
-            self.graded[key] = parse_grade(text)
-            with open(self.memo, "a") as f:
-                f.write(json.dumps({"question_id": q.id, "answer": answer, "grade": self.graded[key],
-                                    "call": c.to_json()}) + "\n")
+            with self.lock:
+                self.graded[key] = parse_grade(text)
+                with open(self.memo, "a") as f:
+                    f.write(json.dumps({"question_id": q.id, "answer": answer, "grade": self.graded[key],
+                                        "call": c.to_json()}) + "\n")
         return self.graded[key]
 
 

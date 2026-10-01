@@ -5,7 +5,9 @@ graded reads and compares, which only a baseline may do. wald's acts come from `
 behind `RecordedDoor`, which serves what was observed and never chooses.
 """
 import math
+import resource
 import statistics
+import time
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Callable, Mapping, Sequence
@@ -98,16 +100,44 @@ def played(result) -> Played:
                   "agreement" in acts, looked or blind, blind, end == "answer_second" and looked)
 
 
-def play_plate(world, rows: Sequence, samples: int, fresh: bool = False):
-    """Every row as one episode of one plate, in the given order: (Played, Result) per row. With `fresh`, each
-    episode is played from the declared prior on a plate of its own: the Counts never conditioned on (E7)."""
+@dataclass(frozen=True)
+class Ended:
+    """What the board reads of an episode's Result: the acts, what it paid, how it ended. The belief it ended holding
+    is not kept: nothing reads it, and its exact rationals grow with the Counts."""
+    acts: tuple
+    paid: Fraction
+    status: str
+
+
+def forget_lookahead(world) -> None:
+    """Drop the lookahead's memo: `World.work()`, the values wald has found, keyed by the belief they were found at
+    and kept for the World's life. On a plate that learns no episode's prior recurs, since the Counts grow, so the
+    memo only grows: exact rationals, about 0.25 GB an episode at stage 2's 300 records. A value dropped is found
+    again, the same value, so no act changes (tests/test_omniscience_world.py checks)."""
+    getattr(world, "world", world)._work = None
+
+
+def play_plate(world, rows: Sequence, samples: int, fresh: bool = False, label: str = "", every: int = 25,
+               forget: bool | None = None):
+    """Every row as one episode of one plate, in the given order: (Played, Ended) per row. With `fresh`, each
+    episode is played from the declared prior on a plate of its own: the Counts never conditioned on (E7).
+    With a `label`, a progress line every `every` episodes: seconds so far and the process's peak memory.
+    `forget` (by default on a plate that learns, off for fresh episodes, whose prior recurs) drops the lookahead's
+    memo after each episode (`forget_lookahead`)."""
+    forget = not fresh if forget is None else forget
     plate = wald.plate(world)
     out = []
-    for r in rows:
+    t0 = time.time()
+    for i, r in enumerate(rows, 1):
         res = (wald.plate(world) if fresh else plate).run(RecordedDoor(r, samples))
         if res.status not in ("TERMINAL",):
             raise RuntimeError(f"question {r['question_id']} ended {res.status}")
-        out.append((played(res), res))
+        out.append((played(res), Ended(res.acts, res.paid, res.status)))
+        if forget:
+            forget_lookahead(world)
+        if label and (i % every == 0 or i == len(rows)):
+            print(f"progress {label}{' fresh' if fresh else ''}: {i}/{len(rows)} in {time.time() - t0:.0f}s, "
+                  f"peak {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1048576:.1f} GB", flush=True)
     return plate, out
 
 
@@ -153,9 +183,9 @@ def line(name: str, rows: Sequence, plays: Sequence[Played], p, agreement, c) ->
                 sum(pl.overcharged for pl in plays), nets)
 
 
-def paired(a: Line, b: Line) -> tuple[float, float]:
-    "Mean of a - b per question, and its standard error."
-    d = [x - y for x, y in zip(a.nets, b.nets)]
+def paired(a: Line, b: Line, keep=None) -> tuple[float, float]:
+    "Mean of a - b per question, and its standard error; with `keep`, only the questions it marks."
+    d = [x - y for i, (x, y) in enumerate(zip(a.nets, b.nets)) if keep is None or keep[i]]
     return statistics.mean(d), (statistics.stdev(d) / math.sqrt(len(d)) if len(d) > 1 else math.nan)
 
 
