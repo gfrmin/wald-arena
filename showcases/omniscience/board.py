@@ -103,7 +103,7 @@ def played(result) -> Played:
 @dataclass(frozen=True)
 class Ended:
     """What the board reads of an episode's Result: the acts, what it paid, how it ended. The belief it ended holding
-    is not kept: exact rationals over every Global, it grows with the Counts, and 300 of them outgrew the memory."""
+    is not kept: nothing reads it, and its exact rationals grow with the Counts."""
     acts: tuple
     paid: Fraction
     status: str

@@ -16,6 +16,7 @@ are made again, and the wallet remembers what they cost.
 """
 import argparse
 import hashlib
+import inspect
 import json
 import os
 import pickle
@@ -577,14 +578,25 @@ def test_plate(args) -> PlateOut:
 
 
 PLATES = "plates.pkl"
+TEST_PLATE_SOURCE = inspect.getsource(test_plate)     # read here, as defined, so a stand-in can't change the key
+
+
+def plates_code() -> str:
+    """The code a plate's result also depends on: wald's version, the pack generator (world.py), the door and the
+    episode loop (board.py) and `test_plate`. Any change to them, comments included, replays the plates."""
+    from importlib.metadata import version
+    parts = [version("wald"), Path(W.__file__).read_text(), Path(B.__file__).read_text(), TEST_PLATE_SOURCE]
+    return hashlib.sha256("\0".join(parts).encode()).hexdigest()
 
 
 def plates_key(jobs, digest: str) -> str:
     """What a plate's result depends on: the Counts (by digest), the test questions in plate order with everything
-    the door serves, the settings and prices of every (p, c). Plates are replayed when any of it changes."""
+    the door serves, the settings and prices of every (p, c), and the code (`plates_code`). Plates are replayed when
+    any of it changes."""
     s, base, _, _, test_rows, _, _ = jobs[0]
-    return hashlib.sha256(repr((digest, repr(s), repr(base), [(p, c) for _, _, p, c, *_ in jobs],
-                                [sorted(r.items()) for r in test_rows])).encode()).hexdigest()
+    inputs = hashlib.sha256(repr((digest, repr(s), repr(base), [(p, c) for _, _, p, c, *_ in jobs],
+                                  [sorted(r.items()) for r in test_rows])).encode()).hexdigest()
+    return hashlib.sha256((inputs + plates_code()).encode()).hexdigest()
 
 
 def saved_plates(run_dir: Path, jobs, digest: str):
@@ -595,7 +607,7 @@ def saved_plates(run_dir: Path, jobs, digest: str):
         return None
     saved = pickle.loads(path.read_bytes())
     if saved["key"] != plates_key(jobs, digest):
-        print(f"{PLATES}: saved for other Counts, questions or prices; playing the plates again", flush=True)
+        print(f"{PLATES}: saved for other Counts, questions, prices or code; playing the plates again", flush=True)
         return None
     print(f"{PLATES}: the plates' results as saved ({len(saved['plates'])} plates); not played again", flush=True)
     return saved["plates"]

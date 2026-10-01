@@ -134,6 +134,11 @@ def test_stage2_writes_the_audit_sample_and_withholds_the_verdict_until_it_is_fi
                 write_packs=False, workers=1, stage="stage2")
     assert o.audit == (12, 12, 12) and "agreed with the grader on 12" in SB.claims(o, dry_run=False)
     assert o.plates == played
+    # other code (a wald bump, a changed generator or door) plays the plates again rather than reuse them
+    monkeypatch.setattr(RUN, "plates_code", lambda: "other code")
+    with pytest.raises(AssertionError, match="a plate was played"):
+        RUN.run(owner, tmp_path / "run", None, False, transport=RUN.replay_only, questions=questions(10),
+                write_packs=False, workers=1, stage="stage2")
 
 
 def test_the_pilot_cap_stops_the_run_before_the_call_that_could_pass_it(tmp_path):
