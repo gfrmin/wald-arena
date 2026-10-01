@@ -10,7 +10,13 @@ ruled, and a missing key fails loud where it is needed. Each open question block
 2. **The lookahead memo** (AA-Omniscience): `board.forget_lookahead` drops wald's `World.work()` memo between a
    learning plate's episodes by reaching into a private attribute of the pinned wald. It stays until wald rules on
    the memo: wald's brief 010 ("the plate owns the lookahead's memo", written 2026-10-01, `gfrmin/wald` `3a0b104`).
-   When the builder's PR is merged and a signed release names it, the pin is bumped and the call deleted. See the Finding "wald's episode cost grows with the Counts".
+   When the builder's PR is merged and a signed release names it, the pin is bumped and the call deleted.
+   Measured against its PR (`gfrmin/wald` #13, unmerged, 2026-10-01), as this board plays: 100 fresh episodes of
+   stage 2's p = 1, c = 1 pack, Counts removed, each on a new `wald.plate(world)` (`board.play_plate(fresh=True)`),
+   on steel. v0.2.1: 17.1 s, the World's memo shared across the plates. The PR: 153.9 s, about 9× slower, since
+   each new plate starts with an empty memo. The acts are identical, and peak memory is 1.25 GB in both. A plate's
+   300 fresh episodes would take about 7.5 minutes rather than about 50 s, small beside a learning plate's
+   2.5–4.2 hours. If it matters, the fix is wald's: this board does not reach into the kernel again. See the Finding "wald's episode cost grows with the Counts".
 
 ## Status: brief 002, as of 2026-09-25 (wald 0.1.0)
 
