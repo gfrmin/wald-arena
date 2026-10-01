@@ -7,8 +7,16 @@ ruled, and a missing key fails loud where it is needed. Each open question block
 
 1. **Question set** (Millionaire): moot. Millionaire's live play is dropped (ruled 2026-09-25); the table that
    stood here is in git history.
+2. **The lookahead memo** (AA-Omniscience): `board.forget_lookahead` drops wald's `World.work()` memo between a
+   learning plate's episodes by reaching into a private attribute of the pinned wald. It stays until wald rules on
+   the memo (wald-charter's `HANDOFF.md` §6, brief 010, which needs the owner's go); then the pin is bumped and the
+   call deleted. See the Finding "wald's episode cost grows with the Counts".
 
 ## Status: brief 002, as of 2026-09-25 (wald 0.1.0)
+
+**Brief 002 is played to its verdicts** (2026-10-01, PR #4, `51f5adc`): the board is
+`showcases/omniscience/runs/run/SCOREBOARD-stage2.md`, and "Stage 2's test half", below, holds the verdicts, the
+audit and the dollars. The status that follows is as of 2026-09-25 and is kept as the record.
 
 **Built** (`showcases/omniscience/`, def8698), against brief 002 as drafted:
 - the loader, pinned to the public CSV's sha256; the seeded draw, and the calibration/test split stratified by domain
@@ -247,8 +255,8 @@ Anthropic as above.
 
 Each total is primary + second opinion (`claude-opus-5-5`) + grader.
 
-**Still open:** the owner's go on stage 2's calibration half (`go.stage2`), then, after the cut table on all 300
-calibration records, the go on its test half (`go.stage2_test`). See "Stage 2, built", below.
+**Nothing is open for brief 002.** Both goes were given and both halves played (below). What waits is wald's: the
+lookahead memo (Open, 2).
 
 ### Stage 2's test half (2026-09-30 – 10-01): played, audited, the verdicts printed
 
